@@ -1,0 +1,102 @@
+{
+  "address": "0x3F8c2B1a9D5e7460C0912d45Ef8369a1b2C3D7A9",
+  "chain": "xlayer",
+  "chainId": 196,
+  "totalTxns": 412,
+  "realizedPnl": 5640,
+  "winRate": 68,
+  "avgGasGwei": 0.05,
+  "networkMedianGasGwei": 0.04,
+  "trades": [
+    {
+      "id": "xl-trade-001",
+      "timestamp": 1737158400000,
+      "token": "0xe538905cf8410324e03a5A23C1B5C1cFeDc761c0",
+      "tokenSymbol": "USDC",
+      "chain": "xlayer",
+      "type": "BUY",
+      "amount": 8000,
+      "amountUsd": 8000,
+      "price": 1.0,
+      "pnlPct": 0,
+      "pnlUsd": 0,
+      "holdDurationDays": 0
+    },
+    {
+      "id": "xl-trade-002",
+      "timestamp": 1737417600000,
+      "token": "0xe538905cf8410324e03a5A23C1B5C1cFeDc761c0",
+      "tokenSymbol": "USDC",
+      "chain": "xlayer",
+      "type": "BUY",
+      "amount": 4000,
+      "amountUsd": 4000,
+      "price": 1.0,
+      "pnlPct": 0,
+      "pnlUsd": 0,
+      "holdDurationDays": 0
+    },
+    {
+      "id": "xl-trade-003",
+      "timestamp": 1738108800000,
+      "token": "0x4F9A0e7FD2Bf6067db6994CF12E308b932E2dFa7",
+      "tokenSymbol": "xUSDT",
+      "chain": "xlayer",
+      "type": "BUY",
+      "amount": 10000,
+      "amountUsd": 10000,
+      "price": 1.0,
+      "pnlPct": 0,
+      "pnlUsd": 0,
+      "holdDurationDays": 0
+    },
+    {
+      "id": "xl-trade-004",
+      "timestamp": 1739059200000,
+      "token": "0x74c6cADE3eF61Dc6AA57e3e2C6C9f3B9c687e5B8",
+      "tokenSymbol": "xETH",
+      "chain": "xlayer",
+      "type": "BUY",
+      "amount": 2,
+      "amountUsd": 6780,
+      "price": 3390,
+      "pnlPct": 0,
+      "pnlUsd": 0,
+      "holdDurationDays": 0
+    },
+    {
+      "id": "xl-trade-005",
+      "timestamp": 1739836800000,
+      "token": "0x74c6cADE3eF61Dc6AA57e3e2C6C9f3B9c687e5B8",
+      "tokenSymbol": "xETH",
+      "chain": "xlayer",
+      "type": "SELL",
+      "amount": 2,
+      "amountUsd": 8340,
+      "price": 4170,
+      "pnlPct": 23.01,
+      "pnlUsd": 1560,
+      "holdDurationDays": 9
+    }
+  ],
+  "approvals": [
+    {
+      "contractAddress": "0xDef1C0ded9bec7F1a1670819833240f027b25EfF",
+      "spender": "OKX DEX Aggregator",
+      "tokenSymbol": "USDC",
+      "amount": "20000",
+      "riskLevel": "LOW"
+    }
+  ],
+  "tokenScans": [
+    {
+      "tokenAddress": "0xe538905cf8410324e03a5A23C1B5C1cFeDc761c0",
+      "chainId": "196",
+      "riskLevel": "LOW",
+      "buyTaxes": null,
+      "sellTaxes": null,
+      "isHoneypot": false,
+      "isRugpull": false
+    }
+  ]
+}

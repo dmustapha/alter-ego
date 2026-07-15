@@ -1,0 +1,160 @@
+{
+  "address": "7KVHhE9mBXG1LpWqR3sT4yU6vF8aN2cD5xM7kP9jB0wQ",
+  "chain": "solana",
+  "chainId": 501,
+  "totalTxns": 3204,
+  "realizedPnl": -8750,
+  "winRate": 33,
+  "avgGasGwei": 0.00015,
+  "networkMedianGasGwei": 0.00012,
+  "trades": [
+    {
+      "id": "sol-trade-001",
+      "timestamp": 1736985600000,
+      "token": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "tokenSymbol": "BONK",
+      "chain": "solana",
+      "type": "BUY",
+      "amount": 500000000,
+      "amountUsd": 6200,
+      "price": 0.0000124,
+      "pnlPct": 0,
+      "pnlUsd": 0,
+      "holdDurationDays": 0
+    },
+    {
+      "id": "sol-trade-002",
+      "timestamp": 1737244800000,
+      "token": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "tokenSymbol": "BONK",
+      "chain": "solana",
+      "type": "SELL",
+      "amount": 500000000,
+      "amountUsd": 12400,
+      "price": 0.0000248,
+      "pnlPct": 100.0,
+      "pnlUsd": 6200,
+      "holdDurationDays": 3
+    },
+    {
+      "id": "sol-trade-003",
+      "timestamp": 1737417600000,
+      "token": "2weMjPLLybRMMva1fM3U31goWWrCpF59CHWNhnCJ9Vyh",
+      "tokenSymbol": "SAMO",
+      "chain": "solana",
+      "type": "BUY",
+      "amount": 200000,
+      "amountUsd": 8200,
+      "price": 0.041,
+      "pnlPct": 0,
+      "pnlUsd": 0,
+      "holdDurationDays": 0
+    },
+    {
+      "id": "sol-trade-004",
+      "timestamp": 1737849600000,
+      "token": "2weMjPLLybRMMva1fM3U31goWWrCpF59CHWNhnCJ9Vyh",
+      "tokenSymbol": "SAMO",
+      "chain": "solana",
+      "type": "SELL",
+      "amount": 200000,
+      "amountUsd": 3400,
+      "price": 0.017,
+      "pnlPct": -58.54,
+      "pnlUsd": -4800,
+      "holdDurationDays": 5
+    },
+    {
+      "id": "sol-trade-005",
+      "timestamp": 1738108800000,
+      "token": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+      "tokenSymbol": "WIF",
+      "chain": "solana",
+      "type": "BUY",
+      "amount": 3500,
+      "amountUsd": 7700,
+      "price": 2.20,
+      "pnlPct": 0,
+      "pnlUsd": 0,
+      "holdDurationDays": 0
+    },
+    {
+      "id": "sol-trade-006",
+      "timestamp": 1738368000000,
+      "token": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+      "tokenSymbol": "WIF",
+      "chain": "solana",
+      "type": "SELL",
+      "amount": 3500,
+      "amountUsd": 11200,
+      "price": 3.20,
+      "pnlPct": 45.45,
+      "pnlUsd": 3500,
+      "holdDurationDays": 3
+    },
+    {
+      "id": "sol-trade-007",
+      "timestamp": 1738627200000,
+      "token": "6AJcP7wuLymRYAsoTXyjPMqLoNEtTcrYSkh3BFPvJF2M",
+      "tokenSymbol": "RUGGY",
+      "chain": "solana",
+      "type": "BUY",
+      "amount": 10000000,
+      "amountUsd": 5000,
+      "price": 0.0005,
+      "pnlPct": 0,
+      "pnlUsd": 0,
+      "holdDurationDays": 0
+    },
+    {
+      "id": "sol-trade-008",
+      "timestamp": 1738629000000,
+      "token": "6AJcP7wuLymRYAsoTXyjPMqLoNEtTcrYSkh3BFPvJF2M",
+      "tokenSymbol": "RUGGY",
+      "chain": "solana",
+      "type": "SELL",
+      "amount": 10000000,
+      "amountUsd": 210,
+      "price": 0.000021,
+      "pnlPct": -95.8,
+      "pnlUsd": -4790,
+      "holdDurationDays": 0
+    }
+  ],
+  "approvals": [
+    {
+      "contractAddress": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+      "spender": "Jupiter Aggregator v6",
+      "tokenSymbol": "BONK",
+      "amount": "1000000000",
+      "riskLevel": "MEDIUM"
+    },
+    {
+      "contractAddress": "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc",
+      "spender": "Orca Whirlpools",
+      "tokenSymbol": "SAMO",
+      "amount": "500000",
+      "riskLevel": "LOW"
+    }
+  ],
+  "tokenScans": [
+    {
+      "tokenAddress": "6AJcP7wuLymRYAsoTXyjPMqLoNEtTcrYSkh3BFPvJF2M",
+      "chainId": "501",
+      "riskLevel": "CRITICAL",
+      "buyTaxes": "99",
+      "sellTaxes": "99",
+      "isHoneypot": true,
+      "isRugpull": true
+    },
+    {
+      "tokenAddress": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "chainId": "501",
+      "riskLevel": "MEDIUM",
+      "buyTaxes": "0",
+      "sellTaxes": "0",
+      "isHoneypot": false,
+      "isRugpull": false
+    }
+  ]
+}

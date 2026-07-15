@@ -1,0 +1,82 @@
+[
+  {
+    "rank": 1,
+    "walletAddress": "6bZk5xN2fP8qR1cW9yA3tG7vL4mH0sD6jF8kB2nE5pX",
+    "realizedPnlUsd": "2874500",
+    "winRatePercent": "72.0",
+    "txs": "1247",
+    "txVolume": "8900000"
+  },
+  {
+    "rank": 2,
+    "walletAddress": "DfMxre4cKmvwtCbTLjJHTZ6Nv3UA3K6g8DzKq5SPmE2h",
+    "realizedPnlUsd": "1923000",
+    "winRatePercent": "68.5",
+    "txs": "983",
+    "txVolume": "6200000"
+  },
+  {
+    "rank": 3,
+    "walletAddress": "9aZxF3n6R8tB1vL4qW7cY2eA5kM0jH3sD8fG5pN2mX9",
+    "realizedPnlUsd": "1456700",
+    "winRatePercent": "64.2",
+    "txs": "2156",
+    "txVolume": "11400000"
+  },
+  {
+    "rank": 4,
+    "walletAddress": "3Vn7mJ2xK8pR4sW1cY5tB9aF6gL0dH3vM7nQ2wE5kX8",
+    "realizedPnlUsd": "980200",
+    "winRatePercent": "61.8",
+    "txs": "732",
+    "txVolume": "4200000"
+  },
+  {
+    "rank": 5,
+    "walletAddress": "0xA1B2c3D4e5F6a7B8c9D0e1F2a3B4c5D6e7F8a9B0",
+    "realizedPnlUsd": "754300",
+    "winRatePercent": "59.4",
+    "txs": "568",
+    "txVolume": "3100000"
+  },
+  {
+    "rank": 6,
+    "walletAddress": "HqY8nT4rK2mW6pS1cV9bZ3xL5jF7dN0aG4hM8tR2wQ6",
+    "realizedPnlUsd": "512800",
+    "winRatePercent": "57.1",
+    "txs": "891",
+    "txVolume": "4700000"
+  },
+  {
+    "rank": 7,
+    "walletAddress": "0x3F8c2B1a9D5e7460C0912d45Ef8369a1b2C3D7A9",
+    "realizedPnlUsd": "5640",
+    "winRatePercent": "68.0",
+    "txs": "412",
+    "txVolume": "38000"
+  },
+  {
+    "rank": 8,
+    "walletAddress": "0x7A9B3c1F8e25D4a6B70C0912d45Ef8369a1b2C3D",
+    "realizedPnlUsd": "12450",
+    "winRatePercent": "41.0",
+    "txs": "847",
+    "txVolume": "142000"
+  },
+  {
+    "rank": 9,
+    "walletAddress": "7KVHhE9mBXG1LpWqR3sT4yU6vF8aN2cD5xM7kP9jB0wQ",
+    "realizedPnlUsd": "-8750",
+    "winRatePercent": "33.0",
+    "txs": "3204",
+    "txVolume": "67000"
+  },
+  {
+    "rank": 10,
+    "walletAddress": "2XpL9zC4vB7nM1qW5rT8yU3aF6dG0hJ4kL7pR2wS9",
+    "realizedPnlUsd": "-34200",
+    "winRatePercent": "28.6",
+    "txs": "1423",
+    "txVolume": "195000"
+  }
+]
