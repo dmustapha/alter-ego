@@ -1,0 +1,108 @@
+[
+  {
+    "walletLabel": "ETHEREUM SELF",
+    "archetype": "The Professional",
+    "catchphrase": "I'll wait for confirmation on the daily.",
+    "vice": "Conviction-turns-into-bagholding",
+    "superpower": "Diamond hands through 50% drawdowns",
+    "kryptonite": "Selling the exact bottom after 2 weeks of pain",
+    "tradingStyle": "DCA into large caps, hold until thesis invalidates (or until it hurts too much)",
+    "emojiSignature": "\ud83d\udcc9\ud83d\udc8e\ud83d\ude4f",
+    "pnlTotal": 12450,
+    "amplifyTags": [
+      {
+        "id": "AMP-01",
+        "tag": "Diamond Hands",
+        "type": "AMPLIFY",
+        "confidence": "HIGH",
+        "evidence": [],
+        "count": 4,
+        "insight": "You hold through major drawdowns instead of cutting losses early."
+      },
+      {
+        "id": "AMP-02",
+        "tag": "DCA Discipline",
+        "type": "AMPLIFY",
+        "confidence": "MEDIUM",
+        "evidence": [],
+        "count": 3,
+        "insight": "You scale into positions methodically across market caps."
+      }
+    ],
+    "guardTags": [
+      {
+        "id": "GRD-01",
+        "tag": "HODL Spiral",
+        "type": "GUARD",
+        "confidence": "HIGH",
+        "evidence": [],
+        "count": 2,
+        "costUsd": 5300,
+        "insight": "You held UNI and WETH past their local peaks, losing $5,300."
+      },
+      {
+        "id": "GRD-02",
+        "tag": "Slow Exit",
+        "type": "GUARD",
+        "confidence": "MEDIUM",
+        "evidence": [],
+        "count": 1,
+        "costUsd": 1200,
+        "insight": "One full week of drift cost you $1,200 in missed gains."
+      }
+    ]
+  },
+  {
+    "walletLabel": "SOLANA SELF",
+    "archetype": "The Degen",
+    "catchphrase": "Wen moon? Sent it.",
+    "vice": "Apes into every launch with the rent money",
+    "superpower": "3-day 100% gains on memecoin flips",
+    "kryptonite": "Tokens with 99% sell tax and a Telegram that's already deleted",
+    "tradingStyle": "Snipe new pairs on Jupiter, full-port entries, pray the dev isn't doxxed in Malaysia",
+    "emojiSignature": "\ud83d\ude80\ud83d\udc80\ud83e\udd11",
+    "pnlTotal": -8750,
+    "amplifyTags": [
+      {
+        "id": "AMP-03",
+        "tag": "Memecoin Sniper",
+        "type": "AMPLIFY",
+        "confidence": "HIGH",
+        "evidence": [],
+        "count": 6,
+        "insight": "Your memecoin entry timing is surgical \u2014 BONK 3-day double, WIF 3-day +45%."
+      },
+      {
+        "id": "AMP-04",
+        "tag": "Full Port YOLO",
+        "type": "AMPLIFY",
+        "confidence": "HIGH",
+        "evidence": [],
+        "count": 4,
+        "insight": "You commit big \u2014 average position size is 70% of your wallet."
+      }
+    ],
+    "guardTags": [
+      {
+        "id": "GRD-03",
+        "tag": "Rug Magnet",
+        "type": "GUARD",
+        "confidence": "HIGH",
+        "evidence": [],
+        "count": 3,
+        "costUsd": 8950,
+        "insight": "3 rug pulls in 6 months. Total cost: $8,950."
+      },
+      {
+        "id": "GRD-04",
+        "tag": "Paper Hands on Winners",
+        "type": "GUARD",
+        "confidence": "MEDIUM",
+        "evidence": [],
+        "count": 2,
+        "costUsd": 7200,
+        "insight": "You sold SAMO at -58% during a 5-day dip. It recovered to +37% 3 days later."
+      }
+    ]
+  }
+]

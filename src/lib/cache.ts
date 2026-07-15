@@ -37,7 +37,9 @@ export async function loadPersonas(): Promise<Persona[]> {
   }
   // Dynamic generation — use ESM dynamic import (no require() in ESM context)
   const { generatePersona } = await import("./persona");
-  return patterns.map((p) => generatePersona(p, p.walletAddress, 0));
+  return patterns
+    .filter(p => p.chain !== "xlayer")
+    .map((p) => generatePersona(p, p.chain === "solana" ? "SOLANA SELF" : "ETHEREUM SELF", 0));
 }
 
 export function loadComparison(): CompareResult {
