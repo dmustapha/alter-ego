@@ -1,0 +1,167 @@
+// ─── OnchainOS Response Types ──────────────────────
+// WARNING: All numeric fields from OnchainOS are Strings. Parse before using.
+
+export interface TokenAsset {
+  chainIndex: string;        // String "1", "501", "196"
+  tokenContractAddress: string;
+  symbol: string;
+  balance: string;           // String — parseFloat() before math
+  rawBalance: string;
+  tokenPrice: string;
+  isRiskToken: string;       // "true" | "false"
+}
+
+export interface PortfolioOverview {
+  realizedPnlUsd: string;    // String
+  winRate: string;           // String e.g. "0.41" = 41%
+  topPnlTokenList: Array<{
+    symbol: string;
+    pnlUsd: string;
+  }>;
+  buyTxCount: string;
+  preferredMarketCap: string;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  walletAddress: string;
+  realizedPnlUsd: string;
+  winRatePercent: string;
+  txs: string;
+  txVolume: string;
+}
+
+export interface ApprovalEntry {
+  contractAddress: string;
+  spender: string;
+  tokenSymbol: string;
+  amount: string;
+  riskLevel?: string;
+}
+
+export interface TokenScanResult {
+  tokenAddress: string;
+  chainId: string;
+  riskLevel: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  buyTaxes: string | null;
+  sellTaxes: string | null;
+  isHoneypot: boolean;
+  isRugpull: boolean;
+}
+
+// ─── Domain Types ──────────────────────────────────
+
+export interface Trade {
+  id: string;
+  timestamp: number;         // Unix ms
+  token: string;
+  tokenSymbol: string;
+  chain: string;             // "ethereum" | "solana" | "xlayer"
+  type: "BUY" | "SELL";
+  amount: number;
+  amountUsd: number;
+  price: number;
+  pnlPct: number;
+  pnlUsd: number;
+  holdDurationDays: number;
+}
+
+export interface WalletData {
+  address: string;
+  chain: string;
+  chainId: number;
+  totalTxns: number;
+  realizedPnl: number;
+  winRate: number;           // 0-100
+  trades: Trade[];
+  approvals: ApprovalEntry[];
+  tokenScans: TokenScanResult[];
+  avgGasGwei: number;
+  networkMedianGasGwei: number;
+}
+
+export interface Pattern {
+  id: string;                // "AMP-01" through "GRD-06"
+  tag: string;               // Human-readable tag name
+  type: "AMPLIFY" | "GUARD";
+  confidence: "HIGH" | "MEDIUM" | "LOW";
+  evidence: Trade[];         // Supporting trades
+  count: number;
+  costUsd?: number;          // Only for GUARD patterns — dollar cost of bad behavior
+  insight: string;           // Human-readable insight
+}
+
+export interface PatternResult {
+  walletAddress: string;
+  chain: string;
+  amplify: Pattern[];
+  guard: Pattern[];
+}
+
+export interface Persona {
+  walletLabel: string;       // "ETHEREUM SELF" | "SOLANA SELF"
+  archetype: string;         // "The Professional" | "The Degen"
+  catchphrase: string;
+  vice: string;
+  superpower: string;
+  kryptonite: string;
+  tradingStyle: string;
+  emojiSignature: string;
+  pnlTotal: number;
+  amplifyTags: Pattern[];
+  guardTags: Pattern[];
+}
+
+export interface CompareResult {
+  userWinRate: number;
+  topTraderWinRate: number;
+  userAvgExit: number;
+  topTraderAvgExit: number;
+  gapCostUsd: number;
+  worstHabit: string;
+  theirStrategy: string;
+  topTrader: LeaderboardEntry;
+}
+
+export interface RoastLine {
+  round: number;
+  speaker: string;           // "ETHEREUM SELF" | "SOLANA SELF" | "BOTH"
+  text: string;
+  onScreenTag: string;       // GUARD tag that flashes
+  onScreenData: string;      // Specific on-chain evidence
+}
+
+export interface RoastBattle {
+  walletA: Persona;
+  walletB: Persona;
+  lines: RoastLine[];
+}
+
+export interface AnalyzeRequest {
+  addresses: Array<{
+    address: string;
+    chains: string[];
+  }>;
+}
+
+export interface AnalyzeResponse {
+  wallets: number;
+  chains: string[];
+  totalTxns: number;
+  patterns: PatternResult[];
+  personas: Persona[];
+  comparison: CompareResult | null;
+}
+
+// ─── Demo Mode Types ────────────────────────────────
+
+export interface CachedDemoData {
+  walletA: WalletData;
+  walletB: WalletData;
+  walletC: WalletData;
+  patterns: PatternResult[];
+  personas: Persona[];
+  comparison: CompareResult;
+  roastBattle: RoastBattle;
+  leaderboard: LeaderboardEntry[];
+}
