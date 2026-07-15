@@ -17,9 +17,11 @@ export default function Home() {
   const [battleData, setBattleData] = useState<import("@/lib/types").RoastBattle | null>(null);
   const [compareData, setCompareData] = useState<import("@/lib/types").CompareResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [addressCount, setAddressCount] = useState(0);
 
   const handleAnalyze = async (addresses: Array<{ address: string; chains: string[] }>) => {
     setLoading(true);
+    setAddressCount(addresses.length);
     setPhase("scanning");
 
     try {
@@ -36,15 +38,15 @@ export default function Home() {
       setTimeout(() => setPhase("results"), 2000);                              // 2s: show wallet discovery
       setTimeout(() => {
         fetch("/api/roast").then(r => r.json()).then(d => {
-          setBattleData(d.battle);
+          if (d.battle) setBattleData(d.battle);
           setPhase("battle");
-        });
+        }).catch(() => setPhase("battle"));
       }, 20000);                                                                // 20s: begin roast battle
       setTimeout(() => {
         fetch("/api/compare").then(r => r.json()).then(d => {
-          setCompareData(d.comparison);
+          if (d.comparison) setCompareData(d.comparison);
           setPhase("compare");
-        });
+        }).catch(() => setPhase("compare"));
       }, 58000);                                                                // 58s: show crowd comparison
       setTimeout(() => setPhase("cta"), 76000);                                 // 76s: CTA + badge
     } catch (e) {
@@ -75,7 +77,7 @@ export default function Home() {
 
       {phase === "scanning" && (
         <SlideIn>
-          <TypingText text="Alter Ego initiating... Connecting to OnchainOS..." />
+          <TypingText text={`Analyzing ${addressCount} wallet${addressCount !== 1 ? "s" : ""}... Connecting to OnchainOS...`} />
         </SlideIn>
       )}
 
