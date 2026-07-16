@@ -28,7 +28,7 @@
 | Field | URL |
 |-------|-----|
 | GitHub Repo | https://github.com/dmustapha/alter-ego |
-| Live Demo | https://alter-e8wzy3vsl-damilolas-projects-fafdf859.vercel.app |
+| Live Demo | https://alter-de0pz6wrt-damilolas-projects-fafdf859.vercel.app |
 | Demo Video | [Upload to YouTube, paste link] |
 
 ### 7. Team
