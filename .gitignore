@@ -1,41 +1,59 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Dependencies
+node_modules/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Next.js
+.next/
+out/
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
+# Build
 /build
+dist/
 
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Secrets
+.env
+.env.local
+.env*.local
+
+# Vercel
+.vercel
+
+# Misc
+.DS_Store
+*.pem
+*.log
+
+# Playwright
+test-results/
+
+# Pipeline artifacts (local only)
+.build-state.json
+.debug-state.json
+.forge-state.json
+.stress-test-state.json
+.verify-state.json
+.wire-state.json
+.deploy-state.json
+.conductor-state.json
+.conductor-resume.md
+ARCHITECTURE.md
+BUILD-REPORT.md
+DEBUG-REPORT.md
+DEEP-RESEARCH.md
+DESIGN_SYSTEM.md
+HANDOFF-DEPLOY.md
+HANDOFF-STRESS-TEST.md
+PLAN.md
+PRD.md
+PULSE.md
+STRESS-TEST-PLAN.md
+WIRE-REPORT.md
+concerns.md
+pipeline-log.md
+research/
+warroom/
+proposals/
+debug-results/
