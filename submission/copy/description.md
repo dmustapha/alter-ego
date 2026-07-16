@@ -31,7 +31,7 @@ Next.js 16 (Turbopack), TypeScript, Tailwind CSS 4, Framer Motion, Playwright (3
 
 ## Live Demo
 
-https://alter-de0pz6wrt-damilolas-projects-fafdf859.vercel.app
+https://alter-ego-demo.vercel.app
 
 Click LOAD DEMO → ANALYZE → watch the 6-phase journey: scanning → persona analysis → roast battle → comparison → payment gate.
 
