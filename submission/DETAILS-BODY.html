@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alter Ego — DoraHacks Details</title>
+<style>
+  body { background: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #222; line-height: 1.6; }
+  .note { background: #e3f2fd; padding: 12px 16px; border-radius: 6px; font-size: 13px; color: #1565c0; margin-bottom: 32px; }
+  .note strong { color: #0d47a1; }
+  h2 { font-size: 18px; margin: 32px 0 12px; color: #111; }
+  p { margin: 0 0 12px; }
+  ul { margin: 8px 0 16px; padding-left: 20px; }
+  li { margin: 4px 0; }
+  code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+  a { color: #1565c0; }
+  strong { color: #111; }
+</style>
+</head>
+<body>
+
+<div class="note"><strong>Click anywhere on this page, then press Cmd+A, Cmd+C, and paste into the DoraHacks Details box.</strong> Styled paste preserves headings, bold, lists. If formatting strips, re-bold the labels and set headings via the Normal dropdown.</div>
+
+<h2>Hook</h2>
+
+<p><strong>Every wallet has a story. Alter Ego reveals the trader you become on each chain — then stages a roast battle between your personas, backed by real transaction data.</strong></p>
+
+<p><em>OKX.AI Genesis Hackathon · Lifestyle Companion + Social Buzz</em></p>
+
+<h2>The Problem</h2>
+
+<p>Crypto traders manage multiple wallets across multiple chains. On Ethereum, they might be disciplined DCA investors. On Solana, they could be high-frequency meme-coin degen. <strong>No tool surfaces this identity split</strong> — you see separate wallets, not the full picture of who you are as a trader. The same person running smart exits on ETH is panic-selling on SOL, and they do not know it.</p>
+
+<p>Existing portfolio trackers show balances. They do not tell you <strong>why</strong> you trade the way you do, or what it costs you.</p>
+
+<h2>The Solution</h2>
+
+<p>Alter Ego is a <strong>TEE-bound agent</strong> that ingests your complete on-chain history across every wallet and chain. It classifies every trade, builds a psychological profile, assigns archetypes (The Professional, The Degen), then pits your Ethereum self against your Solana self in a <strong>5-round roast battle</strong> backed by real transaction data. The output is a cryptographic snapshot you can share or sell.</p>
+
+<p>The core insight: <strong>self-knowledge is the product.</strong> You are not one trader. You are multiple traders. Alter Ego makes you look at all of them, side by side, and shows you the GAP COST: what you lost by not being your best self on every chain.</p>
+
+<h2>How It Works</h2>
+
+<ol>
+  <li><strong>Paste any wallet address.</strong> EVM or Solana. Alter Ego pulls complete portfolio data and transaction history through the <code>OnchainOS</code> CLI layer (OKX WALLET + DEX-MARKET integrations).</li>
+  <li><strong>Pattern classification engine.</strong> Every trade gets tagged as <code>AMPLIFY</code> (strength: Diamond Hands, Smart Exits) or <code>GUARD</code> (risk: Panic Selling, Meme Chasing) with confidence scores.</li>
+  <li><strong>Persona builder assigns archetypes.</strong> The Professional. The Degen. The Whale. Each persona gets a superpower, a kryptonite, and a win/loss rate.</li>
+  <li><strong>5-round roast battle.</strong> Your Ethereum persona and Solana persona face off. Every insult is backed by real transaction data. "You held through a 45% drawdown — that is not conviction, that is a coma." GUARD tags flash pink when targeted.</li>
+  <li><strong>Compare card reveals the cost.</strong> Side-by-side PnL, win rates, and the GAP COST — $31,500 in the demo wallet — what you lost by not being your best self on every chain.</li>
+  <li><strong>Cryptographic snapshot via x402.</strong> TEE-sealed attestation pinned to the agent identity. Pay $0.99 via x402 (USDC on Base) to lock a permanent, shareable proof.</li>
+</ol>
+
+<h2>Key Features</h2>
+
+<ul>
+  <li><strong>Multi-chain behavioral fingerprinting:</strong> Ethereum, Solana, X Layer. 4,463 transactions analyzed across the demo wallets.</li>
+  <li><strong>Persona archetype engine:</strong> assigns trading personalities based on real patterns, not heuristics.</li>
+  <li><strong>5-round roast battle:</strong> each round fires a data-backed insult at the opposing persona. Pink/cyan/yellow speaker colors, CRT scanline effects.</li>
+  <li><strong>GAP COST calculation:</strong> quantifies the real dollar difference between your best and worst trading persona.</li>
+  <li><strong>TEE-sealed attestation:</strong> cryptographic proof pinned to the agent identity. Verifiable, private, shareable.</li>
+  <li><strong>x402 micropayment gate:</strong> 3-state transition (idle → simulating → done). Snapshot at $0.99, coaching subscription at $4.99/mo.</li>
+</ul>
+
+<h2>Live Now</h2>
+
+<ul>
+  <li><strong>Live demo:</strong> <a href="https://alter-e8wzy3vsl-damilolas-projects-fafdf859.vercel.app">https://alter-e8wzy3vsl-damilolas-projects-fafdf859.vercel.app</a> — click LOAD DEMO then ANALYZE</li>
+  <li><strong>Open-source repo:</strong> <a href="https://github.com/dmustapha/alter-ego">https://github.com/dmustapha/alter-ego</a></li>
+  <li><strong>4 API endpoints live:</strong> <code>POST /api/analyze</code> (200), <code>GET /api/roast</code> (200), <code>GET /api/compare</code> (200), <code>GET /api/persona</code> (200)</li>
+  <li><strong>33 Playwright browser tests:</strong> 33/33 passing — 6-phase state machine, responsive layout (320px/1440px), network resilience (slow 3G)</li>
+  <li><strong>Deployed on Vercel:</strong> production build, Next.js 16 (Turbopack), TypeScript 0 errors</li>
+  <li><strong>All 4 OKX OnchainOS skills:</strong> WALLET, DEX-MARKET, OKX-AI, X402 integrated and verified in the app integration strip</li>
+</ul>
+
+<h2>Tech Stack</h2>
+
+<p><code>Next.js 16</code> · <code>TypeScript 5</code> · <code>Tailwind CSS 4</code> · <code>Framer Motion</code> · <code>Playwright</code> · <code>OKX OnchainOS CLI</code> · <code>x402</code> · <code>TEE</code> · <code>Vercel</code> · Press Start 2P + Space Mono fonts · Glitch Core design system (CRT scanlines, corner brackets, polygon clip-path, neon glow)</p>
+
+<h2>Hackathon Alignment</h2>
+
+<ul>
+  <li><strong>Primary tracks:</strong> Lifestyle Companion + Social Buzz</li>
+  <li><strong>OKX integrations used:</strong> OKX WALLET (multi-chain address ingestion), OKX DEX-MARKET (cross-chain PnL), OKX-AI (marketplace listing), X402 (micropayment gate)</li>
+  <li><strong>Sponsor tech:</strong> OnchainOS CLI v4.2.4 for all wallet data, ERC-8004 agent identity, TEE attestation</li>
+</ul>
+
+<h2>Proof</h2>
+
+<ul>
+  <li><strong>Live URL:</strong> <a href="https://alter-e8wzy3vsl-damilolas-projects-fafdf859.vercel.app">https://alter-e8wzy3vsl-damilolas-projects-fafdf859.vercel.app</a></li>
+  <li><strong>GitHub:</strong> <a href="https://github.com/dmustapha/alter-ego">https://github.com/dmustapha/alter-ego</a></li>
+  <li><strong>Tests:</strong> 33/33 Playwright browser tests passing</li>
+  <li><strong>Verify score:</strong> 88/100 WINNER-READINESS (preflight audit)</li>
+  <li><strong>Demo video:</strong> 86-second walkthrough of the full 6-phase journey</li>
+</ul>
+
+</body>
+</html>
