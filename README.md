@@ -7,7 +7,7 @@ Alter Ego is a TEE-bound agent that ingests your complete on-chain history acros
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-33%2F33-brightgreen)]()
 
-**Live:** [alter-ego.vercel.app](https://alter-e8wzy3vsl-damilolas-projects-fafdf859.vercel.app)
+**Live:** [alter-ego.vercel.app](https://alter-de0pz6wrt-damilolas-projects-fafdf859.vercel.app)
 
 ---
 
@@ -151,7 +151,7 @@ What the tests verify:
 
 ## Try It (2 minutes)
 
-1. Visit the [live demo](https://alter-e8wzy3vsl-damilolas-projects-fafdf859.vercel.app)
+1. Visit the [live demo](https://alter-de0pz6wrt-damilolas-projects-fafdf859.vercel.app)
 2. Click **LOAD DEMO** to populate with sample wallets
 3. Click **ANALYZE** to start the pipeline
 4. Watch the 6-phase flow: scanning, persona analysis, roast battle, comparison
