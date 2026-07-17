@@ -1,0 +1,67 @@
+[
+  {
+    "persona": "P05: Senior Dev",
+    "check_id": "5.1",
+    "severity": "P2",
+    "effort": "E2",
+    "status": "GAP",
+    "title": "Live mode requires OnchainOS CLI binary — not satisfiable through public HTTP API",
+    "location": "src/lib/onchainos.ts:6-14,85-96",
+    "evidence": "All 9 exported onchainos.ts functions call execSync('onchainos ...'). checkWalletStatus(), loginWallet(), verifyOtp() require interactive CLI authentication. In demo mode (cacheExists()=true), the CLI is never called. But for live mode, the system assumes: (a) onchainos CLI is installed on the server, (b) wallet is authenticated interactively. A fresh deploy on Vercel would not have onchainos CLI installed.",
+    "rationale": "In demo mode, this is irrelevant — the entire live path is dead code. For a post-hackathon production deployment, the OnchainOS CLI dependency is a significant integration barrier. It requires binary installation, interactive authentication, and is not a standard npm package.",
+    "fix_guidance": "For demo: no action needed. For production: replace execSync with OKX REST API calls (fetch-based) using OKX_API_KEY from env vars. The API keys already exist in .env — just need to wire them to HTTP calls instead of CLI shell commands.",
+    "persona_type": "quantitative"
+  },
+  {
+    "persona": "P05: Senior Dev",
+    "check_id": "5.2",
+    "severity": "P2",
+    "effort": "E1",
+    "status": "SOLID",
+    "title": "Demo onboarding is 2 clicks — within limits. Live mode would be 9+ steps.",
+    "location": "DEMO-SCRIPT.md, src/app/page.tsx:15,28-38",
+    "evidence": "Demo flow: (1) visit URL → (2) click LOAD DEMO → (3) click ANALYZE. That's 3 clicks total, 1 interface (browser). The 76-second phase flow auto-advances. Well within the 5-step/2-interface threshold. Live mode would additionally require: entering addresses, chain configuration, waiting for CLI ingestion, pattern classification — still within browser, but significantly more complex.",
+    "rationale": "Demo mode is intentionally minimal — 2 buttons. This is correct for a hackathon demo. The live mode path exists in code but is unreachable in the submitted demo deployment.",
+    "fix_guidance": "No change needed for demo. If live mode is ever activated, add wallet address validation feedback and progress indicators. The demo flow is good as-is.",
+    "persona_type": "quantitative"
+  },
+  {
+    "persona": "P05: Senior Dev",
+    "check_id": "5.3",
+    "severity": "P1",
+    "effort": "E1",
+    "status": "GAP",
+    "title": "All error paths silently swallow failures — no error message reaches user",
+    "location": "src/app/page.tsx:34-38; src/app/api/*/route.ts",
+    "evidence": "page.tsx catch block at line 38: catch { setPhase('landing') } — no toast, no error text. Fetch errors at lines 34-35: .catch(() => setPhase('battle')) and .catch(() => setPhase('compare')) — silently advance to next phase with null data. API routes return error.message in JSON (500), but the client never displays it. User sees blank screens during battle/compare phases with no indication of failure.",
+    "rationale": "In demo mode with pre-cached data, errors are unlikely (cache always exists, API always returns data). But if an error DOES occur (network issue, cache file missing), the user gets zero feedback — just a blank screen or unexpected phase reset to landing. This is the highest-risk integration issue for demo reliability.",
+    "fix_guidance": "Add error state to the Phase type ('error'). On fetch failure: setPhase('error'), show error message with retry button. At minimum: add a toast or inline error text in the scanning phase if the API call fails. E1 because just needs error display component.",
+    "persona_type": "quantitative"
+  },
+  {
+    "persona": "P05: Senior Dev",
+    "check_id": "5.4",
+    "severity": "P2",
+    "effort": "E2",
+    "status": "GAP",
+    "title": "No SDK, CLI, or non-browser API invocation method documented",
+    "location": "README.md:105-113",
+    "evidence": "README documents 4 API endpoint routes in a table but provides: no curl examples, no request/response schemas, no auth notes. package.json has no SDK, CLI, or MCP export. TypeScript types exist (src/lib/types.ts) but are not exported as a reusable package. A developer wanting to integrate analyze/roast/compare abilities into an external tool has zero guidance beyond reading the source code.",
+    "rationale": "For a hackathon submission, this is common and acceptable. The API is trivially RESTful and the endpoints are unauthenticated — curl examples would take 2 minutes to add but weren't prioritized.",
+    "fix_guidance": "Add curl examples to README for each endpoint with expected request/response. Link to src/lib/types.ts for response schemas. Note that all endpoints return pre-cached data in demo mode.",
+    "persona_type": "quantitative"
+  },
+  {
+    "persona": "P05: Senior Dev",
+    "check_id": "5.5",
+    "severity": "P1",
+    "effort": "E1",
+    "status": "SOLID",
+    "title": "POST /api/analyze is fully idempotent — no side effects from duplicate submissions",
+    "location": "src/app/api/analyze/route.ts:10-22",
+    "evidence": "In demo mode: loadAllDemoData() reads static JSON files — no writes, no mutations. Multiple POST calls return identical responses. In live mode: would call OnchainOS CLI (stateless queries). classifyPatterns() and generatePersona() are pure functions. No database writes, no external state mutations anywhere. The only mutable state is React component state (per-session).",
+    "rationale": "The implementation is inherently stateless — no write paths exist in any route handler. Safe to retry POST /api/analyze any number of times. The compare/roast/persona GET endpoints are similarly idempotent (read-only cache access).",
+    "fix_guidance": "None needed. Document idempotency guarantee in API docs for integrator confidence.",
+    "persona_type": "quantitative"
+  }
+]

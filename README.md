@@ -1,13 +1,13 @@
 # Alter Ego: Every wallet has a story. Meet your Alter Ego.
 
-Alter Ego is a TEE-bound agent that ingests your complete on-chain history across every wallet and chain. It classifies trading patterns, builds a psychological persona, then pits your Ethereum self against your Solana self in a 5-round roast battle built on real transaction data. Self-knowledge is the product.
+Alter Ego is a TEE-ready agent (simulated attestation in demo) that ingests your complete on-chain history across every wallet and chain. It classifies trading patterns, builds a psychological persona, then pits your Ethereum self against your Solana self in a 5-round roast battle built on real transaction data. Self-knowledge is the product.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-33%2F33-brightgreen)]()
 
-**Live:** [alter-ego.vercel.app](https://alter-ego-demo.vercel.app)
+**Live:** [alter-ego-wine-mu.vercel.app](https://alter-ego-wine-mu.vercel.app)
 
 ---
 
@@ -151,7 +151,7 @@ What the tests verify:
 
 ## Try It (2 minutes)
 
-1. Visit the [live demo](https://alter-ego-demo.vercel.app)
+1. Visit the [live demo](https://alter-ego-wine-mu.vercel.app)
 2. Click **LOAD DEMO** to populate with sample wallets
 3. Click **ANALYZE** to start the pipeline
 4. Watch the 6-phase flow: scanning, persona analysis, roast battle, comparison

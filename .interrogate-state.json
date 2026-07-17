@@ -1,0 +1,37 @@
+{
+  "status": "complete_with_blockers",
+  "mode": "DEEP",
+  "personas_run": 23,
+  "personas_total": 23,
+  "findings": {
+    "total": 72,
+    "P0": 4,
+    "P1": 21,
+    "P2": 32,
+    "P3": 13,
+    "P4": 2,
+    "SOLID": 21,
+    "unverified": 0
+  },
+  "gate_status": {
+    "demo_gate": "HAZARDS",
+    "submission_gate": "BLOCKED"
+  },
+  "demo_hazards": [
+    { "title": "Battle/compare phases show blank screen on fetch failure", "impact": "BLOCKS", "fix_guidance": "Ensure cache files are present; add error fallback UI" },
+    { "title": "Fetches fail silently — no recovery path, user must refresh", "impact": "BLOCKS", "fix_guidance": "Add retry mechanism; test all API endpoints before demo" },
+    { "title": "All error paths silently swallow failures", "impact": "BLOCKS", "fix_guidance": "Pre-load all phases; verify data populates before recording" },
+    { "title": "Blank screen on battle/compare data fetch failure", "impact": "BLOCKS", "fix_guidance": "Ensure cache files and API health before demo" },
+    { "title": "TEE attestation mock is the weakest demo element", "impact": "BLOCKS", "fix_guidance": "Don't linger on attestation text; frame as 'TEE-ready architecture'" },
+    { "title": "Silent error swallowing — 3 fetch failure modes", "impact": "BLOCKS", "fix_guidance": "Run full pre-flight check: all 4 APIs return 200 before demo" }
+  ],
+  "submission_blockers": [
+    { "title": "Command injection in OnchainOS execSync", "persona": "P01", "check_id": "1.4", "fix_guidance": "Use spawn() with argument arrays; document as dead code in demo mode" },
+    { "title": "VERCEL_OIDC_TOKEN in .env.local", "persona": "P03", "check_id": "3.5", "fix_guidance": "Verify .gitignore; rotate token; token expires today" },
+    { "title": "Zero input validation on POST /api/analyze", "persona": "P07", "check_id": "7.1", "fix_guidance": "Add Zod schema; validate addresses, chain names, max count" },
+    { "title": "Live OKX API credentials in .env", "persona": "P08", "check_id": "8.1", "fix_guidance": "Rotate credentials immediately; delete .env; use Vercel Env Vars" }
+  ],
+  "acknowledged_risks": [],
+  "timestamp": "2026-07-16T12:15:00Z",
+  "working_dir": "/Users/MAC/hackathon-toolkit/active/alter-ego"
+}

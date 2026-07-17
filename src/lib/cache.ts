@@ -63,7 +63,28 @@ export async function loadRoastBattle(): Promise<RoastBattle> {
 }
 
 export function loadLeaderboard(): LeaderboardEntry[] {
-  return loadJson<LeaderboardEntry[]>("leaderboard.json");
+  const raw = loadJson<any>("leaderboard.json");
+
+  // Handle seed-script format: { solana: "{...json...}", ethereum: "{...json...}" }
+  if (raw && typeof raw === "object" && !Array.isArray(raw) && (raw.solana || raw.ethereum)) {
+    const entries: LeaderboardEntry[] = [];
+    for (const chain of ["solana", "ethereum"] as const) {
+      if (raw[chain]) {
+        try {
+          const parsed = typeof raw[chain] === "string" ? JSON.parse(raw[chain]) : raw[chain];
+          if (parsed?.ok && Array.isArray(parsed.data)) {
+            entries.push(...parsed.data);
+          }
+        } catch { /* skip malformed chain data */ }
+      }
+    }
+    return entries;
+  }
+
+  // Handle plain array format
+  if (Array.isArray(raw)) return raw as LeaderboardEntry[];
+
+  return [];
 }
 
 export async function loadAllDemoData(): Promise<CachedDemoData> {

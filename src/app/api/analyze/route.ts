@@ -3,14 +3,33 @@ import type { AnalyzeRequest, AnalyzeResponse, WalletData } from "@/lib/types";
 import { getAllBalances, getPortfolioOverview, getApprovals, scanTokens } from "@/lib/onchainos";
 import { classifyPatterns } from "@/lib/classifier";
 import { generatePersona } from "@/lib/persona";
-import { loadComparison, loadLeaderboard, cacheExists } from "@/lib/cache";
+import { loadComparison, loadLeaderboard } from "@/lib/cache";
 
 export async function POST(req: Request) {
   try {
     const body: AnalyzeRequest = await req.json();
 
+    // Input validation
+    if (!body.addresses || !Array.isArray(body.addresses)) {
+      return NextResponse.json({ error: "Invalid request: addresses must be an array" }, { status: 400 });
+    }
+    if (body.addresses.length === 0) {
+      return NextResponse.json({ error: "At least one address required" }, { status: 400 });
+    }
+    if (body.addresses.length > 5) {
+      return NextResponse.json({ error: "Maximum 5 wallets per analysis" }, { status: 400 });
+    }
+    for (const addr of body.addresses) {
+      if (!addr.address || typeof addr.address !== "string" || addr.address.length < 6 || addr.address.length > 100) {
+        return NextResponse.json({ error: `Invalid address: ${addr.address?.slice(0, 10)}...` }, { status: 400 });
+      }
+      if (/[<>"'&`\\]/.test(addr.address)) {
+        return NextResponse.json({ error: "Invalid address: contains disallowed characters" }, { status: 400 });
+      }
+    }
+
     // In demo mode, use pre-cached data
-    if (process.env.DEMO_MODE === "true" || cacheExists()) {
+    if (process.env.DEMO_MODE === "true") {
       const { loadAllDemoData } = await import("@/lib/cache");
       const cached = await loadAllDemoData();
 
@@ -31,6 +50,10 @@ export async function POST(req: Request) {
     const walletResults: WalletData[] = [];
 
     for (const addr of body.addresses) {
+      // Validate chains before use
+      if (!addr.chains || !Array.isArray(addr.chains) || addr.chains.length === 0) {
+        return NextResponse.json({ error: `Missing or invalid chains for address: ${addr.address?.slice(0, 10)}...` }, { status: 400 });
+      }
       // ⚠️ Separate EVM and Solana calls
       const evmChains = addr.chains.filter((c) => c !== "solana");
       const hasSolana = addr.chains.includes("solana");
@@ -100,6 +123,8 @@ export async function POST(req: Request) {
       comparison,
     } satisfies AnalyzeResponse);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[API] POST /api/analyze:`, error.message);
+    const message = process.env.NODE_ENV === "production" ? "Internal server error" : error.message;
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

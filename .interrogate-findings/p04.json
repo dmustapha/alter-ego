@@ -1,0 +1,67 @@
+[
+  {
+    "persona": "P04: Access Control Auditor",
+    "check_id": "4.1",
+    "severity": "P2",
+    "effort": "E1",
+    "status": "GAP",
+    "title": "All 4 API endpoints are unauthenticated — no access control anywhere",
+    "location": "src/app/api/analyze/route.ts:8, src/app/api/roast/route.ts:4, src/app/api/compare/route.ts:4, src/app/api/persona/route.ts:4",
+    "evidence": "POST /api/analyze accepts any JSON body from any caller. GET /api/roast, /api/compare, /api/persona all return data without any auth check. No middleware.ts exists. No API keys, no CORS origin check, no header validation anywhere.",
+    "rationale": "In a hackathon demo, this is expected — no real user data is at risk and all data is pre-cached. In production, every endpoint would need auth. Severity downgraded to P2 because this is a demo with mock data.",
+    "fix_guidance": "For production: add Next.js middleware with API key validation or JWT bearer token. For demo: document that endpoints are intentionally open for easy evaluation.",
+    "persona_type": "quantitative"
+  },
+  {
+    "persona": "P04: Access Control Auditor",
+    "check_id": "4.2",
+    "severity": "P2",
+    "effort": "E1",
+    "status": "GAP",
+    "title": "Anonymous users can reach server_internal functions through unauthenticated endpoints",
+    "location": "src/app/api/analyze/route.ts:14",
+    "evidence": "POST /api/analyze calls loadAllDemoData() which reads filesystem caches. Client-side code cannot directly import server-only modules (checked — 'use client' boundaries prevent direct imports), but any caller can trigger server functions through the unauthenticated API. This is the intended architecture — the API IS the boundary.",
+    "rationale": "Boundary exists (API routes are server-only, client can't import cache.ts directly). But since the boundary has no auth, it's effectively transparent. Low risk for demo since data is public mock data.",
+    "fix_guidance": "Acceptable for hackathon demo. Add rate limiting to prevent abuse. Add origin check for production.",
+    "persona_type": "quantitative"
+  },
+  {
+    "persona": "P04: Access Control Auditor",
+    "check_id": "4.3",
+    "severity": "P3",
+    "effort": "E1",
+    "status": "GAP",
+    "title": "DEMO_MODE env var used as sole branching mechanism — no origin/header differentiation",
+    "location": "src/app/api/analyze/route.ts:13",
+    "evidence": "Route branches on `process.env.DEMO_MODE === 'true' || cacheExists()`. No differentiation based on request origin, user-agent, or headers. Same response regardless of who calls.",
+    "rationale": "Trivial for a demo. The single branching mechanism (demo vs live) is clear and intentional.",
+    "fix_guidance": "No fix needed for demo. Production would need proper auth middleware before the branch.",
+    "persona_type": "quantitative"
+  },
+  {
+    "persona": "P04: Access Control Auditor",
+    "check_id": "4.4",
+    "severity": "P3",
+    "effort": "E1",
+    "status": "GAP",
+    "title": "Demo mode is permanent once cache files exist — no reversible toggle",
+    "location": "src/lib/cache.ts:85-87",
+    "evidence": "cacheExists() checks `fs.existsSync(path.join(CACHE_DIR, 'wallet-a-ethereum.json'))`. If DEMO_MODE=false but cache files exist, `|| cacheExists()` still activates demo mode. Setting env var to 'false' is ignored.",
+    "rationale": "The `|| cacheExists()` fallback is a deliberate convenience — if cache data exists, use it. This is by design for the demo. Not a security issue since there's no sensitive data.",
+    "fix_guidance": "If strict env var control is needed: remove `|| cacheExists()` and only check DEMO_MODE env var. Otherwise, accept this as intentional convenience.",
+    "persona_type": "quantitative"
+  },
+  {
+    "persona": "P04: Access Control Auditor",
+    "check_id": "4.5",
+    "severity": "P2",
+    "effort": "E1",
+    "status": "GAP",
+    "title": "Phase transitions bypassable via React DevTools — setPhase reachable from browser",
+    "location": "src/app/page.tsx:13,30-43",
+    "evidence": "`setPhase` is React state setter in a 'use client' component. Four setTimeout chains (2s/20s/58s/76s) auto-advance phases. React DevTools can directly call setPhase('cta') to skip the entire flow and reach the payment mock. Demo launch (launchDemo) is module-level constant, callable from console.",
+    "rationale": "This is inherent to client-side React state machines. A user pressing 'cta' early sees the payment button but has no real data (battleData/compareData = null). Low impact — the demo still works, just with empty state.",
+    "fix_guidance": "For demo: acceptable. For production: move phase sequencing server-side with SSE push, or validate server-side that prerequisites were met before returning data for each phase.",
+    "persona_type": "quantitative"
+  }
+]

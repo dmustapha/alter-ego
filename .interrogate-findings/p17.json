@@ -1,0 +1,309 @@
+{
+  "persona": "17",
+  "layer": 5,
+  "standard": "STANDARD+",
+  "title": "CODE QUALITY / TECHNICAL DEBT — Quantitative Assessment",
+  "summary": "5 checks executed across 20 source files in src/. No TODO/FIXME/HACK/XXX markers found; 4 functions exceed 50 lines (detectAmplifyPatterns: 101, detectGuardPatterns: 97, analyze route POST: 95, Terminal component: 111); duplicate error-handling block found in 4 API routes and duplicate table-parsing pattern in 4 onchainos.ts parsers; 2 P0 silent error-swallowing instances found in page.tsx; zero unit tests exist — only stress-browser.spec.ts (E2E) covers the project, leaving classifier.ts, persona.ts, onchainos.ts, cache.ts, and all components untested at the unit level.",
+
+  "checks": {
+    "17.1": {
+      "id": "TODO/FIXME/HACK inventory",
+      "priority": "P2",
+      "status": "PASS",
+      "total_markers": 0,
+      "details": {
+        "TODO": 0,
+        "FIXME": 0,
+        "HACK": 0,
+        "XXX": 0,
+        "commented_out_code_blocks": 0,
+        "informal_warnings": 6
+      },
+      "evidence": [
+        "Grep for (TODO|FIXME|HACK|XXX) across 29 files in src/ returned 2 false positives: 'hackathon' in a comment at src/app/api/analyze/route.ts:30, and a data-file match in src/data/cache/leaderboard.json:2",
+        "Grep for commented-out code patterns (^// (const|let|var|function|export|...) found zero matches",
+        "However, src/lib/onchainos.ts contains 6 informal ⚠️ warning comments that function as undocumented constraints: lines 17-18 (EVM/Solana separation), line 21 (GUARD comment), line 43-44 (portfolio-overview address), line 52 (wallet-type single value), line 67 (works without wallet login), line 99 (numeric fields arrive as Strings)"
+      ],
+      "categories": {
+        "markers_found": [],
+        "informal_warnings": [
+          "src/lib/onchainos.ts:17 — '⚠️ EVM and Solana addresses MUST be separate calls'",
+          "src/lib/onchainos.ts:21 — '⚠️ GUARD: EVM and Solana addresses MUST be in separate calls — mixing fails'",
+          "src/lib/onchainos.ts:43 — '⚠️ portfolio-overview --address is for external wallets'",
+          "src/lib/onchainos.ts:52 — '⚠️ --wallet-type is SINGLE VALUE ONLY (not comma-separated)'",
+          "src/lib/onchainos.ts:67 — '⚠️ Works without wallet login'",
+          "src/lib/onchainos.ts:99 — 'WARNING: All numeric OnchainOS fields arrive as Strings. Parse before use.'"
+        ]
+      }
+    },
+
+    "17.2": {
+      "id": "Function length >50 lines",
+      "priority": "P3",
+      "status": "FAIL",
+      "threshold": 50,
+      "functions_flagged": [
+        {
+          "file": "src/lib/classifier.ts",
+          "function": "detectAmplifyPatterns",
+          "line_range": "18-119",
+          "line_count": 101,
+          "severity": "HIGH",
+          "note": "Contains 6 independent pattern-detection blocks (AMP-01 through AMP-06). Each could be extracted into a dedicated detector function."
+        },
+        {
+          "file": "src/lib/classifier.ts",
+          "function": "detectGuardPatterns",
+          "line_range": "123-220",
+          "line_count": 97,
+          "severity": "HIGH",
+          "note": "Contains 6 independent pattern-detection blocks (GRD-01 through GRD-06). Same structure as detectAmplifyPatterns — could share an extraction strategy."
+        },
+        {
+          "file": "src/app/api/analyze/route.ts",
+          "function": "POST handler",
+          "line_range": "8-103",
+          "line_count": 95,
+          "severity": "MEDIUM",
+          "note": "Mixes demo-mode dispatch, live-mode wallet iteration, EVM/Solana splitting, pattern classification, persona generation, and comparison fallback in one handler."
+        },
+        {
+          "file": "src/components/Terminal.tsx",
+          "function": "Terminal (component)",
+          "line_range": "4-115",
+          "line_count": 111,
+          "severity": "LOW",
+          "note": "React presentational component — acceptable for a visual terminal shell with glitch layers, header, integration strip, and corner brackets. Could extract the glitch layers and integration strip into sub-components."
+        }
+      ],
+      "functions_examined": {
+        "page.tsx_handleAnalyze": {"line_range": "28-37", "line_count": 10, "flag": false},
+        "page.tsx_Home": {"line_range": "16-144", "line_count": 128, "flag": true, "note": "React component — not flagged as a function per se, but should be monitored"},
+        "Terminal.tsx_Terminal": {"line_range": "4-115", "line_count": 111, "flag": true},
+        "Terminal.tsx_TypingText": {"line_range": "119-124", "line_count": 5, "flag": false},
+        "Terminal.tsx_SlideIn": {"line_range": "126-131", "line_count": 5, "flag": false},
+        "onchainos.ts_run": {"line_range": "6-14", "line_count": 8, "flag": false},
+        "onchainos.ts_parseTokenAssets": {"line_range": "101-120", "line_count": 19, "flag": false},
+        "onchainos.ts_parsePortfolioOverview": {"line_range": "122-142", "line_count": 20, "flag": false},
+        "onchainos.ts_parseLeaderboard": {"line_range": "144-161", "line_count": 17, "flag": false},
+        "onchainos.ts_parseApprovals": {"line_range": "163-179", "line_count": 16, "flag": false},
+        "onchainos.ts_parseTokenScans": {"line_range": "181-200", "line_count": 19, "flag": false},
+        "persona.ts_generatePersona": {"line_range": "53-73", "line_count": 20, "flag": false},
+        "classifier.ts_detectAmplifyPatterns": {"line_range": "18-119", "line_count": 101, "flag": true},
+        "classifier.ts_detectGuardPatterns": {"line_range": "123-220", "line_count": 97, "flag": true},
+        "api_analyze_POST": {"line_range": "8-103", "line_count": 95, "flag": true}
+      }
+    },
+
+    "17.3": {
+      "id": "Duplicate code",
+      "priority": "P2",
+      "status": "FAIL",
+      "duplicates_found": [
+        {
+          "pattern": "API error-handling wrapper",
+          "instances": 4,
+          "block_lines": "~5 lines each",
+          "files": [
+            "src/app/api/analyze/route.ts:102-103",
+            "src/app/api/compare/route.ts:9-10",
+            "src/app/api/persona/route.ts:8-9",
+            "src/app/api/roast/route.ts:8-9"
+          ],
+          "template": "try { ... } catch (error: any) { return NextResponse.json({ error: error.message }, { status: 500 }); }",
+          "note": "All 4 routes share the identical `NextResponse.json({error}, {status:500})` catch block. Consider a shared `withErrorHandler` wrapper or Next.js middleware."
+        },
+        {
+          "pattern": "Tabular CLI output parser",
+          "instances": 4,
+          "block_lines": "~15 lines each",
+          "files": [
+            "src/lib/onchainos.ts:101-120 (parseTokenAssets)",
+            "src/lib/onchainos.ts:144-161 (parseLeaderboard)",
+            "src/lib/onchainos.ts:163-179 (parseApprovals)",
+            "src/lib/onchainos.ts:181-200 (parseTokenScans)"
+          ],
+          "template": "const items: T[] = []; const lines = output.split('\\n').filter(l => l.includes('│') && <predicate>); for (const line of lines) { const cols = line.split('│').map(c => c.trim()).filter(Boolean); if (cols.length >= N) { items.push({ ... }); } } return items;",
+          "note": "All 4 parsers share the same split-filter-map-push pattern. A generic `parseTableOutput<T>(output, predicate, mapper, minCols)` utility would eliminate ~60 lines of duplication."
+        }
+      ],
+      "pattern_matches_required": "≥5 lines appearing in 3+ places"
+    },
+
+    "17.4": {
+      "id": "Error swallowing",
+      "priority": "P0",
+      "status": "FAIL",
+      "total_try_catch_sites": 12,
+      "silent_swallows": [
+        {
+          "severity": "CRITICAL",
+          "file": "src/app/page.tsx",
+          "line": 34,
+          "pattern": ".catch(() => setPhase(\"battle\"))",
+          "description": "Fetch to /api/roast fails silently — user sees empty battle phase with no data and no error feedback. Network errors, JSON parse failures, and server 500s all produce the same silent fallback.",
+          "impact": "User cannot distinguish between 'battle data loading' and 'battle endpoint broken'. Degrades to a blank RoastBattle component."
+        },
+        {
+          "severity": "CRITICAL",
+          "file": "src/app/page.tsx",
+          "line": 35,
+          "pattern": ".catch(() => setPhase(\"compare\"))",
+          "description": "Fetch to /api/compare fails silently — same pattern as above. User auto-advances to empty CompareCard.",
+          "impact": "User sees an empty comparison phase with no data. Identical failure mode to the roast fetch."
+        },
+        {
+          "severity": "CRITICAL",
+          "file": "src/app/page.tsx",
+          "line": 37,
+          "pattern": "catch { setPhase(\"landing\"); }",
+          "description": "Outer try/catch in handleAnalyze catches all errors (network, parse, runtime) and silently resets to landing page. No console.error, no user-visible message.",
+          "impact": "Any failure in the analyze flow silently resets the UX. User has no indication anything went wrong — appears as if the app just ignored their input."
+        },
+        {
+          "severity": "MEDIUM",
+          "file": "src/app/api/analyze/route.ts",
+          "lines": "88-91",
+          "pattern": "try { comparison = loadComparison(); } catch { /* Comparison unavailable */ }",
+          "description": "Silently swallows loadComparison() errors. Comment explains intent but no logging exists to diagnose why comparison data is unavailable.",
+          "impact": "Comparison data silently missing from analyze response. No observability into cache corruption or file-not-found issues."
+        },
+        {
+          "severity": "LOW",
+          "file": "src/lib/cache.ts",
+          "lines": "73-77",
+          "pattern": "try { ... } catch { /* skip malformed chain data */ }",
+          "description": "Silently skips malformed leaderboard entries during parse. Acceptable for resilience but no logging means data quality issues are invisible.",
+          "impact": "Partial leaderboard data silently lost. Acceptable for demo but would mask data ingestion bugs in production."
+        }
+      ],
+      "non_swallowing_sites": [
+        "src/lib/onchainos.ts:7-13 — run() re-throws with context after console.error (CORRECT)",
+        "src/app/api/analyze/route.ts:102-103 — returns 500 JSON error to client (CORRECT)",
+        "src/app/api/compare/route.ts:9-10 — returns 500 JSON error to client (CORRECT)",
+        "src/app/api/persona/route.ts:8-9 — returns 500 JSON error to client (CORRECT)",
+        "src/app/api/roast/route.ts:8-9 — returns 500 JSON error to client (CORRECT)"
+      ]
+    },
+
+    "17.5": {
+      "id": "Test coverage gaps",
+      "priority": "P1",
+      "status": "FAIL",
+      "existing_tests": [
+        {
+          "file": "stress-browser.spec.ts",
+          "type": "E2E (Playwright)",
+          "line_count": 440,
+          "test_count_estimate": "~25 tests across 6 test.describe blocks",
+          "coverage": "Browser-level smoke tests: landing page rendering, wallet input UX, phase transitions, responsive viewports, CRT effects, console errors"
+        }
+      ],
+      "untested_source_files": [
+        {
+          "file": "src/lib/classifier.ts",
+          "line_count": 220,
+          "reason": "Core business logic — 12 pattern-detection rules, no unit tests. A single refactor could silently break pattern classification.",
+          "risk": "HIGH",
+          "recommendation": "Write unit tests for each AMP-01..AMP-06 and GRD-01..GRD-06 detection rule with mock WalletData fixtures."
+        },
+        {
+          "file": "src/lib/persona.ts",
+          "line_count": 80,
+          "reason": "Persona generation, archetype mapping, catchphrase generation — all untested. Edge cases (null patterns, unknown IDs) have fallback paths exercised only manually.",
+          "risk": "MEDIUM",
+          "recommendation": "Unit-test generatePersona with known PatternResult inputs; verify archetype, catchphrase, superpower, kryptonite outputs."
+        },
+        {
+          "file": "src/lib/onchainos.ts",
+          "line_count": 201,
+          "reason": "CLI wrapper and 5 table parsers completely untested. Parsers are regex/string-split based and fragile to OnchainOS CLI output format changes.",
+          "risk": "HIGH",
+          "recommendation": "Unit-test each parseXxx function with snapshot fixtures of real CLI output."
+        },
+        {
+          "file": "src/lib/cache.ts",
+          "line_count": 106,
+          "reason": "File-system cache loader with fallback logic, leaderboard multi-format parsing. Untested — file-not-found, JSON parse errors, and format migration paths are unverified.",
+          "risk": "MEDIUM",
+          "recommendation": "Unit-test loadLeaderboard's dual-format parsing; test cacheExists edge cases."
+        },
+        {
+          "file": "src/lib/types.ts",
+          "line_count": 147,
+          "reason": "Type definitions only — no runtime logic to test. Low risk but no compile-time validation of type compatibility with OnchainOS CLI output.",
+          "risk": "LOW",
+          "recommendation": "Consider Zod or similar runtime schema validation at the parse boundary."
+        },
+        {
+          "file": "src/app/api/analyze/route.ts",
+          "line_count": 104,
+          "reason": "POST handler with demo/live branching. Only tested indirectly through E2E browser tests in demo mode. Live-mode code path never exercised by any test.",
+          "risk": "HIGH",
+          "recommendation": "Add API route unit tests with mocked onchainos/cache dependencies for both demo and live paths."
+        },
+        {
+          "file": "src/app/api/compare/route.ts",
+          "line_count": 12,
+          "reason": "Simple GET route, but no test verifies response shape or error handling.",
+          "risk": "LOW"
+        },
+        {
+          "file": "src/app/api/persona/route.ts",
+          "line_count": 11,
+          "reason": "Simple GET route, untested.",
+          "risk": "LOW"
+        },
+        {
+          "file": "src/app/api/roast/route.ts",
+          "line_count": 11,
+          "reason": "Simple GET route, untested.",
+          "risk": "LOW"
+        },
+        {
+          "file": "src/components/*.tsx",
+          "line_count": "7 component files",
+          "reason": "All UI components (Terminal, WalletInput, PersonaCard, RoastBattle, CompareCard, PatternCard, PaymentButton) lack component-level tests. Only covered indirectly through E2E screenshots.",
+          "risk": "MEDIUM",
+          "recommendation": "Add React Testing Library component tests for WalletInput validation logic and RoastBattle state machine."
+        }
+      ],
+      "coverage_ratio": "1 E2E test file covering 20 source files — 0% unit test coverage",
+      "summary": "Only stress-browser.spec.ts (E2E Playwright) exists. No unit tests, no integration tests, no API route tests, no component tests. Core business logic in classifier.ts (220 lines) and onchainos.ts (201 lines) has zero direct test coverage."
+    }
+  },
+
+  "risk_ranking": [
+    {"rank": 1, "check": "17.4", "finding": "3 critical silent error swallows in page.tsx handleAnalyze (lines 34-37)", "impact": "All user-facing errors are invisible — broken UX with no feedback"},
+    {"rank": 2, "check": "17.5", "finding": "Zero unit test coverage for classifier.ts and onchainos.ts (421 lines of core logic)", "impact": "Pattern classification and CLI parsing are untested; any change risks silent breakage"},
+    {"rank": 3, "check": "17.3", "finding": "Duplicate error-handling in 4 API routes and duplicate parser pattern in 4 onchainos.ts functions", "impact": "~80+ lines of boilerplate; inconsistent error-handling changes would need 4-site edits"},
+    {"rank": 4, "check": "17.2", "finding": "detectAmplifyPatterns (101 lines) and detectGuardPatterns (97 lines) exceed 50-line threshold", "impact": "Difficult to test individual pattern detectors in isolation; high cognitive load"},
+    {"rank": 5, "check": "17.1", "finding": "No formal TODO/FIXME/HACK markers; 6 informal ⚠️ warnings embedded in onchainos.ts comments", "impact": "CLI integration constraints are undocumented outside inline comments — easy to miss during refactors"}
+  ],
+
+  "files_audited": [
+    "src/app/page.tsx",
+    "src/app/layout.tsx",
+    "src/app/proof/page.tsx",
+    "src/app/globals.css",
+    "src/app/api/analyze/route.ts",
+    "src/app/api/compare/route.ts",
+    "src/app/api/persona/route.ts",
+    "src/app/api/roast/route.ts",
+    "src/components/Terminal.tsx",
+    "src/components/WalletInput.tsx",
+    "src/components/PersonaCard.tsx",
+    "src/components/RoastBattle.tsx",
+    "src/components/CompareCard.tsx",
+    "src/components/PaymentButton.tsx",
+    "src/components/PatternCard.tsx",
+    "src/lib/onchainos.ts",
+    "src/lib/persona.ts",
+    "src/lib/types.ts",
+    "src/lib/cache.ts",
+    "src/lib/classifier.ts"
+  ],
+
+  "total_files": 20,
+  "total_loc": "~2,050 lines of source code (excluding CSS, JSON caches, and node_modules)"
+}

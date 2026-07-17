@@ -1,0 +1,37 @@
+[
+  {
+    "round": 0,
+    "speaker": "ETHEREUM SELF",
+    "text": "You lost $21,800 on tokens that rugged. I farmed safely at 12% APY while you gambled on dog coins at 3am.",
+    "onScreenTag": "Rug Roulette",
+    "onScreenData": "-$21,800 on micro-cap rugs"
+  },
+  {
+    "round": 1,
+    "speaker": "SOLANA SELF",
+    "text": "I made +$14,700 on memecoin entries. Your 14 unverified approvals — one is definitely draining your wallet right now.",
+    "onScreenTag": "Blind Signer",
+    "onScreenData": "14 unverified contract approvals"
+  },
+  {
+    "round": 2,
+    "speaker": "ETHEREUM SELF",
+    "text": "At least I HAVE a wallet left to drain. You burn 60% of your trades and call it 'strategy.'",
+    "onScreenTag": "Paper Trader",
+    "onScreenData": "43 panic sells within 2 hours"
+  },
+  {
+    "round": 3,
+    "speaker": "SOLANA SELF",
+    "text": "Your biggest win this year was 12% APY. I made that during this conversation. But sure, tell me more about 'risk management.'",
+    "onScreenTag": "Gas Guzzler",
+    "onScreenData": "2.3x avg gas fees"
+  },
+  {
+    "round": 4,
+    "speaker": "BOTH",
+    "text": "The question isn't which one of us is right. The question is: which one are you going to be tomorrow?",
+    "onScreenTag": "",
+    "onScreenData": ""
+  }
+]

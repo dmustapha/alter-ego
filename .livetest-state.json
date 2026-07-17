@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "mode": "web",
+  "autonomous_mode": true,
+  "status": "complete",
+  "overall": "PASS",
+  "summary": "V1: 18 PASS / 0 FAIL / 3 SKIP — no P0 blockers",
+  "testedAt": "2026-07-16T03:35:00Z",
+  "testedUrl": "http://localhost:3000",
+  "domains": {
+    "core_flows": { "status": "PASS", "notes": "6-phase state machine verified", "flowsTested": 6, "flowsFailed": 0 },
+    "api_connectivity": { "status": "PASS", "notes": "4/4 endpoints responding 200", "apisChecked": 4, "apisFailed": 0 },
+    "visual": { "status": "PASS", "notes": "No slop. Integration strip + TEE badge present." },
+    "forms": { "status": "PASS", "notes": "ANALYZE disabled when empty, enabled after LOAD DEMO" },
+    "console_errors": { "status": "PASS", "errorCount": 0, "errors": [] },
+    "auth": { "status": "SKIP", "notes": "Demo mode — no real wallet connect" },
+    "mobile": { "status": "PASS", "notes": "375px: no horizontal scroll, bodyWidth=viewportWidth" },
+    "post_prd": { "status": "PASS", "notes": "Glitch Core design + WalletInput + Terminal all integrated" }
+  },
+  "p0Blockers": [],
+  "p1Warnings": [],
+  "criticalIssues": [],
+  "warnings": [],
+  "screenshots": ["screenshots/livetest-landing.png", "screenshots/livetest-mobile.png"],
+  "reportPath": "LIVETEST-REPORT.md",
+  "phase_ledger": [
+    { "phase": "entry", "completed_at": "2026-07-16T03:30:00Z", "evidence": "V1 run. PULSE.md §deploy For-Next-Skill read. TESTING-PLAN.md absent — V1 only." },
+    { "phase": "interface_inventory", "completed_at": "2026-07-16T03:31:00Z", "evidence": "Web Mode. 4 API routes (analyze POST, roast GET, compare GET, persona GET). 2 pages (/, /proof)." },
+    { "phase": "test_execution", "completed_at": "2026-07-16T03:35:00Z", "evidence": "Domains 1-8 audited. API bodies verified. Playwright console=0 errors. Mobile 375px no overflow." },
+    { "phase": "report", "completed_at": "2026-07-16T03:36:00Z", "evidence": "LIVETEST-REPORT.md written. 18 PASS / 0 WARN / 0 FAIL / 3 SKIP." }
+  ]
+}

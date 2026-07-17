@@ -1,0 +1,50 @@
+{
+  "name": "Alter Ego",
+  "tagline": "Every wallet has a story. Meet your Alter Ego.",
+  "design": "Neon Arcade",
+  "colorMode": "dark-only",
+  "brandColor": "#ff2d95",
+  "secondaryColor": "#00ffff",
+  "ink": ["#0a0a0f", "#0d0d1a", "#08081a"],
+  "semantic": {
+    "success": "#00ffff",
+    "warning": "#ffff00",
+    "danger": "#ff2d95"
+  },
+  "fonts": {
+    "display": "Press Start 2P",
+    "body": "Space Mono",
+    "mono": "Space Mono"
+  },
+  "fontImports": {
+    "google": "Press+Start+2P|Space+Mono:wght@400;700"
+  },
+  "radii": { "xs": 2, "sm": 2, "md": 2, "lg": 2 },
+  "shadowPhilosophy": "neon-glow",
+  "glowColors": {
+    "pink": "rgba(255, 45, 149, 0.3)",
+    "cyan": "rgba(0, 255, 255, 0.5)"
+  },
+  "signatureElement": "Neon corner brackets (cyan top, pink bottom) on polygon-clipped card + CRT scanlines + header flicker",
+  "accent": "#ff2d95",
+  "secondary": "#00ffff",
+  "surface": "#0d0d1a",
+  "background": "#0a0a0f",
+  "textPrimary": "#00ffff",
+  "textBody": "#e0e0ff",
+  "textMuted": "rgba(200,200,255,0.5)",
+  "effects": {
+    "crt_scanlines": true,
+    "crt_vignette": true,
+    "neon_glow": true,
+    "flicker_animation": true,
+    "glitch_bar": true,
+    "corner_brackets": true,
+    "polygon_card": true
+  },
+  "logoPath": "public/logo.svg",
+  "logoMarkPath": "public/logo-mark.svg",
+  "avatarPath": "public/avatar-440.png",
+  "faviconPath": "public/favicon.ico",
+  "ogImagePath": "public/og-image.png"
+}

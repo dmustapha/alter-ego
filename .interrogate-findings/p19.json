@@ -1,0 +1,118 @@
+{
+  "persona": 19,
+  "title": "UPGRADE FORESIGHT AUDITOR",
+  "layer": 6,
+  "depth": "DEEP",
+  "qualitative": true,
+  "max_severity": "P1",
+  "checks": {
+    "19.1": {
+      "id": "19.1",
+      "check": "Storage layout compatibility",
+      "original_level": "P0",
+      "effective_level": "P1",
+      "severity": "P1",
+      "status": "WARN",
+      "finding": "Cache JSON files have no schema validation — type assertions mask missing fields at runtime.",
+      "evidence": [
+        "src/lib/cache.ts:12 — `JSON.parse(...) as T` uses TypeScript type assertion with zero runtime validation",
+        "src/lib/cache.ts:36 — same pattern: `JSON.parse(...) as Persona[]`",
+        "src/lib/types.ts:145-155 — CachedDemoData has 8 required fields; none are optional",
+        "src/data/cache/ — 9 JSON files exist but no schema version field in any of them",
+        "If a new required field is added to WalletData (e.g. `riskScore: number`), existing cache JSON files would parse without error, but the field would be `undefined` at runtime, causing `TypeError` on property access",
+        "No Zod, Yup, io-ts, or any runtime schema validation library in package.json"
+      ],
+      "impact": "Adding new required fields to CachedDemoData, WalletData, Pattern, Persona, or RoastBattle types would silently break cache reads because `JSON.parse(...) as T` performs no validation. Consumers that access `.toLowerCase()`, `.map()`, or arithmetic on undefined fields crash at runtime with no clear error.",
+      "mitigation": "Add a `version` field to each cache JSON file and use Zod or a simple runtime type guard in loadJson<T>() to validate shape before casting. On version mismatch, throw a clear error with migration instructions."
+    },
+    "19.2": {
+      "id": "19.2",
+      "check": "Migration path completeness",
+      "severity": "P1",
+      "status": "FAIL",
+      "finding": "No seed script exists and no cache regeneration path is available — the error message points to a non-existent file.",
+      "evidence": [
+        "ARCHITECTURE.md:127 — references `scripts/seed-demo.ts` as the cache generator",
+        "scripts/ directory — does not exist: `ls scripts/` returns ENOENT",
+        "src/lib/cache.ts:10 — error message says `Run scripts/seed-demo.ts first` but the file does not exist",
+        "src/lib/cache.ts:35-42 — loadPersonas() has a fallback path that calls generatePersona() dynamically, but only works if patterns are cached",
+        "src/lib/cache.ts:48-62 — loadRoastBattle() has a fallback that generates from roast-lines.json + personas, but roast-lines.json must already exist",
+        "No migration script, no `npm run seed`, no `npm run migrate`, no regeneration command anywhere in package.json scripts"
+      ],
+      "impact": "If cache data structure changes (new fields, removed fields, renamed fields), there is no way to regenerate the 9 cache JSON files. The seed script that ARCHITECTURE.md and cache.ts reference does not exist. A developer would need to manually hand-edit JSON files or reverse-engineer the expected shapes from type definitions, which is error-prone and time-consuming.",
+      "mitigation": "Create scripts/seed-demo.ts that calls OnchainOS CLI and outputs cache files matching current types. Add `npm run seed` to package.json. For migration, add a `cacheVersion` constant and a `migrate-cache.ts` script that transforms old-format JSON to new-format."
+    },
+    "19.3": {
+      "id": "19.3",
+      "check": "Backward compatibility",
+      "severity": "P1",
+      "status": "WARN",
+      "finding": "No API versioning exists — the frontend and API are tightly coupled with compile-time-only type safety.",
+      "evidence": [
+        "src/app/api/analyze/route.ts:27,101 — uses `satisfies AnalyzeResponse` which is compile-time only; no runtime version header",
+        "No `/api/v1/` prefix on any route; paths are `/api/analyze`, `/api/persona`, `/api/compare`, `/api/roast`",
+        "grep for 'version|API_VERSION|migrat|upgrade|compat' in src/ returned 0 matches",
+        "AnalyzeResponse (types.ts:168-175) has 6 fields — if any are removed or renamed, `satisfies` catches it at build time, but if the API adds a new required field that the frontend doesn't expect, the frontend would compile fine but could fail at runtime on the response",
+        "No response envelope with version field; API responses are bare JSON objects with no `apiVersion` or `schemaVersion`"
+      ],
+      "impact": "Since this is a monorepo (frontend + API deploy together), the risk of version skew is low in normal operation. However: (1) if the API is ever consumed by external clients, adding/removing fields breaks them; (2) if a rollback deploys old frontend against new cached data format, the UI silently breaks; (3) no way to negotiate API version at runtime.",
+      "mitigation": "Add an `apiVersion: 1` field to all API responses. Use a response envelope: `{ apiVersion: 1, data: {...} }`. For external consumption, version the URL path (`/api/v1/analyze`). Consider making new fields optional (`?`) in TypeScript so old consumers don't crash."
+    },
+    "19.4": {
+      "id": "19.4",
+      "check": "Upgrade admin security",
+      "original_level": "P0",
+      "effective_level": "P1",
+      "severity": "P1",
+      "status": "INFO",
+      "finding": "No admin mechanism exists; deployment is blocked (Vercel unauthenticated) and there is no CI/CD pipeline.",
+      "evidence": [
+        ".deploy-state.json:phase_ledger[9] — platform_deploy phase: 'PARTIAL: GitHub repo live. Vercel BLOCKED — no credentials.'",
+        ".deploy-state.json:errors[0] — 'Vercel CLI not authenticated. No credentials found.'",
+        ".deploy-state.json:project_profile.ci — false (no GitHub Actions or CI configured)",
+        ".deploy-state.json:project_profile.deploy_targets — ['vercel'] (single target, not connected)",
+        ".vercel/project.json — project linked (prj_b3PS3eS5TammYL6H8dm6049e9yy0) but never deployed",
+        "No admin panel, no auth middleware, no upgrade API endpoint, no admin route in src/app/",
+        "Single developer: dmustapha (from .deploy-state.json phase 0)",
+        "package.json scripts — only dev, build, start, lint; no deploy, no release, no promote scripts"
+      ],
+      "impact": "The intended upgrade path is Vercel git-push auto-deploy, but it's not connected. The actual path today is: developer manually runs `vercel login` then `vercel --prod`. There is no staging environment, no canary deploys, no rollback mechanism beyond `vercel rollback`. For a single-dev hackathon project this is acceptable, but any team expansion would need structured deploy access.",
+      "mitigation": "Complete Vercel connection: run `vercel login`, connect the GitHub repo at vercel.com for auto-deploy on push to main. Add `vercel.json` with production/staging environment configs. For team scenarios, add GitHub branch protection rules and Vercel team member roles."
+    },
+    "19.5": {
+      "id": "19.5",
+      "check": "Data migration testing",
+      "severity": "P1",
+      "status": "FAIL",
+      "finding": "Zero migration tests exist; cache file integrity is never validated at build time, test time, or startup.",
+      "evidence": [
+        "file_search *.test.* — 0 results across the entire project",
+        "file_search *.spec.* — only Playwright E2E tests (stress-browser.spec.ts), no data migration tests",
+        "src/lib/cache.ts:9-13 — loadJson<T>() has no validation: fs.existsSync check only, then blind JSON.parse + cast",
+        "No test that verifies cache files conform to TypeScript types",
+        "No build-time validation of cache JSON against expected schemas",
+        "No startup check in any API route that validates cache integrity before serving data",
+        "No snapshot tests, no fixture validation, no schema conformance tests"
+      ],
+      "impact": "If new cache files are created (e.g. adding a 4th wallet, new pattern categories, new persona fields), there is zero automated validation that they conform to expected types. A malformed cache file would only be discovered when the frontend crashes at runtime. Without tests, any cache regeneration or migration is a blind manual operation.",
+      "mitigation": "Add a `validate-cache.ts` script that reads all cache JSON files and asserts they match expected TypeScript interfaces (using Zod schemas or manual type guards). Run it as a pre-build step (`npm run validate-cache` in `prebuild`). Add Playwright fixture tests that verify the app renders correctly with the current cache data."
+    }
+  },
+  "summary": "Alter Ego is a greenfield hackathon project with no upgrade infrastructure whatsoever. The most critical gaps: (1) the seed script referenced by both ARCHITECTURE.md and cache.ts does not exist, making cache regeneration impossible; (2) cache loading uses blind `JSON.parse(...) as T` casts with zero runtime validation, so type changes silently corrupt runtime behavior; (3) no migration tests exist to validate cache integrity. The Vercel deploy is linked but never completed (auth blocked). For a single-dev demo these are acceptable, but any productionization would require: a real seed script, Zod-based cache validation, a `cacheVersion` field, and a CI/CD pipeline.",
+  "files_examined": [
+    "ARCHITECTURE.md:1-300",
+    "package.json:1-27",
+    "src/lib/types.ts:1-178",
+    "src/lib/cache.ts:1-96",
+    "src/app/api/analyze/route.ts:1-107",
+    "src/app/api/persona/route.ts:1-12",
+    "src/app/api/compare/route.ts:1-13",
+    "src/app/api/roast/route.ts:1-12",
+    ".deploy-state.json:1-67",
+    ".vercel/project.json:1",
+    "src/data/cache/ (9 files listed)",
+    "src/data/cache/wallet-a-ethereum.json:1-50",
+    "src/data/cache/patterns.json:1-50",
+    "src/data/cache/personas.json:1-30"
+  ]
+}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" fill="#0a0a10"/>
+  <!-- Simplified split hexagon for small sizes -->
+  <path d="M20 16 L32 8 L32 56 L20 48 Z" fill="rgba(255,45,149,0.2)"/>
+  <path d="M32 8 L44 16 L44 48 L32 56 Z" fill="rgba(0,255,255,0.12)"/>
+  <line x1="32" y1="6" x2="32" y2="58" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+</svg>

@@ -61,3 +61,13 @@ alter-ego/
 33 Playwright browser tests passing. Covers: 6-phase state machine, responsive layout (320px/1440px), keyboard navigation, network resilience (slow 3G), Glitch Core design compliance, form validation, console error detection.
 
 Built for the OKX.AI Genesis Hackathon (OKX × DoraHacks). July 2026.
+
+## Known Limitations
+
+This is a 2-day hackathon demo. The following are acknowledged and documented:
+
+- **Demo mode**: All data is pre-cached (4,463 transactions across 3 wallets). The OnchainOS CLI integration is structurally complete but operates in demo-bypass mode for deterministic results.
+- **TEE attestation**: Simulated for demo. The attestation badge shows "TEE Attestation — Simulated for Demo." Real SGX/TDX attestation is planned for post-hackathon.
+- **x402 payments**: Simulated for demo. Payment flow is structurally complete but operates without real USDC settlement.
+- **State machine**: 6-phase flow is timer-driven for the recorded demo. No manual navigation controls exist — this is by design for the 76-second demo recording.
+- **Input validation**: Client-side validation exists (max 5 wallets). Server-side validation is added for safety but the demo always returns pre-cached data.
