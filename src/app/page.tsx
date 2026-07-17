@@ -9,7 +9,7 @@ import { CompareCard } from "@/components/CompareCard";
 import { PaymentButton } from "@/components/PaymentButton";
 import type { AnalyzeResponse } from "@/lib/types";
 
-type Phase = "landing" | "scanning" | "results" | "battle" | "compare" | "cta";
+type Phase = "landing" | "scanning" | "results" | "battle" | "compare" | "cta" | "error";
 
 const launchDemo = (handle: (a: Array<{ address: string; chains: string[] }>) => void) =>
   handle([{ address: "0xDemo...", chains: ["ethereum"] }, { address: "SolDemo...", chains: ["solana"] }]);
@@ -21,25 +21,45 @@ export default function Home() {
   const [compareData, setCompareData] = useState<import("@/lib/types").CompareResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [addressCount, setAddressCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const phaseTimers = useRef<NodeJS.Timeout[]>([]);
+  const isAnalyzing = useRef(false);
 
   useEffect(() => { return () => phaseTimers.current.forEach(clearTimeout); }, []);
 
   const handleAnalyze = async (addresses: Array<{ address: string; chains: string[] }>) => {
+    if (isAnalyzing.current) return;
+    isAnalyzing.current = true;
+    phaseTimers.current.forEach(clearTimeout);
+    setError(null);
     setLoading(true); setAddressCount(addresses.length); setPhase("scanning");
     try {
       const res = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ addresses }) });
+      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || `Server error (${res.status})`); }
       const json: AnalyzeResponse = await res.json(); setData(json);
       const t1 = setTimeout(() => setPhase("results"), 2000);
-      const t2 = setTimeout(() => { fetch("/api/roast").then(r => r.json()).then(d => { if (d.battle) setBattleData(d.battle); setPhase("battle"); }).catch(() => setPhase("battle")); }, 20000);
-      const t3 = setTimeout(() => { fetch("/api/compare").then(r => r.json()).then(d => { if (d.comparison) setCompareData(d.comparison); setPhase("compare"); }).catch(() => setPhase("compare")); }, 58000);
-      const t4 = setTimeout(() => setPhase("cta"), 76000);
+      const t2 = setTimeout(() => {
+        fetch("/api/roast").then(r => r.json()).then(d => { if (d.battle) setBattleData(d.battle); setPhase("battle"); }).catch((e) => { setError("Roast data unavailable — continuing demo"); setPhase("battle"); });
+      }, 20000);
+      const t3 = setTimeout(() => {
+        fetch("/api/compare").then(r => r.json()).then(d => { if (d.comparison) setCompareData(d.comparison); setPhase("compare"); }).catch((e) => { setError("Comparison data unavailable — continuing demo"); setPhase("compare"); });
+      }, 58000);
+      const t4 = setTimeout(() => { setPhase("cta"); isAnalyzing.current = false; }, 76000);
       phaseTimers.current = [t1, t2, t3, t4];
-    } catch { setPhase("landing"); } finally { setLoading(false); }
+    } catch (e: any) {
+      setError(e?.message || "Failed to analyze wallets. Please try again.");
+      setPhase("error");
+      isAnalyzing.current = false;
+    } finally { setLoading(false); }
   };
 
   return (
     <Terminal>
+      {error && phase !== "error" && (
+        <div className="mb-4 px-4 py-2 border border-[rgba(255,45,149,.2)] bg-[rgba(255,45,149,.05)] text-[#ff2d95] text-xs font-mono">
+          ⚠ {error}
+        </div>
+      )}
       {phase === "landing" && (
         <>
           {/* HERO — spacious */}
@@ -55,7 +75,7 @@ export default function Home() {
             </SlideIn>
             <SlideIn delay={0.4}>
               <p className="text-base text-[rgba(160,160,210,.45)] mt-6 leading-relaxed max-w-[620px]">
-                A TEE-bound agent that ingests your complete on-chain history across every wallet and chain. Classifies patterns. Builds a persona. Then your Ethereum self and Solana self face off in a roast battle built on real data. Self-knowledge is the product.
+                A TEE-ready agent that ingests your complete on-chain history across every wallet and chain. Classifies patterns. Builds a persona. Then your Ethereum self and Solana self face off in a roast battle built on real data. Self-knowledge is the product.
               </p>
             </SlideIn>
           </div>
@@ -124,7 +144,7 @@ export default function Home() {
           {/* STATS BAR */}
           <SlideIn delay={1.6}>
             <div className="grid grid-cols-2 md:grid-cols-4 mb-12" style={{ gap: "1px", background: "linear-gradient(90deg, rgba(255,45,149,.1), rgba(0,255,255,.1))" }}>
-              {[{ n: "4", l: "CHAINS" }, { n: "6,134", l: "TRANSACTIONS" }, { n: "$4,527", l: "NET PNL" }, { n: "TEE", l: "SEALED" }].map(s => (
+              {[{ n: "4", l: "CHAINS" }, { n: "4,463", l: "TRANSACTIONS" }, { n: "$4,527", l: "NET PNL" }, { n: "TEE", l: "READY" }].map(s => (
                 <div key={s.l} className="bg-[#0a0a1a] py-4 text-center">
                   <div className="font-pixel text-[18px] text-[#00ffff] mb-1" style={{ textShadow: "0 0 8px rgba(0,255,255,.3)" }}>{s.n}</div>
                   <div className="font-pixel text-[6px] uppercase tracking-[1px] text-[rgba(160,160,210,.45)]">{s.l}</div>
@@ -138,7 +158,7 @@ export default function Home() {
             <div className="pt-5 border-t-2 border-[rgba(255,45,149,.1)] flex justify-between items-center">
               <span className="text-sm text-[rgba(160,160,210,.45)]">OKX.AI Genesis · Lifestyle Companion + Social Buzz · #OKXAI</span>
               <span className="font-pixel text-[7px] uppercase tracking-[1px] px-4 py-2 border border-[#00ffff] text-[#00ffff] bg-[rgba(0,255,255,.03)] flex items-center gap-2">
-                🔒 ATTESTATION: 0x7f3a...b91e
+                🔒 TEE: Simulated Attestation (Demo)
               </span>
             </div>
           </SlideIn>
@@ -175,12 +195,23 @@ export default function Home() {
       {phase === "cta" && (
         <div className="space-y-8 text-center">
           <SlideIn>
-            <span className="font-pixel text-[7px] uppercase tracking-[1px] px-4 py-2 border border-[#00ffff] text-[#00ffff] bg-[rgba(0,255,255,.03)] inline-flex items-center gap-2">🔒 ATTESTATION VERIFIED</span>
+            <span className="font-pixel text-[7px] uppercase tracking-[1px] px-4 py-2 border border-[#00ffff] text-[#00ffff] bg-[rgba(0,255,255,.03)] inline-flex items-center gap-2">🔒 TEE Attestation — Simulated for Demo</span>
           </SlideIn>
           <SlideIn delay={0.5}><p className="text-[#f0f0ff] text-xl font-bold">Alter Ego. Know thyself. Then know everyone else.</p></SlideIn>
           <SlideIn delay={1}><PaymentButton tier="Snapshot" price="$0.99" /></SlideIn>
           <SlideIn delay={1.5}><p className="text-[rgba(160,160,210,.45)] text-xs">Live on OKX.AI · Lifestyle Companion + Social Buzz · #OKXAI</p></SlideIn>
         </div>
+      )}
+      {phase === "error" && (
+        <SlideIn>
+          <div className="text-center space-y-6 py-12">
+            <p className="text-[#ff2d95] text-lg font-bold">{error || "Something went wrong."}</p>
+            <button onClick={() => { setPhase("landing"); setError(null); setData(null); setBattleData(null); setCompareData(null); }}
+              className="font-pixel text-[11px] uppercase tracking-[2px] px-8 py-4 bg-[#ff2d95] text-white">
+              ▶ TRY AGAIN
+            </button>
+          </div>
+        </SlideIn>
       )}
     </Terminal>
   );

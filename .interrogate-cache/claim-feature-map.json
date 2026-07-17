@@ -1,0 +1,150 @@
+{
+  "project": "alter-ego",
+  "generated": "2026-07-16T00:00:00Z",
+  "sources_scanned": ["README.md", "PRD.md", "ARCHITECTURE.md", "DEMO-SCRIPT.md", "submission/description.md"],
+  "claims": [
+    {
+      "id": "C1",
+      "claim": "TEE-bound agent — analysis runs inside Trusted Execution Environment",
+      "source": "README.md:L1, PRD.md:L1, ARCHITECTURE.md Emergency Mode",
+      "code_evidence": "Mock only — badge in Terminal.tsx:90, ATTESTATION text in page.tsx:156. No real TEE integration code.",
+      "verdict": "MOCKED",
+      "severity": "P0",
+      "detail": "TEE attestation badge shows pre-computed 'ATTESTATION: 0x7f3a...b91e'. ARCHITECTURE.md Section 8: 'TEE Attestation Generation [MOCK]'. No TEE SDK, no SGX/TDX, no remote attestation code."
+    },
+    {
+      "id": "C2",
+      "claim": "x402 micropayments — $0.99 per snapshot, $4.99/mo subscription",
+      "source": "README.md:L63-68, PRD.md:L47",
+      "code_evidence": "PaymentButton.tsx — three-state button (idle→simulating→done), NO network request, NO payment settlement, NO x402 protocol. 'Simulate Payment' label only.",
+      "verdict": "MOCKED",
+      "severity": "P1",
+      "detail": "Payment flow is entirely simulated with setTimeout(1500). No x402 protocol integration. No USDC transfer. No payment verification."
+    },
+    {
+      "id": "C3",
+      "claim": "Real-time whale monitoring / top trader comparison",
+      "source": "README.md:L81-91, PRD.md:L21",
+      "code_evidence": "CompareCard.tsx renders static data from comparison.json cache. ARCHITECTURE.md Emergency Mode: 'Real-time Whale Monitoring [MOCK] — Pre-cached leaderboard data only'.",
+      "verdict": "MOCKED",
+      "severity": "P1",
+      "detail": "Leaderboard data is pre-cached. No real-time polling, no WebSocket, no live data updates."
+    },
+    {
+      "id": "C4",
+      "claim": "OnchainOS CLI integration — live wallet data ingestion",
+      "source": "README.md:L40-51, ARCHITECTURE.md:L51-56",
+      "code_evidence": "src/lib/onchainos.ts — CLI commands defined (getAllBalances, getPortfolioOverview, getApprovals, scanTokens). But in demo mode (cacheExists()=true), POST /api/analyze short-circuits to loadAllDemoData() — never calls CLI.",
+      "verdict": "CODE_EXISTS_BUT_BYPASSED_IN_DEMO",
+      "severity": "P2",
+      "detail": "OnchainOS commands are properly implemented but never executed in demo mode. In production they would work if onchainos CLI is installed."
+    },
+    {
+      "id": "C5",
+      "claim": "Multi-chain support: Ethereum, Solana, X Layer",
+      "source": "README.md:L40, PRD.md:L38",
+      "code_evidence": "3 cache files (wallet-a-ethereum.json, wallet-b-solana.json, wallet-c-xlayer.json). page.tsx stats bar shows '4 CHAINS'. ARCH handles EVM/Solana separation correctly.",
+      "verdict": "REAL",
+      "severity": "OK",
+      "detail": "Cache data exists for 3 chains. OnchainOS code handles EVM/Solana separation. X Layer (chain 196) is pre-cached."
+    },
+    {
+      "id": "C6",
+      "claim": "6-phase state machine: landing→scanning→results→battle→compare→cta",
+      "source": "README.md:L96-103, DEMO-SCRIPT.md",
+      "code_evidence": "src/app/page.tsx:13 — Phase type with 6 states. Timers on lines 32-36 auto-advance through phases. All 6 phases rendered in JSX.",
+      "verdict": "REAL",
+      "severity": "OK",
+      "detail": "Fully implemented 6-phase state machine with auto-advancing timers."
+    },
+    {
+      "id": "C7",
+      "claim": "12 deterministic pattern rules (6 AMPLIFY + 6 GUARD)",
+      "source": "ARCHITECTURE.md:L61, PRD.md",
+      "code_evidence": "src/lib/classifier.ts — detectAmplifyPatterns (6 rules: AMP-01 through AMP-06) + detectGuardPatterns (6 rules: GRD-01 through GRD-06). All deterministic, no AI.",
+      "verdict": "REAL",
+      "severity": "OK",
+      "detail": "All 12 patterns implemented with clear thresholds and evidence collection."
+    },
+    {
+      "id": "C8",
+      "claim": "Persona engine — archetype, catchphrase, superpower, kryptonite",
+      "source": "README.md:L99, ARCHITECTURE.md:L66-68",
+      "code_evidence": "src/lib/persona.ts — generatePersona with ARCHETYPES map, VICES map, generateCatchphrase, generateSuperpower, generateKryptonite. Deterministic, no LLM.",
+      "verdict": "REAL",
+      "severity": "OK",
+      "detail": "Personas are generated deterministically from pattern results. Archetypes mapped to AMP pattern IDs."
+    },
+    {
+      "id": "C9",
+      "claim": "5-round roast battle between ETH self and SOL self",
+      "source": "README.md:L98-102, DEMO-SCRIPT.md:Step5",
+      "code_evidence": "RoastBattle.tsx — component renders rounds with framer-motion. API returns pre-generated roast lines. battle.lines.length controls round count. auto-advance every 4s.",
+      "verdict": "REAL",
+      "severity": "OK",
+      "detail": "Roast battle component is fully implemented. Lines are pre-computed (not LLM-generated at runtime) per PRD Emergency Mode."
+    },
+    {
+      "id": "C10",
+      "claim": "OKX Wallet integration with multi-address support",
+      "source": "README.md:L40-51",
+      "code_evidence": "WalletInput.tsx accepts newline-separated addresses. page.tsx launchDemo feeds demo addresses. OnchainOS wrappers handle EVM/Solana separately. No actual OKX Wallet SDK — uses OnchainOS CLI instead.",
+      "verdict": "PARTIAL",
+      "severity": "P2",
+      "detail": "Address input works but no direct OKX Wallet SDK integration. Uses OnchainOS CLI as abstraction layer."
+    },
+    {
+      "id": "C11",
+      "claim": "OKX DEX Market integration — cross-chain market data + PnL",
+      "source": "README.md:L53-55",
+      "code_evidence": "PROOF page lists 'okx-dex-market' with status '✓ Verified' and commands 'leaderboard list, portfolio-overview'. These are OnchainOS CLI commands, not direct DEX Market API calls.",
+      "verdict": "IMPORT_ONLY",
+      "severity": "P2",
+      "detail": "DEX Market data accessed through OnchainOS CLI abstraction, not direct OKX DEX Market API. In demo mode, all data is pre-cached."
+    },
+    {
+      "id": "C12",
+      "claim": "OKX AI Marketplace listing — Alter Ego listed as ASP agent",
+      "source": "README.md:L57-59, proof/page.tsx",
+      "code_evidence": "Proof page shows ASP listing info. ERC-8004 badge in Terminal header. No ASP registration code in repo — likely done via OKX portal separately.",
+      "verdict": "EXTERNAL",
+      "severity": "P3",
+      "detail": "ASP registration is external to codebase. Proof page documents the listing but code doesn't contain registration logic."
+    },
+    {
+      "id": "C13",
+      "claim": "TEE cryptographic snapshot — permanent shareable proof",
+      "source": "README.md:L59, proof/page.tsx",
+      "code_evidence": "Proof page at /proof shows static data. TEE attestation is pre-computed mock per Emergency Mode table.",
+      "verdict": "MOCKED",
+      "severity": "P1",
+      "detail": "No real cryptographic attestation. Proof page shows static text descriptions."
+    },
+    {
+      "id": "C14",
+      "claim": "33 Playwright tests, 100% pass rate",
+      "source": "README.md:L134-148",
+      "code_evidence": "stress-browser.spec.ts exists. STRESS-TEST-REPORT.md confirms 33/33 passed.",
+      "verdict": "VERIFIED_BY_STRESS_TEST",
+      "severity": "OK",
+      "detail": "33 browser tests covering all 6 phases, responsive layout, keyboard nav, network resilience."
+    },
+    {
+      "id": "C15",
+      "claim": "Glitch Core design with CRT scanlines, corner brackets, neon glow",
+      "source": "README.md, DESIGN_SYSTEM.md, brand.json",
+      "code_evidence": "Terminal.tsx — polygon clip-path, offset glitch layers (cyan+3px, pink-3px), corner bracket divs, pixel fonts, flicker animation. globals.css — CRT scanlines, glitch keyframes.",
+      "verdict": "REAL",
+      "severity": "OK",
+      "detail": "Full Glitch Core implementation across all components."
+    }
+  ],
+  "summary": {
+    "total_claims": 15,
+    "real": 8,
+    "mocked": 4,
+    "partial": 2,
+    "external": 1,
+    "high_risk_mocks": ["C1 (TEE — P0)", "C2 (x402 payments — P1)", "C13 (crypto snapshot — P1)", "C3 (real-time data — P1)"]
+  }
+}

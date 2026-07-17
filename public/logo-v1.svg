@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Logomark: Split Mask — terminal cursor divider, emerald/amber halves -->
+  <!-- Left half — emerald -->
+  <path d="M32 8C22 8 14 16 14 26v12c0 10 8 18 18 18V8Z" fill="#34d399" opacity="0.9"/>
+  <!-- Right half — amber -->
+  <path d="M32 8c10 0 18 8 18 18v12c0 10-8 18-18 18V8Z" fill="#fbbf24" opacity="0.9"/>
+  <!-- Center division line -->
+  <line x1="32" y1="6" x2="32" y2="58" stroke="#000000" stroke-width="3"/>
+  <!-- Terminal cursor block at center -->
+  <rect x="29" y="27" width="6" height="10" rx="1" fill="#000000"/>
+</svg>

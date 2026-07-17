@@ -1,0 +1,101 @@
+{
+  "persona": "SPONSOR COMPLIANCE AUDITOR",
+  "layer": "Qualitative Layer 3",
+  "mode": "ALWAYS",
+  "severity_cap": "P1",
+  "findings": {
+    "11.1": {
+      "id": "11.1",
+      "title": "SDK Integration Depth — OnchainOS CLI Wrapper",
+      "severity": "P0",
+      "status": "FAIL",
+      "summary": "The OnchainOS 'SDK' is a thin shell-wrapper that never executes in the deployed demo. Zero real OKX code runs at runtime.",
+      "evidence": [
+        "9 functions exported from src/lib/onchainos.ts; only 4 imported in src/app/api/analyze/route.ts (getAllBalances, getPortfolioOverview, getApprovals, scanTokens). Functions getTotalValue, getLeaderboard, checkWalletStatus, loginWallet, verifyOtp are dead code — grep_files confirms zero call sites outside onchainos.ts itself.",
+        "The 4 imported functions live in a code path guarded by `if (process.env.DEMO_MODE === 'true' || cacheExists())` at src/app/api/analyze/route.ts:13. Since cacheExists() checks fs.existsSync for src/data/cache/wallet-a-ethereum.json (src/lib/cache.ts:103) — and 9 cache files exist — this guard ALWAYS matches, and the live OnchainOS code path at lines 28-96 NEVER executes.",
+        "The OnchainOS 'SDK' is not an SDK: it shells out via execSync('onchainos ...') (src/lib/onchainos.ts:6-13). There is no onchainos binary in the deployment; Vercel serverless functions cannot run arbitrary CLI binaries. This architecture would fail even if the cache guard were removed.",
+        "package.json contains ZERO OKX dependencies — no @okx packages, no x402 SDK, no wallet SDK, no Web3 libraries. Only framer-motion, next, react, react-dom.",
+        "All 4 API routes (analyze, compare, roast, persona) read exclusively from static JSON in src/data/cache/ with no network calls to any OKX service."
+      ],
+      "remediation": "Replace the execSync shell-wrapper with actual OKX REST API calls using fetch(). Add @okx dependencies. Remove the cacheExists() short-circuit or gate it behind an explicit DEMO_MODE toggle that defaults to false."
+    },
+    "11.2": {
+      "id": "11.2",
+      "title": "Sponsor Requirement Completeness — OKX.AI Genesis",
+      "severity": "P0",
+      "status": "FAIL",
+      "summary": "Of 4 required OKX.AI Genesis integrations (OnchainOS, Wallet, x402, AI Marketplace), only OnchainOS has partial code (dead path). x402 is honestly marked as mocked. Wallet and Marketplace are claims with zero implementation.",
+      "evidence": [
+        "OnchainOS: 4 of 9 functions are wired into analyze/route.ts, but the code path is dead (see 11.1). The CLI-wrapper architecture is incompatible with Vercel serverless deployment.",
+        "Wallet: checkWalletStatus, loginWallet, verifyOtp exist in src/lib/onchainos.ts:85-96 but are NEVER called by any file in src/. grep_files confirms zero import sites. No OKX Wallet SDK in package.json.",
+        "x402 payments: src/components/PaymentButton.tsx implements a 3-state CSS animation ('idle' → 'simulating' → 'done') with setTimeout and the text 'Processing x402...' / '✓ Payment Simulated'. Zero HTTP requests, zero payment SDK, zero USDC transfers. The proof page at src/app/proof/page.tsx:12 honestly marks this as '◐ Mocked'.",
+        "AI Marketplace: The proof page claims 'agent create asp, ERC-8004 identity' and 'ASP Listing' with 'Category: Lifestyle. Service Type: A2A.' — but there is zero ASP registration code, zero marketplace API calls, zero agent ID. ERC-8004 is mentioned 9+ times in metadata/UI (src/app/layout.tsx:14, src/components/Terminal.tsx:73, src/app/proof/page.tsx:18) but has zero implementation code.",
+        "submission/sponsor-tracks.md claims 'All 4 OKX OnchainOS skills are integrated' and lists code evidence that is misleading — WalletInput accepts addresses but never calls OnchainOS; the code snippets shown don't prove actual OKX API integration."
+      ],
+      "remediation": "Implement real OKX Wallet SDK connection. Replace PaymentButton setTimeout with actual x402 payment flow (USDC on Base). Add ASP registration via okx-ai CLI/API with a verifiable agent ID. Remove claims for unbuilt features or clearly mark them as roadmap."
+    },
+    "11.3": {
+      "id": "11.3",
+      "title": "Sponsor Feature Authenticity — Static Cache vs Real OKX Tech",
+      "severity": "P0",
+      "status": "FAIL",
+      "summary": "OnchainOS is a thin wrapper around static cache. No OKX API keys are consumed at runtime. TEE attestation is a hardcoded string. The demo could run identically without any OKX integration.",
+      "evidence": [
+        "All data flows through src/lib/cache.ts → loadAllDemoData(), which reads 9 static JSON files from src/data/cache/ (wallet-a-ethereum.json, wallet-b-solana.json, wallet-c-xlayer.json, patterns.json, personas.json, roast-battle.json, roast-lines.json, comparison.json, leaderboard.json). These are pre-generated, not fetched from OKX.",
+        "No OKX API keys are consumed by the cache path. The README documents OKX_API_KEY, OKX_SECRET_KEY, OKX_PASSPHRASE (README.md:176-181) but these are never read by loadAllDemoData or any cache function.",
+        "TEE attestation is a hardcoded string '0x7f3a...b91e' displayed as a badge in src/app/page.tsx:141 and src/app/page.tsx:178. Zero TEE code, zero SGX, zero attestation verification.",
+        "ERC-8004 identity is a metadata claim with no on-chain registration, no token mint, no contract interaction, no X Layer explorer link.",
+        "The leaderboard data in src/data/cache/leaderboard.json appears to contain real OKX API response JSON (with real wallet addresses, PnL values, token symbols) — suggesting it was scraped once from the OKX API and frozen, not live-integrated."
+      ],
+      "remediation": "Implement live API calls to OKX endpoints using documented REST APIs. Run TEE attestation through OKX Agentic Wallet or provide a verifiable substitute. Register an actual ERC-8004 token. If static cache is needed for demo reliability, clearly document it and keep the live path as the default."
+    },
+    "11.4": {
+      "id": "11.4",
+      "title": "Sponsor Documentation Quality — 60-Second Judge Verification",
+      "severity": "P1",
+      "status": "WARN",
+      "summary": "README integration sections are well-structured but misleading. The proof page is honest about x402 mocking. A judge can verify depth in 60 seconds via package.json + proof page, which will reveal the integration is superficial.",
+      "evidence": [
+        "README.md:38-68 has dedicated sections for OKX Wallet, OKX DEX Market, OKX AI Marketplace, and x402 Micropayments with code snippets. These sections describe capabilities as if they are working features, but the code snippets (WalletInput, PaymentButton) don't actually demonstrate OKX integration depth.",
+        "README.md:74-92 'How It Works' diagram shows OnchainOS CLI Layer → Pattern Engine → Persona Builder pipeline, implying real data flow. The diagram omits that the entire pipeline is fed by static cache.",
+        "src/app/proof/page.tsx is the most honest artifact: it correctly marks x402 as '◐ Mocked' and shows 3 of 4 skills as '✓ Verified'. The 'Verified' claims for OnchainOS skills are misleading since they're not actually executing in the demo.",
+        "A judge checking package.json (60 seconds) would find zero OKX dependencies — immediate red flag. Checking the proof page confirms x402 is mocked. Checking the analyze route reveals the cacheExists() bypass. The integration depth is verifiable as superficial within 60 seconds.",
+        "submission/sponsor-tracks.md makes unsupported claims: '4 API routes, 7 components, 6-phase state machine, TEE mock, x402 gate' — the TEE is not mocked, it's a hardcoded string; the x402 gate is a CSS animation with no payment logic."
+      ],
+      "remediation": "Add a clear 'Demo Mode Limitations' section to README explaining what is cached vs live. Remove or qualify '✓ Verified' claims for features that don't execute real OKX code. The proof page is on the right track — extend that honesty to the README."
+    },
+    "11.5": {
+      "id": "11.5",
+      "title": "Sponsor Ecosystem Fit — Use Case vs Implementation",
+      "severity": "P1",
+      "status": "WARN",
+      "summary": "The concept (multi-chain behavioral fingerprinting with persona-based roast battles) is a compelling fit for OKX's ecosystem. But the implementation doesn't showcase OKX technology — it's a static demo with OKX branding.",
+      "evidence": [
+        "The core idea — analyzing wallet history across chains, surfacing behavioral patterns, and creating a shareable social experience — aligns well with OKX's Agentic Wallet, DEX, and AI Marketplace ecosystem.",
+        "The persona/roast battle concept is novel and non-trivial: it requires real on-chain data analysis to work authentically. With actual OKX integration it would be a strong showcase.",
+        "However, the current implementation is a Next.js frontend with static JSON that could run without any OKX infrastructure. The OnchainOS wrapper, wallet functions, TEE badge, and ERC-8004 mentions are decorative.",
+        "The demo doesn't demonstrate OKX's technical differentiation (Agentic Wallet TEE, cross-chain DEX aggregation, x402 micropayments) — it demonstrates a well-designed UI with hardcoded data.",
+        "The Leaderboard data in cache appears to have been sourced from real OKX API output (matching OnchainOS CLI response format), which suggests the team understands the OKX ecosystem but ran out of time to wire it live."
+      ],
+      "remediation": "Wire at least one OKX integration end-to-end live (e.g., real-time portfolio lookup via OnchainOS REST API). Demonstrate x402 with a testnet USDC transaction. Show the ASP listing URL on OKX.AI marketplace. The concept is strong — it needs technical execution to match."
+    }
+  },
+  "overall_assessment": {
+    "grade": "INSUFFICIENT",
+    "summary": "Alter Ego has a compelling concept and polished UI, but OKX sponsor integration is almost entirely decorative. The OnchainOS 'SDK' is a shell-wrapper to a non-existent CLI that never executes because the entire data path is short-circuited to static cache. x402 payments are a CSS animation. Wallet integration functions exist but are never called. ERC-8004 and TEE attestation are metadata claims with zero implementation. Of the 4 required OKX.AI Genesis integrations, 0 are genuinely implemented. The proof page is honest about x402 mocking, which is commendable, but the README and sponsor-tracks document overclaim integration depth. A judge verifying in 60 seconds (package.json + proof page) will conclude the OKX integration is superficial.",
+    "critical_issues": [
+      "Zero real OKX code executes in the deployed demo — 100% static cache",
+      "OnchainOS 'SDK' is execSync to a non-existent CLI binary, incompatible with Vercel deployment",
+      "Zero OKX dependencies in package.json",
+      "x402 payment is a setTimeout with no payment logic",
+      "TEE attestation is a hardcoded truncated hex string"
+    ],
+    "positive_notes": [
+      "Proof page honestly marks x402 as '◐ Mocked'",
+      "Concept (multi-chain persona analysis + roast battles) is genuinely compelling for OKX ecosystem",
+      "Cache data appears sourced from real OKX API output, suggesting the team understands the integration surface",
+      "UI is polished with a distinctive Glitch Core design"
+    ],
+    "recommendation": "The team should focus on wiring at least one OKX integration end-to-end live before judging. The static cache approach is acceptable as a fallback for demo reliability, but the live path must be the default. Remove or qualify unsubstantiated claims about TEE, ERC-8004, and ASP listing."
+  }
+}

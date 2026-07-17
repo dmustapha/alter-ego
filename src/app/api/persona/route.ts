@@ -6,6 +6,8 @@ export async function GET() {
     const personas = await loadPersonas();
     return NextResponse.json({ personas });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[API] GET /api/persona:`, error.message);
+    const message = process.env.NODE_ENV === "production" ? "Internal server error" : error.message;
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

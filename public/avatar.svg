@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 440" fill="none">
+  <!-- Background -->
+  <rect width="440" height="440" fill="#0a0a10"/>
+
+  <!-- Subtle grid pattern for tech/software feel -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
+    </pattern>
+    <radialGradient id="bgGlow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="rgba(255,45,149,0.06)"/>
+      <stop offset="50%" stop-color="rgba(0,255,255,0.03)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <radialGradient id="pinkGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(255,45,149,0.35)"/>
+      <stop offset="100%" stop-color="rgba(255,45,149,0)"/>
+    </radialGradient>
+    <radialGradient id="cyanGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(0,255,255,0.35)"/>
+      <stop offset="100%" stop-color="rgba(0,255,255,0)"/>
+    </radialGradient>
+    <linearGradient id="centerLine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,45,149,0)"/>
+      <stop offset="50%" stop-color="rgba(255,255,255,0.5)"/>
+      <stop offset="100%" stop-color="rgba(0,255,255,0)"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="440" height="440" fill="url(#grid)"/>
+  <circle cx="220" cy="210" r="160" fill="url(#bgGlow)"/>
+
+  <!-- === MAIN EMBLEM: Split Hexagon === -->
+
+  <!-- Left half fill (pink/AMPLIFY) -->
+  <path d="M140 130 L220 78 L220 342 L140 310 Z" fill="rgba(255,45,149,0.1)"/>
+  <!-- Left half outline -->
+  <path d="M140 130 L220 78 L220 342 L140 310 Z" fill="none" stroke="#ff2d95" stroke-width="2.2" opacity="0.85"/>
+
+  <!-- Right half fill (cyan/GUARD) -->
+  <path d="M220 78 L300 130 L300 310 L220 342 Z" fill="rgba(0,255,255,0.08)"/>
+  <!-- Right half outline -->
+  <path d="M220 78 L300 130 L300 310 L220 342 Z" fill="none" stroke="#00ffff" stroke-width="2.2" opacity="0.85"/>
+
+  <!-- Center divider -->
+  <line x1="220" y1="74" x2="220" y2="346" stroke="url(#centerLine)" stroke-width="1.2"/>
+
+  <!-- Glow orbs -->
+  <circle cx="180" cy="210" r="45" fill="url(#pinkGlow)"/>
+  <circle cx="260" cy="210" r="45" fill="url(#cyanGlow)"/>
+
+  <!-- === AMPLIFY: Rising chevron + bars === -->
+  <!-- Three rising bars (left lobe) -->
+  <rect x="162" y="228" width="5" height="16" rx="1" fill="#ff2d95" opacity="0.7"/>
+  <rect x="170" y="216" width="5" height="28" rx="1" fill="#ff2d95" opacity="0.8"/>
+  <rect x="178" y="202" width="5" height="42" rx="1" fill="#ff2d95" opacity="0.9"/>
+
+  <!-- Rising arrow tip -->
+  <path d="M180 196 L195 215 L187 215 L187 235 L173 235 L173 215 L165 215 Z" fill="none" stroke="#ff2d95" stroke-width="2.8" stroke-linejoin="round" opacity="0.9"/>
+
+  <!-- === GUARD: Shield icon === -->
+  <path d="M257 197 L245 191 L245 213 Q245 227 257 234 Q269 227 269 213 L269 191 Z" fill="rgba(0,255,255,0.08)" stroke="#00ffff" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- === Bottom data-dot clusters === -->
+  <!-- Left -->
+  <circle cx="165" cy="278" r="2.5" fill="#ff2d95" opacity="0.5"/>
+  <circle cx="180" cy="290" r="2.5" fill="#ff2d95" opacity="0.4"/>
+  <circle cx="155" cy="292" r="2" fill="#ff2d95" opacity="0.3"/>
+  <line x1="165" y1="278" x2="180" y2="290" stroke="#ff2d95" stroke-width="0.7" opacity="0.2"/>
+  <line x1="165" y1="278" x2="155" y2="292" stroke="#ff2d95" stroke-width="0.7" opacity="0.15"/>
+
+  <!-- Right -->
+  <circle cx="275" cy="278" r="2.5" fill="#00ffff" opacity="0.5"/>
+  <circle cx="260" cy="290" r="2.5" fill="#00ffff" opacity="0.4"/>
+  <circle cx="285" cy="292" r="2" fill="#00ffff" opacity="0.3"/>
+  <line x1="275" y1="278" x2="260" y2="290" stroke="#00ffff" stroke-width="0.7" opacity="0.2"/>
+  <line x1="275" y1="278" x2="285" y2="292" stroke="#00ffff" stroke-width="0.7" opacity="0.15"/>
+
+  <!-- === Outer ring (subtle bounding circle) === -->
+  <circle cx="220" cy="210" r="145" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+</svg>

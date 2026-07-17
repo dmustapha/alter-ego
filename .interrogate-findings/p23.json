@@ -1,0 +1,67 @@
+[
+  {
+    "persona": "P23: COMPETITIVE POSITIONING AUDITOR",
+    "check_id": "23.1",
+    "severity": "P1",
+    "effort": "E1",
+    "status": "SOLID",
+    "title": "Hackathon-track positioning is genuinely unique — agent identity analysis has no direct competitors in Lifestyle Companion track",
+    "location": "PRD.md:44-48; submission/copy/description.md:1-5",
+    "evidence": "PRD.md lines 44-48 ('Why This Wins' table): 'Category Excellence — Lifestyle Companion has only ~2 ASPs listed. Alter Ego fills an empty lane with a novel product.' PRD.md line 48: 'Nobody is building a trading IDENTITY agent. Eat This? does food. WorldCupCaller does predictions. CertiK does security. Alter Ego builds your on-chain persona.' Submission description confirms the product is 'a TEE-bound agent... builds a psychological persona, then pits your Ethereum self against your Solana self in a 5-round roast battle.' The combo — multi-chain persona generation, AMPLIFY/GUARD pattern classification into 12 rules (AMP-01 through GRD-06, PRD.md:172-184), and roast battle format — has no overlap with the two known ASPs in the track.",
+    "rationale": "The track has ~2 ASPs, neither described as doing identity/persona work. Agent identity analysis via on-chain behavioral classification is an empty lane inside the Lifestyle Companion track. The Social Buzz crossover (roast battle designed for virality on X) further differentiates from any adjacent track entries. Risk: the '~2 ASPs' claim is self-reported and unverifiable — we have no snapshot of the OKX.AI marketplace at submission time. But the product's featureset is structurally distinct from the named competitors (food, predictions, security).",
+    "fix_guidance": "If the '~2 ASPs' claim can be verified with a marketplace screenshot at submission time, add it to the /proof page as competitive-positioning evidence. Otherwise, soften the claim to 'few direct competitors observed in the Lifestyle Companion track.'",
+    "persona_type": "qualitative"
+  },
+  {
+    "persona": "P23: COMPETITIVE POSITIONING AUDITOR",
+    "check_id": "23.2",
+    "severity": "P1",
+    "effort": "E1",
+    "status": "SOLID",
+    "title": "Market-incumbent gap is real — Alter Ego does persona generation, not portfolio tracking",
+    "location": "PRD.md:31-39; submission/copy/description.md:1-12; README.md:18-23",
+    "evidence": "PRD.md lines 31-32: 'A TEE-bound agent that reads your entire on-chain history across every wallet and chain, shows you what you're good at (amplify) and what's costing you money (guard), then cross-references top traders.' PRD.md lines 34-35: 'Crypto traders have no objective mirror reflecting their patterns across all their wallets and chains.' README.md lines 20-23: 'The same person running disciplined DCA on Ethereum often turns into a meme-coin degen on Solana. Alter Ego surfaces that split, names the personas, stages a roast battle between them.' grep across entire project (560 files) for 'Nansen|DeBank|Zapper|Zerion|Dune' returned ZERO matches. Nansen does wallet labeling + smart money tracking. DeBank/Zapper/Zerion do portfolio tracking + DeFi position aggregation. Dune does SQL analytics on on-chain data. None do: (a) behavioral pattern classification into persona archetypes, (b) cross-chain self-vs-self comparison, (c) roast battle narrative format, (d) AMPLIFY/GUARD duality framing. Alter Ego's output is identity, not portfolio value.",
+    "rationale": "The gap is genuine and structural, not cosmetic. Portfolio trackers answer 'how much are you worth?' Alter Ego answers 'who are you as a trader?' The 12-rule pattern classifier (AMP-01 through GRD-06 in PRD.md:172-184) operationalizes this — detecting psychological patterns (Paper Hands, Diamond Hands, HODL Trap) rather than balance aggregation. However, the project never acknowledges Nansen/DeBank/Zapper/Zerion/Dune in any document — not in README, PRD, or submission description. This is a pitch gap (see 23.5), not a competitive-positioning gap.",
+    "fix_guidance": "In the 'Why This Wins' section or a competitive landscape slide, explicitly name the market incumbents and state the structural difference: 'Nansen labels wallets. DeBank tracks balances. Dune queries data. Alter Ego builds your trading identity.' This turns the omission into a deliberate framing choice.",
+    "persona_type": "qualitative"
+  },
+  {
+    "persona": "P23: COMPETITIVE POSITIONING AUDITOR",
+    "check_id": "23.3",
+    "severity": "P1",
+    "effort": "E1",
+    "status": "SOLID",
+    "title": "Differentiation is structural, not cosmetic or parametric — persona generation + roast battle is a genuinely novel mechanism",
+    "location": "PRD.md:37-39,166-184; submission/copy/description.md:7-16; DEMO-SCRIPT.md:27-69",
+    "evidence": "Three-tier differentiation framework applied: COSMETIC = same product, different branding/UI (e.g., two portfolio trackers with different color schemes). PARAMETRIC = same product category, different metrics (e.g., one tracker shows PnL, another shows gas costs). STRUCTURAL = different product category with novel mechanism. Alter Ego's mechanism: (1) Pattern Classifier (PRD.md:166-184) with 12 deterministic rules detecting psychological trading patterns — not PnL aggregation; (2) Persona Engine (PRD.md:186-190) mapping patterns to archetypes with catchphrases, vices, superpowers, kryptonite; (3) Cross-chain roast battle (DEMO-SCRIPT.md:27-42, 5-round battle engine) where ETH self and SOL self exchange data-backed insults; (4) GAP COST calculation (DEMO-SCRIPT.md:52) — 'what you lost by not being your best self on every chain.' None of these mechanisms exist in Nansen, DeBank, Zapper, Zerion, or Dune. The roast battle format is not a UI flourish on top of portfolio data — it requires the persona-generation pipeline as a prerequisite. Without persona classification, there is no roast battle.",
+    "rationale": "Structural differentiation is the highest tier and hardest to copy. A competitor would need to build the entire 12-rule pattern classifier + persona engine + roast battle engine + cross-chain data ingestion to replicate Alter Ego — it's not a reskin of a portfolio tracker. However, the roast battle lines are PRE-COMPUTED (PRD.md line 24: 'Static roast lines in cache, not generated by LLM at runtime'), which means the demo's most differentiating feature is mocked. If a judge asks 'does the LLM generate these live?' the answer is no — weakening the structural-differentiation claim for the demo itself.",
+    "fix_guidance": "For demo purposes, the pre-computed roast lines are acceptable given 2-day build constraint. But the pitch should clarify that post-hackathon, roast generation would be live LLM-powered with real on-chain data, not pre-cached. Add a slide or verbal note: 'In production, the roast battle is live-generated by an LLM reading real-time transaction data.'",
+    "persona_type": "qualitative"
+  },
+  {
+    "persona": "P23: COMPETITIVE POSITIONING AUDITOR",
+    "check_id": "23.4",
+    "severity": "P1",
+    "effort": "E1",
+    "status": "SOLID",
+    "title": "Sponsor-ecosystem gap-fill is genuine — OKX Wallet has portfolio tracking but no identity/persona agent",
+    "location": "PRD.md:4,48; submission/copy/description.md:25-35; README.md:38-68",
+    "evidence": "PRD.md line 4: 'Track: Lifestyle Companion + Social Buzz crossover.' PRD.md line 48: 'Lifestyle Companion has only ~2 ASPs listed. Alter Ego fills an empty lane.' Submission description lines 25-35 detail all 4 OnchainOS integrations: OKX WALLET (multi-chain address ingestion), OKX DEX-MARKET (cross-chain market data for comparison engine), OKX-AI (agent listing on marketplace), X402 (micropayment gate). README.md lines 38-69 confirm each integration with code references. The OKX Wallet product provides portfolio tracking, transaction history, and token management — but has no persona/identity layer. Alter Ego sits on top of OKX Wallet's data surface (via OnchainOS) and adds a behavioral analysis layer the ecosystem doesn't have. This is not a competitor to OKX Wallet — it's a complement that increases wallet stickiness by giving users a reason to connect and analyze their history.",
+    "rationale": "OKX ecosystem gap: OKX Wallet answers 'what do I own?' Alter Ego answers 'who am I as a trader?' This is a complementary product, not competitive — it drives engagement with OKX Wallet by providing a novel use case (identity discovery). The TEE + ERC-8004 identity layer further ties the agent into the OKX/X Layer ecosystem. The x402 micropayment integration closes the loop with a monetization path inside the OKX marketplace. This is a strong sponsor-ecosystem fit — arguably the strongest positioning argument for the hackathon.",
+    "fix_guidance": "Make the ecosystem complementarity explicit in the pitch: 'OKX Wallet tells you what you own. Alter Ego tells you who you are. Together, they make the wallet indispensable.' This framing sells the value to OKX as a sponsor, not just to judges.",
+    "persona_type": "qualitative"
+  },
+  {
+    "persona": "P23: COMPETITIVE POSITIONING AUDITOR",
+    "check_id": "23.5",
+    "severity": "P1",
+    "effort": "E1",
+    "status": "GAP",
+    "title": "Pitch acknowledges hackathon competitors but omits market incumbents entirely — competitive framing is incomplete",
+    "location": "PRD.md:44-48; README.md:1-222; submission/copy/description.md:1-64",
+    "evidence": "PRD.md lines 44-48 ('Why This Wins' table, Creativity row): 'Nobody is building a trading IDENTITY agent. Eat This? does food. WorldCupCaller does predictions. CertiK does security.' All three named competitors are hackathon peers, not market incumbents. README.md (222 lines, full read): zero mentions of Nansen, DeBank, Zapper, Zerion, Dune Analytics, or any market incumbent. Submission description (64 lines, full read): zero mentions of any competitor, hackathon or market. grep across entire project (560 files) for 'Nansen|DeBank|Zapper|Zerion|Dune|competitor|competition': ZERO matches. The competitive framing exists only in the PRD's 'Why This Wins' section and only names hackathon-track peers. The $1B+ wallet analytics market (Nansen $750M valuation at peak, DeBank millions of users, Dune as the default crypto analytics platform) is invisible in the pitch.",
+    "rationale": "This is a pitch honesty gap, not a product gap. The PRD correctly identifies that no hackathon competitor is building a trading identity agent. But a judge familiar with the wallet analytics market will immediately ask: 'How is this different from Nansen's wallet profiling or DeBank's portfolio analysis?' The pitch has no prepared answer because it never acknowledges these competitors exist. The omission makes the project look less aware of the market landscape than it actually is — the persona-generation mechanism IS structurally different from incumbents (see 23.2, 23.3), but the pitch never makes that case because it never names them.",
+    "fix_guidance": "Add a 'Market Landscape' section to the submission description or a dedicated slide that: (1) names Nansen, DeBank, Zapper, Zerion, Dune as the wallet analytics incumbents; (2) states what they do (portfolio tracking, wallet labeling, SQL queries); (3) states what Alter Ego does differently (behavioral persona generation, self-vs-self cross-chain comparison, roast battle narrative); (4) frames Alter Ego as 'the identity layer on top of portfolio data' — complementary, not competitive. This converts the omission from a weakness into a deliberate positioning choice.",
+    "persona_type": "qualitative"
+  }
+]

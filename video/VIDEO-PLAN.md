@@ -1,6 +1,6 @@
 # Demo Video — Alter Ego
 
-**Target:** 90s | **Live URL:** https://alter-e8wzy3vsl-damilolas-projects-fafdf859.vercel.app
+**Target:** 90s | **Live URL:** https://alter-ego-wine-mu.vercel.app
 **Audio:** Native (live narration during recording)
 
 ---
@@ -20,7 +20,7 @@ ffmpeg -y -f avfoundation -i "1:0" -r 30 -t 95 \
 
 ## Manual Recording Steps
 
-1. Open https://alter-e8wzy3vsl-damilolas-projects-fafdf859.vercel.app in Chrome
+1. Open https://alter-ego-wine-mu.vercel.app in Chrome
 2. Set browser to 1280×800, zoom 100%
 3. Hide bookmarks bar, extensions, DevTools
 4. Start screen recording
@@ -37,7 +37,7 @@ const { chromium } = require('playwright');
 (async () => {
   const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  await page.goto('https://alter-e8wzy3vsl-damilolas-projects-fafdf859.vercel.app');
+  await page.goto('https://alter-ego-wine-mu.vercel.app');
   await page.waitForTimeout(2000);
   await page.click('button:has-text(\"LOAD DEMO\")');
   await page.waitForTimeout(1000);
@@ -57,5 +57,5 @@ ffmpeg -i video/demo-raw.mp4 -t 90 -c copy video/demo-final.mp4
 
 # Add hackathon outro card
 # Title: "Alter Ego — Built for OKX.AI Genesis"
-# URL: alter-ego.vercel.app | GitHub: github.com/dmustapha/alter-ego
+# URL: alter-ego-wine-mu.vercel.app | GitHub: github.com/dmustapha/alter-ego
 ```

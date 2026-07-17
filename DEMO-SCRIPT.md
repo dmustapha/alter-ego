@@ -2,7 +2,7 @@
 
 **Generated:** 2026-07-16 | **Duration target:** 90s
 **Audio strategy:** native (live narration)
-**Live URL:** https://alter-ego.vercel.app (deploying)
+**Live URL:** https://alter-ego-wine-mu.vercel.app
 
 ---
 

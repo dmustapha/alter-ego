@@ -7,6 +7,8 @@ export async function GET() {
     const leaderboard = loadLeaderboard();
     return NextResponse.json({ comparison, top3: leaderboard.slice(0, 3) });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[API] GET /api/compare:`, error.message);
+    const message = process.env.NODE_ENV === "production" ? "Internal server error" : error.message;
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

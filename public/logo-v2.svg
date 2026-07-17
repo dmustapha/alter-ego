@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 48" fill="none">
+  <!-- Wordmark: "ALTER EGO" monospace terminal style with blinking cursor -->
+  <text x="0" y="36" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="32" font-weight="bold" fill="#34d399" letter-spacing="4">
+    ALTER EGO
+  </text>
+  <!-- Blinking cursor -->
+  <rect x="248" y="8" width="14" height="28" rx="1" fill="#34d399" opacity="0.8"/>
+</svg>

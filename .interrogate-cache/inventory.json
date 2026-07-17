@@ -1,0 +1,151 @@
+{
+  "project": "alter-ego",
+  "generated": "2026-07-16T00:00:00Z",
+  "mode": "DEEP",
+  "functions": [
+    { "name": "handleAnalyze", "file": "src/app/page.tsx", "line": 28, "params": "addresses: Array<{address:string,chains:string[]}>", "returns": "Promise<void>", "type": "state_changing", "actor": "anonymous_user" },
+    { "name": "launchDemo", "file": "src/app/page.tsx", "line": 15, "params": "handle: function", "returns": "void", "type": "state_changing", "actor": "anonymous_user" },
+    { "name": "POST /api/analyze", "file": "src/app/api/analyze/route.ts", "line": 8, "params": "Request", "returns": "NextResponse<AnalyzeResponse>", "type": "api_endpoint", "actor": "anonymous_user" },
+    { "name": "GET /api/roast", "file": "src/app/api/roast/route.ts", "line": 4, "params": "none", "returns": "NextResponse<{battle}>", "type": "api_endpoint", "actor": "anonymous_user" },
+    { "name": "GET /api/compare", "file": "src/app/api/compare/route.ts", "line": 4, "params": "none", "returns": "NextResponse<{comparison,top3}>", "type": "api_endpoint", "actor": "anonymous_user" },
+    { "name": "GET /api/persona", "file": "src/app/api/persona/route.ts", "line": 4, "params": "none", "returns": "NextResponse<{personas}>", "type": "api_endpoint", "actor": "anonymous_user" },
+    { "name": "classifyPatterns", "file": "src/lib/classifier.ts", "line": 3, "params": "wallet: WalletData", "returns": "PatternResult", "type": "server_internal" },
+    { "name": "detectAmplifyPatterns", "file": "src/lib/classifier.ts", "line": 18, "params": "wallet: WalletData", "returns": "Pattern[]", "type": "server_internal" },
+    { "name": "detectGuardPatterns", "file": "src/lib/classifier.ts", "line": 123, "params": "wallet: WalletData", "returns": "Pattern[]", "type": "server_internal" },
+    { "name": "generatePersona", "file": "src/lib/persona.ts", "line": 66, "params": "result: PatternResult, label: string, pnlTotal: number", "returns": "Persona", "type": "server_internal" },
+    { "name": "generateCatchphrase", "file": "src/lib/persona.ts", "line": 28, "params": "dominantAmp: Pattern|null, dominantGrd: Pattern|null", "returns": "string", "type": "server_internal" },
+    { "name": "generateSuperpower", "file": "src/lib/persona.ts", "line": 41, "params": "dominantAmp: Pattern|null", "returns": "string", "type": "server_internal" },
+    { "name": "generateKryptonite", "file": "src/lib/persona.ts", "line": 45, "params": "dominantGrd: Pattern|null", "returns": "string", "type": "server_internal" },
+    { "name": "getTopPattern", "file": "src/lib/persona.ts", "line": 49, "params": "patterns: Pattern[]", "returns": "Pattern|null", "type": "server_internal" },
+    { "name": "generateCompareInsight", "file": "src/lib/persona.ts", "line": 78, "params": "userWinRate: number, topWinRate: number", "returns": "string", "type": "server_internal", "note": "DEAD CODE — never called" },
+    { "name": "loadAllDemoData", "file": "src/lib/cache.ts", "line": 72, "params": "none", "returns": "Promise<CachedDemoData>", "type": "server_internal" },
+    { "name": "loadWalletA", "file": "src/lib/cache.ts", "line": 13, "params": "none", "returns": "WalletData", "type": "server_internal" },
+    { "name": "loadWalletB", "file": "src/lib/cache.ts", "line": 18, "params": "none", "returns": "WalletData", "type": "server_internal" },
+    { "name": "loadWalletC", "file": "src/lib/cache.ts", "line": 22, "params": "none", "returns": "WalletData", "type": "server_internal" },
+    { "name": "loadPatterns", "file": "src/lib/cache.ts", "line": 26, "params": "none", "returns": "PatternResult[]", "type": "server_internal" },
+    { "name": "loadPersonas", "file": "src/lib/cache.ts", "line": 30, "params": "none", "returns": "Promise<Persona[]>", "type": "server_internal" },
+    { "name": "loadComparison", "file": "src/lib/cache.ts", "line": 47, "params": "none", "returns": "CompareResult", "type": "server_internal" },
+    { "name": "loadRoastBattle", "file": "src/lib/cache.ts", "line": 51, "params": "none", "returns": "Promise<RoastBattle>", "type": "server_internal" },
+    { "name": "loadLeaderboard", "file": "src/lib/cache.ts", "line": 62, "params": "none", "returns": "LeaderboardEntry[]", "type": "server_internal" },
+    { "name": "cacheExists", "file": "src/lib/cache.ts", "line": 85, "params": "none", "returns": "boolean", "type": "server_internal" },
+    { "name": "getAllBalances", "file": "src/lib/onchainos.ts", "line": 20, "params": "address: string, chains: string[], filter: 0|1", "returns": "TokenAsset[]", "type": "external_cli", "note": "NOT CALLED IN DEMO MODE" },
+    { "name": "getTotalValue", "file": "src/lib/onchainos.ts", "line": 35, "params": "address: string, chains: string[]", "returns": "string", "type": "external_cli", "note": "NOT CALLED IN DEMO MODE" },
+    { "name": "getPortfolioOverview", "file": "src/lib/onchainos.ts", "line": 46, "params": "address: string, chain: string, timeFrame: 1|2|3|4|5", "returns": "PortfolioOverview", "type": "external_cli" },
+    { "name": "getLeaderboard", "file": "src/lib/onchainos.ts", "line": 54, "params": "chain: string, timeFrame: 1|2|3|4|5, sortBy: 1|2|3|4|5, walletType?: string", "returns": "LeaderboardEntry[]", "type": "external_cli" },
+    { "name": "getApprovals", "file": "src/lib/onchainos.ts", "line": 69, "params": "address: string, chains?: string[], limit?: number", "returns": "ApprovalEntry[]", "type": "external_cli" },
+    { "name": "scanTokens", "file": "src/lib/onchainos.ts", "line": 77, "params": "tokens: string[]", "returns": "TokenScanResult[]", "type": "external_cli" },
+    { "name": "checkWalletStatus", "file": "src/lib/onchainos.ts", "line": 85, "params": "none", "returns": "boolean", "type": "external_cli", "note": "DEAD CODE — never called" },
+    { "name": "loginWallet", "file": "src/lib/onchainos.ts", "line": 90, "params": "email: string", "returns": "string", "type": "external_cli", "note": "DEAD CODE — never called" },
+    { "name": "verifyOtp", "file": "src/lib/onchainos.ts", "line": 94, "params": "code: string", "returns": "string", "type": "external_cli", "note": "DEAD CODE — never called" },
+    { "name": "PaymentButton.handleClick", "file": "src/components/PaymentButton.tsx", "line": 5, "params": "none", "returns": "void", "type": "ui_transition", "actor": "anonymous_user" },
+    { "name": "WalletInput.handleSubmit", "file": "src/components/WalletInput.tsx", "line": 13, "params": "React.FormEvent", "returns": "void", "type": "ui_form", "actor": "anonymous_user" },
+    { "name": "Terminal (component)", "file": "src/components/Terminal.tsx", "line": 5, "params": "{children}", "returns": "JSX.Element", "type": "ui_container" },
+    { "name": "TypingText", "file": "src/components/Terminal.tsx", "line": 106, "params": "{text, delay}", "returns": "JSX.Element", "type": "ui_animation" },
+    { "name": "SlideIn", "file": "src/components/Terminal.tsx", "line": 112, "params": "{children, delay}", "returns": "JSX.Element", "type": "ui_animation" },
+    { "name": "PatternCard", "file": "src/components/PatternCard.tsx", "line": 5, "params": "{pattern, delay}", "returns": "JSX.Element", "type": "ui_display" },
+    { "name": "PersonaCard", "file": "src/components/PersonaCard.tsx", "line": 5, "params": "{persona, delay}", "returns": "JSX.Element", "type": "ui_display" },
+    { "name": "RoastBattle", "file": "src/components/RoastBattle.tsx", "line": 6, "params": "{battle}", "returns": "JSX.Element", "type": "ui_display" },
+    { "name": "CompareCard", "file": "src/components/CompareCard.tsx", "line": 5, "params": "{comparison}", "returns": "JSX.Element", "type": "ui_display" }
+  ],
+  "actor_roles": [
+    { "role": "anonymous_user", "description": "Any web visitor. No auth. Can call all 4 API endpoints, click any button." },
+    { "role": "server_internal", "description": "Server-side code execution context. Can read filesystem, execute CLI commands." }
+  ],
+  "asset_pools": [
+    { "name": "demo_cache", "type": "filesystem", "location": "src/data/cache/", "contents": "9 JSON files with 4,463 pre-computed transactions across 3 chains", "ownership": "server_internal" },
+    { "name": "vercel_deployment", "type": "platform", "location": "alter-ego-demo.vercel.app", "ownership": "damilolas-projects-fafdf859" }
+  ],
+  "claims": [
+    { "id": "C1", "claim": "TEE-bound agent with cryptographic attestation", "status": "MOCKED", "severity": "P0" },
+    { "id": "C2", "claim": "x402 micropayments ($0.99 snapshot, $4.99/mo)", "status": "MOCKED", "severity": "P1" },
+    { "id": "C3", "claim": "Real-time whale monitoring", "status": "MOCKED", "severity": "P1" },
+    { "id": "C4", "claim": "OnchainOS CLI live data ingestion", "status": "CODE_EXISTS_BUT_BYPASSED", "severity": "P2" },
+    { "id": "C5", "claim": "Multi-chain: Ethereum, Solana, X Layer", "status": "REAL", "severity": "OK" },
+    { "id": "C6", "claim": "6-phase state machine", "status": "REAL", "severity": "OK" },
+    { "id": "C7", "claim": "12 deterministic pattern rules", "status": "REAL", "severity": "OK" },
+    { "id": "C8", "claim": "Persona engine with archetypes", "status": "REAL", "severity": "OK" },
+    { "id": "C9", "claim": "5-round roast battle", "status": "REAL", "severity": "OK" },
+    { "id": "C10", "claim": "OKX Wallet integration", "status": "PARTIAL", "severity": "P2" },
+    { "id": "C11", "claim": "OKX DEX Market integration", "status": "IMPORT_ONLY", "severity": "P2" },
+    { "id": "C12", "claim": "OKX AI Marketplace ASP listing", "status": "EXTERNAL", "severity": "P3" },
+    { "id": "C13", "claim": "TEE cryptographic snapshot proof", "status": "MOCKED", "severity": "P1" },
+    { "id": "C14", "claim": "33/33 Playwright tests", "status": "VERIFIED", "severity": "OK" },
+    { "id": "C15", "claim": "Glitch Core design system", "status": "REAL", "severity": "OK" }
+  ],
+  "endpoints": [
+    { "method": "POST", "path": "/api/analyze", "auth": "none", "description": "Wallet ingestion + pattern classification", "file": "src/app/api/analyze/route.ts" },
+    { "method": "GET", "path": "/api/roast", "auth": "none", "description": "Roast battle transcript", "file": "src/app/api/roast/route.ts" },
+    { "method": "GET", "path": "/api/compare", "auth": "none", "description": "Leaderboard comparison", "file": "src/app/api/compare/route.ts" },
+    { "method": "GET", "path": "/api/persona", "auth": "none", "description": "Cached persona lookup", "file": "src/app/api/persona/route.ts" }
+  ],
+  "ui_surfaces": [
+    { "name": "Landing page", "path": "/", "file": "src/app/page.tsx", "components": ["Terminal", "WalletInput", "PersonaCard"], "phase": "landing" },
+    { "name": "Scanning phase", "path": "/", "file": "src/app/page.tsx", "components": ["Terminal", "TypingText"], "phase": "scanning" },
+    { "name": "Results phase", "path": "/", "file": "src/app/page.tsx", "components": ["PersonaCard", "PatternCard", "TypingText"], "phase": "results" },
+    { "name": "Battle phase", "path": "/", "file": "src/app/page.tsx", "components": ["RoastBattle"], "phase": "battle" },
+    { "name": "Compare phase", "path": "/", "file": "src/app/page.tsx", "components": ["CompareCard"], "phase": "compare" },
+    { "name": "CTA phase", "path": "/", "file": "src/app/page.tsx", "components": ["PaymentButton"], "phase": "cta" },
+    { "name": "Proof page", "path": "/proof", "file": "src/app/proof/page.tsx", "components": ["Terminal"], "phase": "static" }
+  ],
+  "dependencies": [
+    { "name": "next", "version": "16.2.10", "type": "runtime" },
+    { "name": "react", "version": "19.2.4", "type": "runtime" },
+    { "name": "react-dom", "version": "19.2.4", "type": "runtime" },
+    { "name": "framer-motion", "version": "12.42.2", "type": "runtime" },
+    { "name": "typescript", "version": "^5", "type": "dev" },
+    { "name": "@playwright/test", "version": "^1.61.1", "type": "dev" },
+    { "name": "tailwindcss", "version": "^4", "type": "dev" },
+    { "name": "@tailwindcss/postcss", "version": "^4", "type": "dev" },
+    { "name": "eslint", "version": "^9", "type": "dev" },
+    { "name": "eslint-config-next", "version": "16.2.10", "type": "dev" },
+    { "name": "onchainos", "version": "latest (system CLI)", "type": "external_system" }
+  ],
+  "config_values": [
+    { "key": "DEMO_MODE", "file": ".env (not found), referenced in code", "value": "unknown", "type": "feature_flag" },
+    { "key": "OKX_API_KEY", "file": ".env.example", "value": "placeholder", "type": "credential" },
+    { "key": "OKX_SECRET_KEY", "file": ".env.example", "value": "placeholder", "type": "credential" },
+    { "key": "OKX_PASSPHRASE", "file": ".env.example", "value": "placeholder", "type": "credential" },
+    { "key": "VERCEL_OIDC_TOKEN", "file": ".env.local", "value": "EXPOSED_JWT", "type": "deployment_token", "severity": "P0" }
+  ],
+  "judging_criteria": [
+    { "criterion": "Product Experience & Completeness", "weight": "high", "our_claim": "Full end-to-end flow: wallet→ingest→classify→persona→compare→battle→CTA" },
+    { "criterion": "Creativity", "weight": "high", "our_claim": "Trading identity agent with roast battle format" },
+    { "criterion": "Revenue / Orders / Reviews", "weight": "medium", "our_claim": "x402: Snapshot $0.99, Coach $4.99/mo, Battle $1.99" },
+    { "criterion": "Category Excellence", "weight": "medium", "our_claim": "Lifestyle Companion + Social Buzz crossover" },
+    { "criterion": "Social Traction", "weight": "medium", "our_claim": "Roast battle format for virality, #OKXAI post" }
+  ],
+  "sponsor_requirements": [
+    { "sponsor": "OKX", "requirement": "Use OKX OnchainOS", "status": "PARTIAL — CLI code exists but bypassed in demo" },
+    { "sponsor": "OKX", "requirement": "OKX Wallet integration", "status": "PARTIAL — no direct SDK integration" },
+    { "sponsor": "OKX", "requirement": "x402 payments", "status": "MOCKED" },
+    { "sponsor": "OKX", "requirement": "OKX AI Marketplace listing", "status": "CLAIMED — external to codebase" }
+  ],
+  "demo_steps": [
+    { "step": 1, "title": "Landing Page", "duration": "0:00-0:10", "description": "Show hero text + integration strip", "footgun": "none" },
+    { "step": 2, "title": "LOAD DEMO", "duration": "0:10-0:20", "description": "Click LOAD DEMO, addresses populate", "footgun": "Do not type random addresses" },
+    { "step": 3, "title": "ANALYZE + Scanning", "duration": "0:20-0:30", "description": "Click ANALYZE, scanning phase with CRT flicker", "footgun": "none" },
+    { "step": 4, "title": "Results", "duration": "0:30-0:45", "description": "Persona cards + PatternCards", "footgun": "Empty persona cards during load" },
+    { "step": 5, "title": "Roast Battle", "duration": "0:45-1:05", "description": "5-round roast battle, interject at rounds 1/3/5", "footgun": "Let battle play naturally" },
+    { "step": 6, "title": "Compare Card", "duration": "1:05-1:15", "description": "GAP COST: $31,500", "footgun": "Don't show negative percentages" },
+    { "step": 7, "title": "CTA", "duration": "1:15-1:30", "description": "ATTESTATION VERIFIED badge + x402 button", "footgun": "TEE attestation is mock — don't linger" }
+  ],
+  "data_structures": [
+    "TokenAsset", "PortfolioOverview", "LeaderboardEntry", "ApprovalEntry", "TokenScanResult",
+    "Trade", "WalletData", "Pattern", "PatternResult", "Persona",
+    "CompareResult", "RoastLine", "RoastBattle", "AnalyzeRequest", "AnalyzeResponse",
+    "CachedDemoData"
+  ],
+  "test_files": [
+    { "file": "stress-browser.spec.ts", "tests": 33, "coverage": "6-phase state machine, responsive layout, keyboard nav, network resilience, visual design" }
+  ],
+  "files": {
+    "source": 19,
+    "components": 7,
+    "lib": 5,
+    "api_routes": 4,
+    "pages": 2,
+    "types": 1,
+    "test": 1,
+    "cache_data": 9
+  }
+}
