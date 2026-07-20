@@ -68,3 +68,36 @@ Source of truth for the remediation arc. Detailed plans are written **roll-wave*
 - Re-record at 1920×1080 with narration (script in `DEMO-SCRIPT.md` is strong; keep the copy, fix the delivery).
 - Fix the script/UI persona-name mismatch ("The Degen" spoken vs "The Sniper" rendered).
 **Spike:** none. ~0.5 day.
+
+---
+
+## Status: all 6 plans written in full detail
+
+| Plan | File | Reconciliation gate |
+|------|------|---------------------|
+| 1 | `2026-07-20-genuinely-live-data-layer.md` | Task 0 security gate + Task 1 API spike (own fork) |
+| 2 | `2026-07-20-a2mcp-conformance.md` | Task 0 reconcile + Task 1 A2MCP-contract spike |
+| 3 | `2026-07-20-real-x402-payment.md` | Task 0 reconcile + Task 1 x402 round-trip HARD GATE |
+| 4 | `2026-07-20-frontend-a11y-tokenization.md` | Task 0 reconcile (independent; parallelizable) |
+| 5 | `2026-07-20-submission-honesty-pass.md` | Task 0 reconcile (branches on what actually shipped) |
+| 6 | `2026-07-20-demo-rerecord.md` | Task 0 live-truth gate (HALT if prod 500s) |
+
+## Reconciliation protocol (how caveats resolve across plans)
+
+Full plans are written up front, but each carries **branch caveats** (documented forks) that are resolved by a **reconciliation spike** at its head. The caveat is "what could be true"; the spike is "which one is". They are one mechanism, not two alternatives.
+
+- **Foreseeable forks** → pre-written as branch caveats in each plan's `## Upstream Inputs & Branch Caveats` table (cheap, keeps momentum).
+- **Unforeseeable results** (the spike surfaces something no branch anticipated) → the reconciliation spike HALTS and amends the plan before code. This is the safety valve for unknown-shape unknowns.
+
+**Every plan opens with `## Task 0: Reconcile with upstream output`:** read the artifacts in the "Reads" column below, confirm which documented branch applies, write the chosen branch + evidence to the plan's state note, then proceed. If reality matches no branch, STOP and amend.
+
+## Branch-Caveat Matrix (the different caveats, keyed to the previous process's output)
+
+| Plan | Reads (upstream artifact) | Possible outcomes | Branch taken |
+|------|---------------------------|-------------------|--------------|
+| 1 | (root; no upstream) — its own Task 1 spike | REST trade endpoint exists / does not | exists → live-data build; none → **Plan-1B honest-demo fork** |
+| 2 | Plan 1 green + `docs/OKX-TRADE-API-CONTRACT.md`; A2MCP spike | marketplace card/envelope confirmed live / only skill-grounded defaults reachable | confirmed → build to it; defaults → build to fallbacks + flag card-shape re-validate as a Downstream Item |
+| 3 | Plan 2 green (`docs/A2MCP-CONTRACT.md`, 402 seam); x402 round-trip spike | testnet USDG settles / cannot settle | settles → real x402 (`settlementMode=live`); cannot → **keep demo settlement, do NOT ship Plan 3**, tell Plan 5/6 to not claim real payment |
+| 4 | independent of 1-3; current `globals.css`/components | (no upstream fork) | always runs; parallelizable; only `package.json`/`playwright.config.ts` are shared (additive) |
+| 5 | Plans 1-4 final state + live URL + whether Plan 3 shipped | x402 real vs simulated; A2MCP live vs metadata-only; tx count from regenerated cache | rewrite copy to whichever is TRUE; ONE canonical tx number from Plan 1's cache |
+| 6 | Plan 1 live-500 fixed on prod + `video/REHEARSAL-LOG.md` + whether 2/3 shipped | live flow works with real wallet / still 500s | works → record; 500 → **HALT (never record over a broken flow)**; VO claims only what shipped |
