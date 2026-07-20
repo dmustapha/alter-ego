@@ -88,7 +88,7 @@ vercel --prod
 **Interfaces:**
 - Produces: `OKX-TRADE-API-CONTRACT.md` documenting the exact endpoint, request body, and JSON response shape for per-wallet trade/dex history — consumed by Task 2.
 
-- [ ] **Step 1: Probe candidate endpoints with the fresh creds.** Using the `okxCall` signing convention, `curl` each candidate for one known-active EVM address and record status + body shape. Candidates, in priority order:
+- [ ] **Step 1: Probe candidate endpoints with the fresh creds.** Using the `okxCall` signing convention, `curl` each candidate for one known-active address on EACH target chain — Ethereum (`chainIndex: 1`), Solana (`501`), and **X Layer (`196`)** (the Genesis target chain) — and record status + body shape per chain. Candidates, in priority order:
   1. `POST /priapi/v5/wallet/agentic/market/portfolio-dex-history` body `{ address, chainIndex }` (agentic surface, matches the CLI `market portfolio-dex-history`).
   2. `GET /api/v5/dex/post-transaction/transactions-by-address?address=<a>&chains=<id>` (public Web3 DEX API).
   3. `POST /priapi/v5/wallet/agentic/asset/wallet-transaction-list` body `{ addresses, chains }`.
