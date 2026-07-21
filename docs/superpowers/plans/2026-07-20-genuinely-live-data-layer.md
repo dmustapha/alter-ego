@@ -22,7 +22,7 @@
 
 1. **Live-data spine (THIS PLAN):** security hotfix + REST trade client + wire into routes + classifier bug-fixes + honest cache regen + differential test.
 2. A2MCP conformance (agent card, input schema, 402/X-PAYMENT handshake, ASP `serviceList`).
-3. Real x402 payment (`/api/v6/x402/verify` + `/settle`, replace the `setTimeout`).
+3. Real x402 payment (OKX Payment SDK `@okxweb3/x402`, USDT0 on X Layer `eip155:196`, replace the `setTimeout`) — MANDATORY listing gate.
 4. Frontend a11y + design-system tokenization (focus-visible, reduced-motion, contrast, color tokens, re-capture `landing.png`).
 5. Submission honesty pass (fix live URLs, clone URL, reconcile tx counts, align copy to reality).
 6. Demo re-record (1920x1080 with narration, real rehearsal against the live URL).
