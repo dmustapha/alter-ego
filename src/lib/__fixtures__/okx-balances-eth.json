@@ -1,0 +1,410 @@
+{
+  "code": "0",
+  "msg": "success",
+  "data": [
+    {
+      "tokenAssets": [
+        {
+          "chainIndex": "1",
+          "symbol": "Eagle",
+          "balance": "10000000",
+          "tokenPrice": "14.89335611956904973697083286124382",
+          "isRiskToken": false,
+          "rawBalance": "10000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xbfd96f218d6a13d19593d8442b8185d5992b3699"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "Ass",
+          "balance": "10000000",
+          "tokenPrice": "10.66229265084370192482738824202239",
+          "isRiskToken": false,
+          "rawBalance": "10000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x8e6c84fc33ff960ecf59989b5afdbdb63090e8e4"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "TPM",
+          "balance": "10000000",
+          "tokenPrice": "9.023824674042286295359124044383009",
+          "isRiskToken": false,
+          "rawBalance": "10000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x616746c723a65636f6b0abee9258d9bed744805d"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "^",
+          "balance": "10000000",
+          "tokenPrice": "7.436067774234840174660649236920423",
+          "isRiskToken": false,
+          "rawBalance": "10000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xe6a18a5c2816cfbcb5724e8cdb66e23f3f13a502"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "EGL",
+          "balance": "100000000",
+          "tokenPrice": "0.01680091407034324524731230087800349",
+          "isRiskToken": false,
+          "rawBalance": "100000000000000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x1e83916ea2ef2d7a6064775662e163b2d4c330a7"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "VITALIK",
+          "balance": "900000000",
+          "tokenPrice": "0.0002541265739924804200835303847347671",
+          "isRiskToken": false,
+          "rawBalance": "900000000000000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x3ef71cdcbad09713eb362868f2eeb5d62d089042"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "VITALIK",
+          "balance": "900000000",
+          "tokenPrice": "0.0001505376095531032710604254845547003",
+          "isRiskToken": false,
+          "rawBalance": "900000000000000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xc0e9688dc3b039269a7e440bb85bd49d926832e3"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "KNC",
+          "balance": "700008.531373791941118514",
+          "tokenPrice": "0.1128183594466713098293040122144488",
+          "isRiskToken": false,
+          "rawBalance": "700008531373791941118514",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xdd974d5c2e2928dea5f71b9825b8b646686bd200"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "CMD",
+          "balance": "293365590.222377206150262673",
+          "tokenPrice": "0.0001412222854555579674014067654830377",
+          "isRiskToken": false,
+          "rawBalance": "293365590222377206150262673",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xae42f183554d369ee98b7b1980bea3761f47abc3"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "VITALIK",
+          "balance": "50000000",
+          "tokenPrice": "0.0003684966316913716511823354354380503",
+          "isRiskToken": false,
+          "rawBalance": "50000000000000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x29c4ed182c547ad04c377469be80e18a058fa782"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "ETH",
+          "balance": "6.631771696758380374",
+          "tokenPrice": "1935.27",
+          "isRiskToken": false,
+          "rawBalance": "6631771696758380374",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": ""
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "SNEZHOK",
+          "balance": "500000000",
+          "tokenPrice": "0.00001973664065550022690078913742956016",
+          "isRiskToken": false,
+          "rawBalance": "500000000000000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x691feff7882a743e421ad283ef6669af9b51a1fd"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "VB",
+          "balance": "700000000",
+          "tokenPrice": "0.00001077033439825957242354119153729042",
+          "isRiskToken": false,
+          "rawBalance": "700000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x9ef9ddb221f4aae3d234a94c80c7b23aa69ef415"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "0XWORMHOLE",
+          "balance": "294483000000",
+          "tokenPrice": "0.00000002540277340189322107094274202619497",
+          "isRiskToken": false,
+          "rawBalance": "294483000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x11c1c30ceeb10cb27ee315f674ba6e5757f1ffaa"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "CLAV",
+          "balance": "10155612.260539295440984678",
+          "tokenPrice": "0.0006884685788196811981621761131736702",
+          "isRiskToken": false,
+          "rawBalance": "10155612260539295440984678",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x5b094ea56d478dad0064cdd7de086405dddbf7f4"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "OMG",
+          "balance": "123647.030428532080615067",
+          "tokenPrice": "0.04896358879626096606523246157734718",
+          "isRiskToken": false,
+          "rawBalance": "123647030428532080615067",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xd26114cd6ee289accf82350c8d8487fedb8a0c07"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "ENS",
+          "balance": "1144.036076063671431479",
+          "tokenPrice": "4.576376950699378783810275103435229",
+          "isRiskToken": false,
+          "rawBalance": "1144036076063671431479",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xc18360217d8f7ab5e7c516566761ea12ce7f9d72"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "SPLC",
+          "balance": "29999999.999999999",
+          "tokenPrice": "0.000132760766644041499273891738966217",
+          "isRiskToken": false,
+          "rawBalance": "29999999999999999",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x1b56a517f51c3c46f53fb9502972d2a73b6d7bc0"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "0xwormhole",
+          "balance": "800000000",
+          "tokenPrice": "0.000004804047396826405157585887726372049",
+          "isRiskToken": false,
+          "rawBalance": "800000000000000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x567c0fb1e2594b57223fcb14443e5683b95835d7"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "VITALIK",
+          "balance": "252000041.4",
+          "tokenPrice": "0.00001478422113587374349273647709079802",
+          "isRiskToken": false,
+          "rawBalance": "252000041400000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x6900050fa7bcfbe147634e5c1e90f40db5907dd0"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "MEH",
+          "balance": "167146371",
+          "tokenPrice": "0.00002191762478338360856381",
+          "isRiskToken": false,
+          "rawBalance": "167146371000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x1f38d22f4ec3479c8268c85476b9418716bdb115"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "VITALIK",
+          "balance": "600000000",
+          "tokenPrice": "0.000005829577198194293881839641281731317",
+          "isRiskToken": false,
+          "rawBalance": "600000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xfed729aff56770cc907fbff017e6bba57c7c646d"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "WETH",
+          "balance": "1.46189816401908887",
+          "tokenPrice": "1934.58",
+          "isRiskToken": false,
+          "rawBalance": "1461898164019088870",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "TORN",
+          "balance": "242.91579080703088847",
+          "tokenPrice": "5.712624810631306877339473758371375",
+          "isRiskToken": false,
+          "rawBalance": "242915790807030888470",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x77777feddddffc19ff86db637967013e6c6a116c"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "404Blocks",
+          "balance": "1",
+          "tokenPrice": "1133.683236368145543584636399365503",
+          "isRiskToken": false,
+          "rawBalance": "1000000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x45b3cf56896c4547426a4145ad1d0ae971120214"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "wojak",
+          "balance": "15395266187.206408245221185959",
+          "tokenPrice": "0.00000006724099348292442383104814356471641",
+          "isRiskToken": false,
+          "rawBalance": "15395266187206408245221185959",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x8de39b057cc6522230ab19c0205080a8663331ef"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "SOTU",
+          "balance": "0.001",
+          "tokenPrice": "1020479.84684188474207166745112785",
+          "isRiskToken": false,
+          "rawBalance": "1000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xa91c82b6933105c23298e631a0c1be751d239162"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "ETHARDIO",
+          "balance": "100000000",
+          "tokenPrice": "0.000008772391230141590985457293757163452",
+          "isRiskToken": false,
+          "rawBalance": "100000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x846e57af29fd21391919318a044191b8725822c2"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "ERC20",
+          "balance": "100000000",
+          "tokenPrice": "0.000008291160817008225824666213095550416",
+          "isRiskToken": false,
+          "rawBalance": "100000000000000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xc3761eb917cd790b30dad99f6cc5b4ff93c4f9ea"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "VITALIK",
+          "balance": "100000000",
+          "tokenPrice": "0.000007058875112778381276888619886044014",
+          "isRiskToken": false,
+          "rawBalance": "100000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xc996e514b784169ee4e6d8296659e89613768981"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "tETH",
+          "balance": "0.5",
+          "tokenPrice": "1127.1790515",
+          "isRiskToken": false,
+          "rawBalance": "500000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xa1150cd4a014e06f5e0a6ec9453fe0208da5adab"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "Astley",
+          "balance": "50000000",
+          "tokenPrice": "0.00001103994738575752014298748124883767",
+          "isRiskToken": false,
+          "rawBalance": "50000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x69340ad256a30fa4525686e6fd42df559277b5aa"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "MITSUKI",
+          "balance": "30001000",
+          "tokenPrice": "0.000016225296555615772031385664369109",
+          "isRiskToken": false,
+          "rawBalance": "30001000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xc7190d24f0a21afcf70534703cf244c4d8de0170"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "VITALIK",
+          "balance": "100000000",
+          "tokenPrice": "0.000004776605544097651017695828558887143",
+          "isRiskToken": false,
+          "rawBalance": "100000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xf2da4643b573042ce685baa36a855a8812e5cf31"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "stkWALLET",
+          "balance": "154584.871188085273621679",
+          "tokenPrice": "0.002043243515890493527722295987200992",
+          "isRiskToken": false,
+          "rawBalance": "154584871188085273621679",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xe575cc6ec0b5d176127ac61ad2d3d9d19d1aa4a0"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "remilios",
+          "balance": "70000000.000000000000003817",
+          "tokenPrice": "0.000004459160030261142587817084739058591",
+          "isRiskToken": false,
+          "rawBalance": "70000000000000000000003817",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x0f09044c8aa745868dce7c702c8fdcdff4bbfe47"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "CATBOY",
+          "balance": "102010",
+          "tokenPrice": "0.002994626803989218084392815884716591",
+          "isRiskToken": false,
+          "rawBalance": "102010000000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x0dcee5f694e492f0dd842a7fbe5bed4c6e4665a6"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "USDT",
+          "balance": "290.268219",
+          "tokenPrice": "0.99922",
+          "isRiskToken": false,
+          "rawBalance": "290268219",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "JESTER",
+          "balance": "100000000",
+          "tokenPrice": "0.000002864532708263237558526969281515569",
+          "isRiskToken": false,
+          "rawBalance": "100000000000000000",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x7f006b689f26a53de97ae24e79ef028ce4e3f2ce"
+        },
+        {
+          "chainIndex": "1",
+          "symbol": "LEE",
+          "balance": "9462047.606405541257587908",
+          "tokenPrice": "0.00002848756630342196625488168046248047",
+          "isRiskToken": false,
+          "rawBalance": "9462047606405541257587908",
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "tokenContractAddress": "0x5c3ed5d0a8b0871c075b124368155ae9e9142da0"
+        }
+      ]
+    }
+  ]
+}
