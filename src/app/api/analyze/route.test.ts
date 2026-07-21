@@ -155,4 +155,22 @@ describe("POST /api/analyze", () => {
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
+
+  it("returns 429 on the 11th rapid request from one IP", async () => {
+    const { POST } = await import("./route");
+    const mk = () =>
+      new Request("http://localhost/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "9.9.9.9",
+        },
+        body: JSON.stringify({
+          addresses: [{ address: "0xabcdef1234", chains: ["ethereum"] }],
+        }),
+      });
+    let last: Response | undefined;
+    for (let i = 0; i < 11; i++) last = await POST(mk());
+    expect(last!.status).toBe(429);
+  });
 });
