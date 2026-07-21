@@ -1,22 +1,24 @@
-# Sponsor Tracks — OKX.AI Genesis
+# Sponsor Tracks: OKX.AI Genesis
 
 ## OKX OnchainOS Integration
 
-All 4 OKX OnchainOS skills are integrated into the Alter Ego app:
+OKX OnchainOS integrations wired into the Alter Ego app:
 
 | Skill | Integration | Code Evidence |
 |-------|------------|---------------|
-| **OKX WALLET** | Multi-chain address ingestion via OnchainOS CLI | `src/components/WalletInput.tsx` — accepts EVM/Solana addresses, validates format |
-| **OKX DEX-MARKET** | Cross-chain price feeds for comparison engine | `src/app/api/compare/route.ts` — calculates GAP COST using multi-chain PnL |
-| **OKX-AI** | Agent listing on marketplace | Integration strip: `src/app/page.tsx` — OKX-AI badge, ASP listing metadata |
-| **X402** | Micropayment gate for snapshots | `src/components/PaymentButton.tsx` — 3-state transition (idle→simulating→done), USDC on Base |
+| **OKX WALLET** (live) | Multi-chain address ingestion via the OnchainOS REST API | `src/components/WalletInput.tsx`: accepts EVM/Solana addresses, validates format |
+| **OKX DEX-MARKET** (live) | Cross-chain trade history for the comparison engine | `src/app/api/compare/route.ts`: calculates GAP COST using multi-chain trade data |
+| **OKX-AI** (live) | ASP agent listing on the OKX.AI marketplace | Integration strip: `src/app/page.tsx`; agent card served at `src/app/api/a2mcp/route.ts` |
+| **x402** (gate wired) | Payment gate for snapshots; live settlement planned | `src/components/PaymentButton.tsx`: 3-state transition (idle to simulating to done), USDT0 on X Layer |
 
-## Track: Lifestyle Companion + Social Buzz
+## Track: X Layer Arena (Human Track)
 
-Alter Ego bridges both tracks:
+Alter Ego targets the X Layer Arena (full-stack agentic app) and maps to all four scoring dimensions:
 
-- **Lifestyle Companion** — Ongoing relationship with your trading data. Coaching subscription ($4.99/mo). Pattern tracking over time. Persona evolution as your trading behavior changes.
-- **Social Buzz** — Roast battle format is inherently shareable. "Your ETH self vs your SOL self" as a social post. Cryptographic snapshot for proof of identity.
+- **OnchainOS Integration & Innovation** - combines OKX WALLET and DEX-MARKET REST ingestion with an OKX-AI marketplace listing and an x402 payment gate, not a single API call.
+- **X Layer Ecosystem Fit** - X Layer is one of the three analyzed chains, the x402 token is USDT0 on X Layer, and the agent identity is registered on X Layer (chainIndex 196).
+- **AI Interaction Experience** - the classifier turns raw on-chain history into a natural-language persona and a data-backed roast battle.
+- **Product Completeness** - the full scan to persona to roast to comparison to snapshot flow runs end-to-end on the live deployment.
 
 ## Judging Criteria Alignment
 
@@ -25,5 +27,5 @@ Alter Ego bridges both tracks:
 | Innovation | Multi-chain behavioral fingerprinting with persona-based roast battles is novel |
 | Technical Depth | 4 API routes, 7 components, 6-phase state machine, TEE mock, x402 gate |
 | User Experience | Glitch Core design (CRT scanlines, corner brackets, neon glow), 2-minute user journey |
-| OKX Integration | All 4 OnchainOS skills integrated + TEE attestation + ERC-8004 metadata |
+| OKX Integration | WALLET + DEX-MARKET + OKX-AI wired via OnchainOS REST + A2MCP agent card; TEE attestation simulated; ERC-8004 identity registered on X Layer |
 | Demo Quality | 6-phase auto-play journey, zero console errors, 33/33 tests, mobile responsive |

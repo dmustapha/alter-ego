@@ -1,4 +1,6 @@
-# VERIFY-REPORT — Alter Ego (Preflight)
+PRE-REMEDIATION HISTORICAL RECORD - superseded, not a submission claim
+
+# VERIFY-REPORT - Alter Ego (Preflight)
 
 **Mode:** preflight | **Date:** 2026-07-16T04:05:00Z
 **Deadline:** July 17, 2026 23:59 UTC (~44 hours remaining)

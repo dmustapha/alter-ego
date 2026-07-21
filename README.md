@@ -19,7 +19,7 @@ Alter Ego is a TEE-ready agent (simulated attestation in demo) that ingests your
 
 Alter Ego analyzes your wallet history across chains and reveals the trader you become in different ecosystems. The same person running disciplined DCA on Ethereum often turns into a meme-coin degen on Solana. Alter Ego surfaces that split, names the personas, stages a roast battle between them, and produces a cryptographic snapshot you can share.
 
-It runs inside a TEE (Trusted Execution Environment), so the analysis is verifiable and private. Nobody sees your balances. Everyone can verify the insight.
+The design target is a TEE (Trusted Execution Environment) so analysis is verifiable and private; attestation is simulated in this demo (see Tech Stack). The goal is that nobody sees your balances while anyone can verify the insight. Alter Ego is built for the X Layer ecosystem: X Layer is one of the three analyzed chains, its on-chain identity is registered on X Layer, and its x402 payment token is USDT0 on X Layer.
 
 ---
 
@@ -39,10 +39,10 @@ It runs inside a TEE (Trusted Execution Environment), so the analysis is verifia
 
 ### OKX Wallet
 
-Wallet address ingestion. Users paste any EVM or Solana address and Alter Ego pulls portfolio data, transaction history, and on-chain activity through the OnchainOS CLI layer.
+Wallet address ingestion. Users paste any EVM or Solana address and Alter Ego pulls portfolio data, transaction history, and on-chain activity through the OKX OnchainOS REST API.
 
 ```ts
-// src/app/page.tsx — WalletInput component with multi-chain address support
+// src/app/page.tsx: WalletInput component with multi-chain address support
 <WalletInput
   onSubmit={handleAnalyze}
   isLoading={loading}
@@ -56,16 +56,30 @@ Cross-chain market data feeds the comparison engine. Token prices, volume, and P
 
 ### OKX AI Marketplace
 
-Alter Ego is listed as an agent on the OKX.AI marketplace. The snapshot product is sold via x402 micropayments ($0.99 per snapshot, $4.99/mo coaching subscription). Buyers get a cryptographic attestation pinned to the agent's TEE identity.
+Alter Ego is listed as an ASP agent on the OKX.AI marketplace, reachable at the A2MCP endpoint. The snapshot product is gated by x402 (USDT0 on X Layer, $0.99 per snapshot; the gate is wired end-to-end and live settlement is planned). Buyers get an attestation pinned to the agent identity (TEE attestation simulated in demo).
 
 ### x402 Micropayments
 
-The CTA phase presents a payment-gated snapshot. Users see an "ATTESTATION VERIFIED" badge tied to the TEE, then pay $0.99 via x402 to lock a permanent, shareable proof of their Alter Ego analysis.
+The CTA phase presents a payment-gated snapshot. Users see an "ATTESTATION VERIFIED" badge (TEE attestation simulated in demo), then pay $0.99 via the x402 gate (USDT0 on X Layer) to lock a shareable proof of their Alter Ego analysis.
 
 ```tsx
-// src/components/PaymentButton.tsx — 3-state transition (pink idle → simulating → cyan done)
+// src/components/PaymentButton.tsx: 3-state transition (pink idle → simulating → cyan done)
 <PaymentButton onComplete={handleSnapshot} />
 ```
+
+---
+
+## On-Chain Identity
+
+Alter Ego's on-chain identity is an ERC-8004 agent (agent #6013) registered on X Layer, which serves as the project's Agentic Wallet per the OKX Build X requirement.
+
+| Field | Value |
+|-------|-------|
+| Agent ID | #6013 |
+| Owner wallet | `0xd97c85d61337f8e4366bff2d8b482cfc59d76340` |
+| Agent communication address | `0x835C02C82a1DCCe73585D23DFe07A939AB971707` |
+| Network | X Layer (chainIndex 196) |
+| x402 token | USDT0 `0x779ded0c9e1022225f8e0630b35a9b54be713736` (6 decimals) |
 
 ---
 
@@ -74,7 +88,7 @@ The CTA phase presents a payment-gated snapshot. Users see an "ATTESTATION VERIF
 ```
 ┌──────────┐     ┌──────────────┐     ┌──────────────┐
 │  Wallet  │────▶│   OnchainOS  │────▶│  Pattern     │
-│  Input   │     │   CLI Layer  │     │  Engine      │
+│  Input   │     │   REST API   │     │  Engine      │
 └──────────┘     └──────────────┘     └──────┬───────┘
                                              │
                     ┌────────────────────────┘
@@ -123,9 +137,9 @@ The CTA phase presents a payment-gated snapshot. Users see an "ATTESTATION VERIF
 | Animation | Framer Motion |
 | Fonts | Press Start 2P, Space Mono |
 | Testing | Playwright (33 browser tests) |
-| Payments | x402 micropayments (USDC on Base) |
+| Payments | x402 micropayment gate (USDT0 on X Layer) |
 | Identity | TEE attestation (pre-computed for demo) |
-| Data | OnchainOS CLI (OKX API gateway) |
+| Data | OKX OnchainOS REST API (OKX API gateway) |
 
 ---
 
@@ -163,7 +177,7 @@ What the tests verify:
 ## Running Locally
 
 ```bash
-git clone https://github.com/dmz4pf/alter-ego.git
+git clone https://github.com/dmustapha/alter-ego.git
 cd alter-ego
 npm install
 npm run dev -- --turbopack
@@ -212,6 +226,12 @@ alter-ego/
 ├── playwright.config.ts       # Playwright test configuration
 └── stress-browser.spec.ts     # 33 browser test cases
 ```
+
+---
+
+## Team
+
+Solo project by Dami Mustapha (GitHub: [dmustapha](https://github.com/dmustapha)). Built over 2.5 days for the OKX Build X Series (X Layer Arena, Human Track).
 
 ---
 
