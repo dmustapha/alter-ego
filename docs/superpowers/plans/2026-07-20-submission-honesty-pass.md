@@ -413,7 +413,17 @@ Expected: `OK` for each grep-guard, exactly ONE line under "unique tx count", `2
 
 - [ ] **Step 2: Re-render the DETAILS-BODY paste body** in a browser to confirm the HTML still renders (headings, bold, lists, the new Known Limitations block). `open submission/DETAILS-BODY.html`.
 
-- [ ] **Step 3: Commit.**
+- [ ] **Step 3: Quarantine the stale pre-remediation pipeline gate reports.** `VERIFY-REPORT.md` (and its state file `.verify-state.json`, plus any sibling stale gate artifact) still assert a false "88/100 SHIP IT" readiness that contradicts the actual `.verify-state.json` `winnerReadiness: 0` after Plans 1-4. A judge or reader must not inherit that false claim from any submission-referenced path. For each stale gate artifact, either (a) move it out of any submission-referenced path (e.g. into `docs/context/pre-remediation/`), or (b) prepend a top-of-file banner exactly reading `PRE-REMEDIATION HISTORICAL RECORD — superseded, not a submission claim` (spelled with a real hyphen with spaces, no em-dash). Then prove no submission surface cites the false score or links the stale reports.
+
+```bash
+cd /Users/MAC/hackathon-toolkit/active/alter-ego
+echo "--- stale 88/100 SHIP IT claim not on any submission surface ---"; grep -rniE "88/100|88 / 100|ship it" submission/ README.md && echo "FAIL: stale score/claim on submission surface" || echo "PASS: no stale score on submission surfaces"
+echo "--- stale gate reports not linked from submission surfaces ---"; grep -rnE "VERIFY-REPORT\.md|\.verify-state\.json" submission/ README.md && echo "FAIL: stale gate report linked from submission surface" || echo "PASS: stale gate reports not referenced"
+echo "--- each stale gate artifact is quarantined (moved out or banner-annotated) ---"; for f in VERIFY-REPORT.md .verify-state.json; do if [ -f "$f" ]; then head -1 "$f" | grep -q "PRE-REMEDIATION HISTORICAL RECORD" && echo "PASS banner: $f" || echo "CHECK: $f still in repo root without banner — move or annotate"; else echo "PASS moved: $f"; fi; done
+```
+Expected: PASS branch for the score grep (zero hits on submission surfaces), PASS for the link grep (zero hits), and every stale artifact is either moved (file absent from repo root) or carries the banner as its first line.
+
+- [ ] **Step 4: Commit.**
 
 ```bash
 git add submission/ README.md
