@@ -172,5 +172,6 @@ describe("POST /api/analyze", () => {
     let last: Response | undefined;
     for (let i = 0; i < 11; i++) last = await POST(mk());
     expect(last!.status).toBe(429);
+    expect(Number(last!.headers.get("retry-after"))).toBeGreaterThan(0);
   });
 });
