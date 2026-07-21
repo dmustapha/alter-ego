@@ -4,7 +4,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { buildWalletSignals, deriveTrades } from "@/lib/okx-api";
 
 // -- Fixtures --
 
