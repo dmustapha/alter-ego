@@ -146,6 +146,7 @@ export function buildWalletSignals(
       riskTokenPct: 0,
       topHoldingPct: 0,
       avgGasGwei: 0,
+      // networkMedianGasGwei is a per-chain network constant, returned even for empty input
       networkMedianGasGwei: NETWORK_MEDIAN_GAS_GWEI[chain] ?? 0,
     };
   }
@@ -216,8 +217,6 @@ export function buildWalletSignals(
 /**
  * Maps raw OKX transactions to Trade objects.
  * pnl/price/amountUsd/holdDurationDays are 0 (no PnL endpoint in Path B).
- *
- * @deprecated Path B: no PnL from live data
  */
 export function deriveTrades(
   txns: unknown[],
