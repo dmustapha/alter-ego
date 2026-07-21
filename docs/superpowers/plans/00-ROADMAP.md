@@ -7,7 +7,7 @@ Source of truth for the remediation arc. Detailed plans are written **roll-wave*
 
 - **Hackathon:** OKX.AI Genesis (Build X Series) — `PRD.md:3`.
 - **Submission:** OKX.AI marketplace listing (ASP agent #6013) + DoraHacks Details tab — `submission/`, `PRD.md:428`.
-- **Chain:** X Layer, chain index **196** — ERC-8004 identity token minted on X Layer (`ARCHITECTURE.md:1962`), x402 uses **USDG** `0x4ae46a509f6b1d9056937ba4500cb143933d2dc8` on X Layer (`DEEP-RESEARCH.md:20`), demo wallet C is X Layer.
+- **Chain:** X Layer, chain index **196** — ERC-8004 identity token minted on X Layer (`ARCHITECTURE.md:1962`), x402 uses **USDT0** `0x779ded0c9e1022225f8e0630b35a9b54be713736` (6 decimals) on X Layer (verified from OKX `howtomcp`; the earlier **USDG** `0x4ae46a…` from `DEEP-RESEARCH.md:20` was an omnispect-x error, see `docs/LISTING-REJECTION-ANALYSIS.md`), demo wallet C is X Layer.
 - **Chains analyzed:** Ethereum (1), Solana (501), X Layer (196). The trade-history spike (Plan 1 Task 1) MUST probe `chainIndex: 196` too, not only Ethereum.
 - **Genesis differentiator the brief rewards:** decision-to-action lineage (AI decision → on-chain tx/intent id). Currently absent; candidate for a later plan if scoring needs it.
 
@@ -56,10 +56,10 @@ Plan 2 and Plan 3 interleave (the `/api/a2mcp` endpoint issues the SDK's x402 40
 **Goal:** replace the `PaymentButton.tsx` `setTimeout` with real settlement.
 **Depends on:** Plan 2 (402 challenge lives in the a2mcp path).
 **Tasks (skeleton):**
-- Server 402 challenge with `PaymentRequirements` `{scheme:"exact", network:"xlayer", payToAddress, maxAmountRequired, paymentTokenAddress: USDG, requiredDeadlineSeconds:300}` (`DEEP-RESEARCH.md:18`).
-- Client `X-PAYMENT` header construction + submit.
-- Facilitator `POST /api/v6/x402/verify` then fire-and-forget `/settle` after serving (`DEEP-RESEARCH.md:19,63`).
-**Spike:** one testnet USDG settlement round-trip on X Layer. ~0.5-1 day.
+- Server 402 challenge via the **OKX Payment SDK `@okxweb3/x402`** with the verified v2 `accepts[0]`: `{scheme:"exact", network:"eip155:196", asset:"0x779ded0c…713736" (USDT0, 6dp), amount, payTo, maxTimeoutSeconds:300, extra:{name:"USD₮0", version:"1"}}` (authoritative: `docs/LISTING-REJECTION-ANALYSIS.md`; supersedes the omnispect-x USDG/xlayer/requiredDeadlineSeconds values).
+- Client `X-PAYMENT` header via `onchainos payment pay`/`pay-local` (payer side).
+- Verify + settle handled by the **OKX Payment SDK** (the omnispect `/api/v6/x402/verify|settle` paths are unverified and NOT used; the SDK owns the facilitator call).
+**Spike:** one testnet USDT0 settlement round-trip on X Layer. ~0.5-1 day.
 
 ## Plan 4 — Frontend a11y + design tokenization (parallelizable)
 **Goal:** lift the UI from 58→80 tier and fix the broken flagship screenshot.

@@ -14,6 +14,7 @@
 - **Every claim must be judge-verifiable.** If a sentence asserts a number, a status (200/live/integrated/verified), or a capability, either it is true against the deployed app at `https://alter-ego-wine-mu.vercel.app` and the pushed repo at `https://github.com/dmustapha/alter-ego`, or it is reworded to state the real status (simulated / demo / planned). No aspirational present tense.
 - **DoraHacks detail-blueprint rules** for `submission/DETAILS-BODY.html` (Dami's agreed format): proof-first, section order hook → problem → solution → how-it-works → features → live-now → tech-stack → alignment → proof-close; Title Case bold headings; paste-ready styled HTML (h2/strong/ul/code); `Live Now` block only lists things that are actually live. Keep the existing structure; only correct the false lines inside it.
 - **Target = OKX.AI Genesis (Build X Series) on X Layer, chain index 196.** Copy must map to the four Genesis / X Layer Arena scoring dimensions (each 25%): OnchainOS Integration & Innovation, X Layer Ecosystem Fit, AI Interaction Experience, Product Completeness. Do not claim tracks ("Lifestyle Companion + Social Buzz") that belong to a different program unless they are confirmed present in the target brief; the OKX Build X brief defines X Layer Arena / Skills Arena, not those two tracks. See Task 6.
+- **Authoritative x402 token fact:** the payment token is **USDT0** (6 decimals, X Layer address `0x779ded0c9e1022225f8e0630b35a9b54be713736`, network `eip155:196`), settled via the OKX Payment SDK (`@okxweb3/x402`). The authoritative source is `docs/LISTING-REJECTION-ANALYSIS.md` ("Corrected x402 facts"), which supersedes `DEEP-RESEARCH.md:20` (which wrongly said USDG, inherited from the omnispect-x reference project). Never write USDG or "USDC on Base" in x402 copy, and never assert unverified facilitator paths like `/api/v6/x402/...`.
 - **Do not touch app code, cache JSON, or the classifier** in this plan. If a number in the cache is wrong, that is Plan 1's job (already done). This plan only reads the cache to get the canonical tx count and writes it into copy.
 - **The one canonical tx number** is whatever `scripts/seed-demo.mjs` (Plan 1 Task 5) produced, read via the verification command in Task 3 Step 1. Every placeholder like `<CANONICAL_TXN>` in this plan is resolved to that single value at execution time and then written literally into every file. Do NOT leave `<CANONICAL_TXN>` in any committed file.
 - **Depends on Plans 1-4.** Do not start until Plan 1 (live data + honest cache + differential test) is green, Plan 2 (A2MCP conformance) is green, Plan 4 (a11y + re-captured `landing.png`) is green, and Plan 3 (real x402) is either green or explicitly deferred. The x402 / attestation wording in Task 5 branches on whether Plan 3 shipped.
@@ -280,30 +281,30 @@ The submission currently states, in present tense, several things that are simul
 
 - [ ] **Step 3: `description.md:17` — TEE + x402 snapshot claim.** Branch on `X402_STATE`.
   - BEFORE: `5. **TEE-Sealed Snapshot** — Cryptographic attestation pinned to the agent's identity. Verification badge: ATTESTATION: 0x7f3a...b91e. Available for purchase via x402 micropayments ($0.99/snapshot).`
-  - AFTER if `X402_STATE = real`: `5. **Sealed Snapshot** - An attestation pinned to the agent identity (TEE attestation simulated in demo). Purchasable via a real x402 micropayment on X Layer (USDG), $0.99 per snapshot.`
-  - AFTER if `X402_STATE = simulated`: `5. **Sealed Snapshot** - An attestation pinned to the agent identity (TEE attestation simulated in demo). The x402 payment gate is wired end-to-end in the UI; live USDG settlement on X Layer is the next milestone (see Known Limitations).`
+  - AFTER if `X402_STATE = real`: `5. **Sealed Snapshot** - An attestation pinned to the agent identity (TEE attestation simulated in demo). Purchasable via a real x402 micropayment on X Layer (USDT0), $0.99 per snapshot.`
+  - AFTER if `X402_STATE = simulated`: `5. **Sealed Snapshot** - An attestation pinned to the agent identity (TEE attestation simulated in demo). The x402 payment gate is wired end-to-end in the UI; live USDT0 settlement on X Layer is the next milestone (see Known Limitations).`
 
 - [ ] **Step 4: `description.md:19-26` — "All 4 OKX OnchainOS skills integrated".** Replace the blanket claim with the real `SKILLS_LIVE` list. Keep the ones that are genuinely wired as live; move any not-yet-live to a "planned" phrasing.
   - BEFORE (heading + list at :21-26): `All 4 OKX OnchainOS skills integrated and displayed in the app's integration strip:` followed by the WALLET / DEX-MARKET / OKX-AI / X402 bullets, with X402 described as `Micropayment gate for snapshot purchases (USDC on Base)`.
-  - AFTER: heading `OKX OnchainOS integrations wired into the app:` and bullets reflecting `SKILLS_LIVE`. Fix the two factual errors regardless: X402 network is **X Layer USDG**, not "USDC on Base" (per `DEEP-RESEARCH.md:20`); and mark each bullet live vs planned. Example when WALLET+DEX-MARKET+OKX-AI are live and x402 is simulated:
+  - AFTER: heading `OKX OnchainOS integrations wired into the app:` and bullets reflecting `SKILLS_LIVE`. Fix the two factual errors regardless: X402 token is **USDT0 on X Layer**, not "USDC on Base" (authoritative source `docs/LISTING-REJECTION-ANALYSIS.md`, superseding `DEEP-RESEARCH.md:20`); and mark each bullet live vs planned. Example when WALLET+DEX-MARKET+OKX-AI are live and x402 is simulated:
     ```
     - **OKX WALLET** (live) - multi-chain address ingestion via the OnchainOS REST API
     - **OKX DEX-MARKET** (live) - cross-chain trade history for the comparison engine
     - **OKX-AI** (live) - listed as an ASP agent on the OKX.AI marketplace, reachable at the A2MCP endpoint
-    - **x402** (payment gate wired; live USDG-on-X-Layer settlement planned)
+    - **x402** (payment gate wired; live USDT0-on-X-Layer settlement planned)
     ```
 
 - [ ] **Step 5: `description.md:69-74` — Known Limitations.** This block is already honest. Apply the tx-count edit from Task 3 Step 3 to line 69, and update line 71's x402 wording to match `X402_STATE`:
   - `:71` BEFORE: `- **x402 payments**: Simulated for demo. Payment flow is structurally complete but operates without real USDC settlement.`
-  - `:71` AFTER if `X402_STATE = real`: `- **x402 payments**: Live. Snapshot purchase settles a real USDG micropayment on X Layer via the /api/x402 verify+settle handshake.`  (then this stops being a limitation - move it out of the block and delete the bullet.)
-  - `:71` AFTER if `X402_STATE = simulated`: keep the bullet but fix the token/network: `- **x402 payments**: Simulated for demo. The payment gate is wired in the UI; it does not yet settle real USDG on X Layer.`
+  - `:71` AFTER if `X402_STATE = real`: `- **x402 payments**: Live. Snapshot purchase settles a real USDT0 micropayment on X Layer via the OKX Payment SDK (\`@okxweb3/x402\`).`  (then this stops being a limitation - move it out of the block and delete the bullet.)
+  - `:71` AFTER if `X402_STATE = simulated`: keep the bullet but fix the token/network: `- **x402 payments**: Simulated for demo. The payment gate is wired in the UI; it does not yet settle real USDT0 on X Layer.`
   - Confirm `:70` TEE bullet already reads "Simulated for demo" (it does) - leave as the honesty model.
 
 - [ ] **Step 6: `DETAILS-BODY.html` — the biggest liability, it has no limitations block and claims full live status.**
   - `:38` "TEE-bound agent": reword the opening `<strong>TEE-bound agent</strong>` to `<strong>on-chain persona agent</strong>` and keep the roast-battle sentence; the attestation is mentioned as sealed snapshot below.
   - `:49` GAP COST "$31,500 in the demo wallet": this dollar figure must exist in the regenerated cache. If Plan 1's `comparison.json` produced a different `gapCostUsd`, replace `$31,500` with that real value; if the cache omits a dollar figure, delete the "- $31,500 in the demo wallet -" clause. VERIFY: `grep -rn "gapCost\|31500\|31,500" src/data/cache/`.
-  - `:50` x402 "Pay $0.99 via x402 (USDC on Base)": fix network to `x402 (USDG on X Layer)`; if `X402_STATE = simulated` append ` (payment gate wired; live settlement planned)`.
-  - `:60-61` feature bullets: `x402 micropayment gate: 3-state transition (idle → simulating → done)` — the "→" is fine (arrow, not em-dash), but "simulating" already signals demo; if `X402_STATE = simulated`, add `(simulated settlement)`; and fix any "USDC on Base" → "USDG on X Layer".
+  - `:50` x402 "Pay $0.99 via x402 (USDC on Base)": fix token to `x402 (USDT0 on X Layer)`; if `X402_STATE = simulated` append ` (payment gate wired; live settlement planned)`.
+  - `:60-61` feature bullets: `x402 micropayment gate: 3-state transition (idle → simulating → done)` — the "→" is fine (arrow, not em-dash), but "simulating" already signals demo; if `X402_STATE = simulated`, add `(simulated settlement)`; and fix any "USDC on Base" → "USDT0 on X Layer".
   - `:64-73` **Live Now block** — this is the proof section; it must only list things that are truly live. Fix:
     - `:69` `4 API endpoints live: POST /api/analyze (200), GET /api/roast (200), GET /api/compare (200), GET /api/persona (200)` — replace each `(200)` with the real code from Task 0 Step 5. If all 200, keep.
     - `:72` `All 4 OKX OnchainOS skills: WALLET, DEX-MARKET, OKX-AI, X402 integrated and verified` — replace with the real `SKILLS_LIVE` list and drop "verified" for anything simulated. E.g. `OKX OnchainOS: WALLET, DEX-MARKET, OKX-AI live; x402 gate wired (live settlement planned)`.
@@ -316,28 +317,28 @@ The submission currently states, in present tense, several things that are simul
     <p>This is a hackathon demo. Two capabilities are intentionally simulated and clearly labeled:</p>
     <ul>
       <li><strong>TEE attestation:</strong> simulated. The attestation badge is UI; real SGX/TDX attestation is planned post-hackathon.</li>
-      <li><strong>x402 settlement:</strong> the payment gate is wired end-to-end; live USDG-on-X-Layer settlement is the next milestone.</li>
+      <li><strong>x402 settlement:</strong> the payment gate is wired end-to-end; live USDT0-on-X-Layer settlement is the next milestone.</li>
     </ul>
     ```
     (If `X402_STATE = real`, drop the x402 bullet and instead list it in Live Now.)
 
 - [ ] **Step 7: `sponsor-tracks.md`.**
   - `:5` `All 4 OKX OnchainOS skills are integrated` → reword to the real `SKILLS_LIVE` list, matching Task 5 Step 4.
-  - `:12` X402 row `USDC on Base` → `USDG on X Layer`; and the "Integration" cell should say "payment gate wired (live settlement planned)" if `X402_STATE = simulated`.
+  - `:12` X402 row `USDC on Base` → `USDT0 on X Layer`; and the "Integration" cell should say "payment gate wired (live settlement planned)" if `X402_STATE = simulated`.
   - `:28` `OKX Integration | All 4 OnchainOS skills integrated + TEE attestation + ERC-8004 metadata` → `OKX Integration | WALLET + DEX-MARKET + OKX-AI wired via OnchainOS REST + A2MCP agent card; TEE attestation simulated; ERC-8004 identity minted on X Layer`.
 
 - [ ] **Step 8: `README.md`.**
   - `:3` `TEE-ready agent (simulated attestation in demo)` — already honest, leave.
   - `:21-22` `It runs inside a TEE (Trusted Execution Environment), so the analysis is verifiable and private. Nobody sees your balances.` — this contradicts `:3`. Reword: `The design target is a TEE (Trusted Execution Environment) so analysis is verifiable and private; attestation is simulated in this demo (see Tech Stack).`
-  - `:57-63` OKX AI Marketplace / x402 paragraph: fix `USDC on Base`-style claims to `USDG on X Layer`; if `X402_STATE = simulated`, state the gate is wired and settlement is planned.
-  - `:127-128` Tech Stack table rows `Payments | x402 micropayments (USDC on Base)` → `Payments | x402 micropayment gate (USDG on X Layer)` and `Identity | TEE attestation (pre-computed for demo)` — already honest, keep the "pre-computed for demo".
+  - `:57-63` OKX AI Marketplace / x402 paragraph: fix `USDC on Base`-style claims to `USDT0 on X Layer`; if `X402_STATE = simulated`, state the gate is wired and settlement is planned.
+  - `:127-128` Tech Stack table rows `Payments | x402 micropayments (USDC on Base)` → `Payments | x402 micropayment gate (USDT0 on X Layer)` and `Identity | TEE attestation (pre-computed for demo)` — already honest, keep the "pre-computed for demo".
   - `:166` clone URL already fixed in Task 2.
 
 - [ ] **Step 9: VERIFICATION.**
 
 ```bash
-# no "USDC on Base" left (x402 is USDG on X Layer)
-grep -rn "USDC on Base" submission/ README.md && echo "FAIL: wrong x402 network" || echo "PASS: x402 network correct"
+# no wrong x402 token left (x402 is USDT0 on X Layer); both "USDC on Base" and "USDG" are wrong tokens
+grep -rn "USDC on Base\|USDG" submission/ README.md && echo "FAIL: wrong x402 token" || echo "PASS: x402 token correct (USDT0)"
 # no bare "TEE-bound" present-tense claim on submission surfaces
 grep -rn "TEE-bound" submission/ README.md && echo "CHECK: reword remaining TEE-bound" || echo "PASS: no TEE-bound overclaim"
 # DETAILS-BODY now has a Known Limitations section
@@ -404,7 +405,7 @@ echo "--- demo url on surfaces ---"; grep -rn "alter-ego-demo" submission/ READM
 echo "--- clone url ---"; grep -rn "dmz4pf" README.md || echo OK
 echo "--- unique tx count ---"; grep -rhoE "[0-9],[0-9]{3}" submission/copy/description.md submission/DETAILS-BODY.html | sort -u
 echo "--- stale counts ---"; grep -rn "6,134\|4,051" submission/ || echo OK
-echo "--- wrong x402 network ---"; grep -rn "USDC on Base" submission/ README.md || echo OK
+echo "--- wrong x402 token (USDC on Base OR USDG; correct is USDT0) ---"; grep -rn "USDC on Base\|USDG" submission/ README.md || echo OK
 echo "--- honesty block in details ---"; grep -q "Known Limitations" submission/DETAILS-BODY.html && echo OK
 echo "--- em-dashes on submission surfaces ---"; grep -rn "—" submission/ || echo OK
 echo "--- working url is 200 ---"; curl -sI -o /dev/null -w "%{http_code}\n" https://alter-ego-wine-mu.vercel.app
