@@ -1,4 +1,4 @@
-# Submission Guide — Alter Ego
+# Submission Guide: Alter Ego
 
 **Platform:** DoraHacks (OKX.AI Genesis)
 **Deadline:** July 17, 2026 23:59 UTC
@@ -11,7 +11,7 @@
 **Paste:** `Alter Ego`
 
 ### 2. Tagline
-**Paste:** `Every wallet has a story. Meet your Alter Ego — a TEE-bound agent that reveals your trading personas across chains and pits them against each other.`
+**Paste:** `Every wallet has a story. Meet your Alter Ego, an on-chain persona agent that reveals your trading personas across chains and pits them against each other.`
 
 ### 3. Description (Details Tab)
 **Paste from:** `submission/copy/description.md`
@@ -20,7 +20,7 @@
 **Select/Add:** Next.js, TypeScript, Tailwind CSS, Framer Motion, Playwright, OKX OnchainOS, x402, TEE
 
 ### 5. Tracks / Bounties
-**Select:** Lifestyle Companion, Social Buzz
+**Select:** X Layer Arena (Human Track)
 
 **Justification from:** `submission/sponsor-tracks.md`
 
@@ -28,28 +28,30 @@
 | Field | URL |
 |-------|-----|
 | GitHub Repo | https://github.com/dmustapha/alter-ego |
-| Live Demo | https://alter-ego-demo.vercel.app |
+| Live Demo | https://alter-ego-wine-mu.vercel.app |
 | Demo Video | [Upload to YouTube, paste link] |
 
 ### 7. Team
-**Paste:** Solo developer — Dami Mustapha. GitHub: dmustapha.
+**Paste:** Solo developer, Dami Mustapha. GitHub: dmustapha.
 
 ### 8. Screenshots
 From `docs/images/`:
-- `landing.png` — Landing page with hero + integration strip
-- `results.png` — Persona cards + pattern analysis
-- `battle.png` — Roast battle in progress
-- `compare.png` — Side-by-side comparison
-- `proof.png` — TEE attestation proof page
+- `landing.png`: Landing page with hero + integration strip
+- `results.png`: Persona cards + pattern analysis
+- `battle.png`: Roast battle in progress
+- `compare.png`: Side-by-side comparison
+- `proof.png`: TEE attestation proof page (attestation simulated in demo)
 
 ### 9. Demo Video
 Record following `DEMO-SCRIPT.md` (90 seconds), upload to YouTube, paste link in submission.
 
 ### 10. Pre-Submission Checklist
-- [ ] README.md has live Vercel URL (not placeholder)
+- [ ] README.md has live Vercel URL (https://alter-ego-wine-mu.vercel.app, not placeholder or auth-walled demo)
 - [ ] GitHub repo is public
 - [ ] Vercel app loads without errors
-- [ ] All 4 API endpoints respond 200
+- [ ] All 4 API endpoints respond (analyze 200 POST / 405 GET, roast/compare/persona 200 GET), verified via curl
+- [ ] Agentic Wallet / ERC-8004 identity address present in README
+- [ ] Track matches the brief (X Layer Arena, Human Track)
 - [ ] Demo video uploaded to YouTube
 - [ ] Description pasted from submission/copy/description.md
 - [ ] Sponsor tracks justification included
