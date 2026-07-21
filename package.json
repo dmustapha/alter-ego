@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "! grep -rIqE 'OKX_(API|SECRET)|passphrase|[0-9a-f]{32}' public/ && node scripts/download-onchainos.js",
+    "prebuild": "! grep -rIqE 'OKX_(API|SECRET)|passphrase|[0-9a-f]{32}' public/",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

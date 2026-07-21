@@ -1,17 +1,34 @@
 import { NextResponse } from "next/server";
 import type { AnalyzeRequest, AnalyzeResponse, WalletData } from "@/lib/types";
-import { getAllBalances, getPortfolioOverview, getApprovals, scanTokens } from "@/lib/onchainos";
+import {
+  getWalletTxns,
+  getWalletBalances,
+  getTxDetail,
+  buildWalletSignals,
+  deriveTrades,
+} from "@/lib/okx-api";
 import { classifyPatterns } from "@/lib/classifier";
 import { generatePersona } from "@/lib/persona";
 import { loadComparison, loadAllDemoData, cacheExists } from "@/lib/cache";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 /**
- * A2MCP endpoint — OKX.AI marketplace integration.
+ * A2MCP endpoint -- OKX.AI marketplace integration.
  *
- * POST: Analyze wallet addresses. In live mode, calls OnchainOS CLI for real data.
- *       Falls back to demo cache if DEMO_MODE=true or cache files exist and CLI fails.
+ * POST: Analyze wallet addresses using the live OKX Web3 API.
+ *       Falls back to demo cache if DEMO_MODE=true or no addresses provided.
  * GET: Health check with agent metadata.
  */
+
+// Chain name to OKX numeric chainIndex
+const CHAIN_INDEX: Record<string, string> = {
+  ethereum: "1",
+  solana: "501",
+  xlayer: "196",
+};
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -43,117 +60,138 @@ export async function POST(req: Request) {
       );
     }
 
-    // Input validation
+    // Input validation (mirrors analyze route)
     if (addresses.length > 5) {
       return NextResponse.json({ error: "Maximum 5 wallets per analysis" }, { status: 400 });
     }
-
-    // Live mode: call OnchainOS CLI for real blockchain data
-    const walletResults: WalletData[] = [];
-    const debugErrors: string[] = [];
     for (const addr of addresses) {
-      const evmChains = (addr.chains || []).filter((c) => c !== "solana");
-      const hasSolana = (addr.chains || []).includes("solana");
-
-      if (evmChains.length > 0) {
-        try {
-          const balances = getAllBalances(addr.address, evmChains, 1);
-          const overview = getPortfolioOverview(addr.address, evmChains[0], 3);
-          const approvals = getApprovals(addr.address, evmChains);
-          const tokens = balances
-            .filter((b) => b.tokenContractAddress && b.tokenContractAddress !== "native")
-            .map((b) => `${b.chainIndex}:${b.tokenContractAddress}`);
-          const scans = tokens.length > 0 ? scanTokens(tokens.slice(0, 20)) : [];
-
-          walletResults.push({
-            address: addr.address,
-            chain: evmChains[0],
-            chainId: 1,
-            totalTxns: 0,
-            realizedPnl: parseFloat(overview.realizedPnlUsd) || 0,
-            winRate: parseFloat(overview.winRate) * 100 || 0,
-            trades: [],
-            approvals,
-            tokenScans: scans,
-            avgGasGwei: 0,
-            networkMedianGasGwei: 30,
-            signals: { totalTxns: 0, daysSinceLastTx: 0, activeSpanDays: 0, uniqueTokens: 0, uniqueChains: 0, swapCount: 0, tokensHeld: 0, riskTokenCount: 0, riskTokenPct: 0, topHoldingPct: 0, avgGasGwei: 0, networkMedianGasGwei: 0 },
-          });
-        } catch (err: any) {
-          console.error(`[A2MCP] EVM fetch failed for ${addr.address}:`, err.message);
-          debugErrors.push(`EVM(${addr.address.slice(0,10)}): ${err.message}`);
-        }
+      if (!addr.address || typeof addr.address !== "string" || addr.address.length < 6 || addr.address.length > 100) {
+        return NextResponse.json({ error: `Invalid address: ${addr.address?.slice(0, 10)}...` }, { status: 400 });
       }
+      if (/[<>"'&`\\]/.test(addr.address)) {
+        return NextResponse.json({ error: "Invalid address: contains disallowed characters" }, { status: 400 });
+      }
+    }
 
-      if (hasSolana) {
-        try {
-          const balances = getAllBalances(addr.address, ["solana"], 1);
-          const overview = getPortfolioOverview(addr.address, "solana", 3);
-          walletResults.push({
-            address: addr.address,
-            chain: "solana",
-            chainId: 501,
-            totalTxns: 0,
-            realizedPnl: parseFloat(overview.realizedPnlUsd) || 0,
-            winRate: parseFloat(overview.winRate) * 100 || 0,
-            trades: [],
-            approvals: [],
-            tokenScans: [],
-            avgGasGwei: 0,
-            networkMedianGasGwei: 0,
-            signals: { totalTxns: 0, daysSinceLastTx: 0, activeSpanDays: 0, uniqueTokens: 0, uniqueChains: 0, swapCount: 0, tokensHeld: 0, riskTokenCount: 0, riskTokenPct: 0, topHoldingPct: 0, avgGasGwei: 0, networkMedianGasGwei: 0 },
-          });
-        } catch (err: any) {
-          console.error(`[A2MCP] Solana fetch failed for ${addr.address}:`, err.message);
-          debugErrors.push(`SOL(${addr.address.slice(0,10)}): ${err.message}`);
+    // Demo mode: use pre-cached data
+    if (process.env.DEMO_MODE === "true") {
+      const cached = await loadAllDemoData();
+      return NextResponse.json({
+        wallets: 3,
+        chains: ["ethereum", "solana", "xlayer"],
+        totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
+        patterns: cached.patterns,
+        personas: cached.personas,
+        comparison: cached.comparison,
+      } satisfies AnalyzeResponse);
+    }
+
+    // Validate chain names
+    for (const addr of addresses) {
+      const chains = addr.chains || [];
+      if (chains.length === 0) {
+        return NextResponse.json({ error: `Missing chains for address: ${addr.address?.slice(0, 10)}...` }, { status: 400 });
+      }
+      for (const chainName of chains) {
+        if (!CHAIN_INDEX[chainName]) {
+          return NextResponse.json(
+            { error: `Unknown chain "${chainName}". Supported: ethereum, solana, xlayer` },
+            { status: 400 }
+          );
         }
       }
     }
 
-    // If live mode failed (no wallets fetched), fall back to demo
-    if (walletResults.length === 0) {
-      if (cacheExists()) {
-        const cached = await loadAllDemoData();
-        return NextResponse.json({
-          wallets: 3,
-          chains: ["ethereum", "solana", "xlayer"],
-          totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
-          patterns: cached.patterns,
-          personas: cached.personas,
-          comparison: cached.comparison,
-          _debug: { mode: "demo_fallback", errors: debugErrors },
-        } satisfies AnalyzeResponse & { _debug: any });
-      }
-      return NextResponse.json(
-        { error: "Could not fetch wallet data. OnchainOS CLI may not be configured." },
-        { status: 503 }
-      );
+    // Live mode: build one WalletData per address, aggregated across all its chains
+    const walletResults: WalletData[] = await Promise.all(
+      addresses.map(async (addr) => {
+        const allTxns: unknown[] = [];
+        const allBalances: unknown[] = [];
+
+        // Fetch per chain -- EVM and Solana must never be mixed in one call
+        for (const chainName of addr.chains || []) {
+          const chainIndex = CHAIN_INDEX[chainName]!;
+          const [txns, balances] = await Promise.all([
+            getWalletTxns(addr.address, chainIndex),
+            getWalletBalances(addr.address, chainIndex),
+          ]);
+          allTxns.push(...txns);
+          allBalances.push(...balances);
+        }
+
+        // Sample up to 25 txns for detail/gas data
+        const sampleTxns = allTxns.slice(0, 25) as Array<{ txHash?: string }>;
+        const details = await Promise.all(
+          sampleTxns
+            .filter((tx) => tx.txHash)
+            .map((tx) => {
+              const chainIndex = CHAIN_INDEX[(addr.chains || ["ethereum"])[0]]!;
+              return getTxDetail(chainIndex, tx.txHash!);
+            })
+        );
+
+        const primaryChainIndex = CHAIN_INDEX[(addr.chains || ["ethereum"])[0]]!;
+        const signals = buildWalletSignals(allTxns, allBalances, details, primaryChainIndex, Date.now());
+        const trades = deriveTrades(allTxns, addr.address, primaryChainIndex);
+
+        return {
+          address: addr.address,
+          chain: (addr.chains || ["ethereum"])[0],
+          chainId: Number(primaryChainIndex),
+          totalTxns: signals.totalTxns,
+          avgGasGwei: signals.avgGasGwei,
+          networkMedianGasGwei: signals.networkMedianGasGwei,
+          trades,
+          signals,
+          approvals: [],
+          tokenScans: [],
+          realizedPnl: 0,
+          winRate: 0,
+        } satisfies WalletData;
+      })
+    );
+
+    // If live mode returned nothing, fall back to demo cache
+    if (walletResults.length === 0 && cacheExists()) {
+      const cached = await loadAllDemoData();
+      return NextResponse.json({
+        wallets: 3,
+        chains: ["ethereum", "solana", "xlayer"],
+        totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
+        patterns: cached.patterns,
+        personas: cached.personas,
+        comparison: cached.comparison,
+      } satisfies AnalyzeResponse);
     }
 
     const allPatterns = walletResults.map((w) => classifyPatterns(w));
     const personas = allPatterns.map((p, i) =>
-      generatePersona(p, walletResults[i].chain === "solana" ? "SOLANA SELF" : "ETHEREUM SELF", walletResults[i].realizedPnl)
+      generatePersona(
+        p,
+        walletResults[i].chain === "solana" ? "SOLANA SELF" : "ETHEREUM SELF",
+        walletResults[i].realizedPnl
+      )
     );
 
     let comparison = null;
     try {
       comparison = loadComparison();
-    } catch { /* comparison unavailable */ }
+    } catch {
+      // Comparison unavailable -- proceed without
+    }
 
     return NextResponse.json({
       wallets: walletResults.length,
-      chains: [...new Set((addresses || []).flatMap((a: any) => a.chains || []))],
+      chains: [...new Set(addresses.flatMap((a) => a.chains || []))],
       totalTxns: walletResults.reduce((s, w) => s + w.totalTxns, 0),
       patterns: allPatterns,
       personas,
       comparison,
     } satisfies AnalyzeResponse);
-  } catch (error: any) {
-    console.error("[A2MCP] Error:", error.message);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[A2MCP] Error:", msg);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
