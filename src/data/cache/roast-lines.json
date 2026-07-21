@@ -31,8 +31,8 @@
     "round": 5,
     "speaker": "ETHEREUM SELF",
     "text": "Last active 1 day ago. Still in the game.",
-    "onScreenTag": "Portfolio Diversifier",
-    "onScreenData": "1 days since last tx"
+    "onScreenTag": "Active Trader",
+    "onScreenData": "1 day since last tx"
   },
   {
     "round": 6,

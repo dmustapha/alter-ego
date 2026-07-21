@@ -297,8 +297,8 @@ function buildRoastLines(
       round: 5,
       speaker: "ETHEREUM SELF",
       text: `Last active ${days} day${days !== 1 ? "s" : ""} ago. Still in the game.`,
-      onScreenTag: topAmpA?.tag ?? "Active Trader",
-      onScreenData: `${days} days since last tx`,
+      onScreenTag: patternA.amplify.find((p) => p.tag === "Active Trader")?.tag ?? topAmpA?.tag ?? "Active Trader",
+      onScreenData: `${days} day${days !== 1 ? "s" : ""} since last tx`,
     });
   }
 
