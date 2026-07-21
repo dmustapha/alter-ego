@@ -1,383 +1,86 @@
 [
   {
-    "walletAddress": "0x7A9B3c1F8e25D4a6B70C0912d45Ef8369a1b2C3D",
+    "walletAddress": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
     "chain": "ethereum",
     "amplify": [
       {
-        "id": "AMP-01",
-        "tag": "Diamond Hands",
+        "id": "AMP-02",
+        "tag": "Portfolio Diversifier",
         "type": "AMPLIFY",
         "confidence": "HIGH",
-        "evidence": [
-          {
-            "id": "eth-trade-006",
-            "timestamp": 1739577600000,
-            "token": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-            "tokenSymbol": "WETH",
-            "chain": "ethereum",
-            "type": "BUY",
-            "amount": 5,
-            "amountUsd": 16500,
-            "price": 3300,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          },
-          {
-            "id": "eth-trade-007",
-            "timestamp": 1740614400000,
-            "token": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-            "tokenSymbol": "WETH",
-            "chain": "ethereum",
-            "type": "SELL",
-            "amount": 5,
-            "amountUsd": 14000,
-            "price": 2800,
-            "pnlPct": -15.15,
-            "pnlUsd": -2500,
-            "holdDurationDays": 12
-          }
-        ],
-        "count": 4,
-        "insight": "You hold through major drawdowns instead of cutting losses early. Average hold on losing positions: 12.5 days."
+        "evidence": [],
+        "count": 2779,
+        "insight": "2779 tokens, top position 35%"
       },
       {
-        "id": "AMP-02",
-        "tag": "DCA Discipline",
+        "id": "AMP-03",
+        "tag": "Active Trader",
         "type": "AMPLIFY",
         "confidence": "MEDIUM",
-        "evidence": [
-          {
-            "id": "eth-trade-001",
-            "timestamp": 1736899200000,
-            "token": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-            "tokenSymbol": "USDC",
-            "chain": "ethereum",
-            "type": "BUY",
-            "amount": 50000,
-            "amountUsd": 50000,
-            "price": 1.0,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          },
-          {
-            "id": "eth-trade-008",
-            "timestamp": 1741305600000,
-            "token": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-            "tokenSymbol": "WBTC",
-            "chain": "ethereum",
-            "type": "BUY",
-            "amount": 0.15,
-            "amountUsd": 10200,
-            "price": 68000,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          }
-        ],
-        "count": 3,
-        "insight": "You scale into positions methodically across market caps. 3 large-cap DCA entries in 6 months with zero panic sells."
+        "evidence": [],
+        "count": 50,
+        "insight": "50 txns, last active 1d ago"
+      },
+      {
+        "id": "AMP-04",
+        "tag": "Clean Operator",
+        "type": "AMPLIFY",
+        "confidence": "HIGH",
+        "evidence": [],
+        "count": 2779,
+        "insight": "0% risk-flagged tokens"
+      },
+      {
+        "id": "AMP-05",
+        "tag": "Gas Optimizer",
+        "type": "AMPLIFY",
+        "confidence": "MEDIUM",
+        "evidence": [],
+        "count": 1,
+        "insight": "avg gas 0.09 gwei, at or below median"
       }
     ],
-    "guard": [
-      {
-        "id": "GRD-01",
-        "tag": "HODL Spiral",
-        "type": "GUARD",
-        "confidence": "HIGH",
-        "evidence": [
-          {
-            "id": "eth-trade-004",
-            "timestamp": 1738195200000,
-            "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-            "tokenSymbol": "UNI",
-            "chain": "ethereum",
-            "type": "BUY",
-            "amount": 2000,
-            "amountUsd": 12400,
-            "price": 6.20,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          },
-          {
-            "id": "eth-trade-005",
-            "timestamp": 1739318400000,
-            "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-            "tokenSymbol": "UNI",
-            "chain": "ethereum",
-            "type": "SELL",
-            "amount": 2000,
-            "amountUsd": 9600,
-            "price": 4.80,
-            "pnlPct": -22.58,
-            "pnlUsd": -2800,
-            "holdDurationDays": 13
-          }
-        ],
-        "count": 2,
-        "costUsd": 5300,
-        "insight": "You held UNI and WETH past their local peaks, losing $5,300 on exits that could have been +$1,500 each."
-      },
-      {
-        "id": "GRD-02",
-        "tag": "Slow Exit",
-        "type": "GUARD",
-        "confidence": "MEDIUM",
-        "evidence": [
-          {
-            "id": "eth-trade-002",
-            "timestamp": 1737158400000,
-            "token": "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
-            "tokenSymbol": "MATIC",
-            "chain": "ethereum",
-            "type": "BUY",
-            "amount": 15000,
-            "amountUsd": 12750,
-            "price": 0.85,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          },
-          {
-            "id": "eth-trade-003",
-            "timestamp": 1737763200000,
-            "token": "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
-            "tokenSymbol": "MATIC",
-            "chain": "ethereum",
-            "type": "SELL",
-            "amount": 15000,
-            "amountUsd": 13800,
-            "price": 0.92,
-            "pnlPct": 8.24,
-            "pnlUsd": 1050,
-            "holdDurationDays": 7
-          }
-        ],
-        "count": 1,
-        "costUsd": 1200,
-        "insight": "Your single winner (MATIC) could have been +18% if you'd sold 2 days earlier. One full week of drift cost you $1,200 in missed gains."
-      }
-    ]
+    "guard": []
   },
   {
-    "walletAddress": "7KVHhE9mBXG1LpWqR3sT4yU6vF8aN2cD5xM7kP9jB0wQ",
+    "walletAddress": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
     "chain": "solana",
     "amplify": [
       {
         "id": "AMP-03",
-        "tag": "Memecoin Sniper",
+        "tag": "Active Trader",
         "type": "AMPLIFY",
-        "confidence": "HIGH",
-        "evidence": [
-          {
-            "id": "sol-trade-001",
-            "timestamp": 1736985600000,
-            "token": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-            "tokenSymbol": "BONK",
-            "chain": "solana",
-            "type": "BUY",
-            "amount": 500000000,
-            "amountUsd": 6200,
-            "price": 0.0000124,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          },
-          {
-            "id": "sol-trade-002",
-            "timestamp": 1737244800000,
-            "token": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-            "tokenSymbol": "BONK",
-            "chain": "solana",
-            "type": "SELL",
-            "amount": 500000000,
-            "amountUsd": 12400,
-            "price": 0.0000248,
-            "pnlPct": 100.0,
-            "pnlUsd": 6200,
-            "holdDurationDays": 3
-          }
-        ],
-        "count": 6,
-        "insight": "Your memecoin entry timing is surgical — BONK 3-day double, WIF 3-day +45%. You catch momentum early."
+        "confidence": "MEDIUM",
+        "evidence": [],
+        "count": 50,
+        "insight": "50 txns, last active 0d ago"
       },
       {
         "id": "AMP-04",
-        "tag": "Full Port YOLO",
+        "tag": "Clean Operator",
         "type": "AMPLIFY",
         "confidence": "HIGH",
-        "evidence": [
-          {
-            "id": "sol-trade-005",
-            "timestamp": 1738108800000,
-            "token": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
-            "tokenSymbol": "WIF",
-            "chain": "solana",
-            "type": "BUY",
-            "amount": 3500,
-            "amountUsd": 7700,
-            "price": 2.20,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          }
-        ],
-        "count": 4,
-        "insight": "You commit big — average position size is 70% of your wallet. When it works, it really works."
+        "evidence": [],
+        "count": 2473,
+        "insight": "0% risk-flagged tokens"
       }
     ],
-    "guard": [
-      {
-        "id": "GRD-03",
-        "tag": "Rug Magnet",
-        "type": "GUARD",
-        "confidence": "HIGH",
-        "evidence": [
-          {
-            "id": "sol-trade-007",
-            "timestamp": 1738627200000,
-            "token": "6AJcP7wuLymRYAsoTXyjPMqLoNEtTcrYSkh3BFPvJF2M",
-            "tokenSymbol": "RUGGY",
-            "chain": "solana",
-            "type": "BUY",
-            "amount": 10000000,
-            "amountUsd": 5000,
-            "price": 0.0005,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          },
-          {
-            "id": "sol-trade-008",
-            "timestamp": 1738629000000,
-            "token": "6AJcP7wuLymRYAsoTXyjPMqLoNEtTcrYSkh3BFPvJF2M",
-            "tokenSymbol": "RUGGY",
-            "chain": "solana",
-            "type": "SELL",
-            "amount": 10000000,
-            "amountUsd": 210,
-            "price": 0.000021,
-            "pnlPct": -95.8,
-            "pnlUsd": -4790,
-            "holdDurationDays": 0
-          }
-        ],
-        "count": 3,
-        "costUsd": 8950,
-        "insight": "3 rug pulls in 6 months. No token scan would have saved RUGGY — 99% tax, honeypot. Total cost: $8,950."
-      },
-      {
-        "id": "GRD-04",
-        "tag": "Paper Hands on Winners",
-        "type": "GUARD",
-        "confidence": "MEDIUM",
-        "evidence": [
-          {
-            "id": "sol-trade-003",
-            "timestamp": 1737417600000,
-            "token": "2weMjPLLybRMMva1fM3U31goWWrCpF59CHWNhnCJ9Vyh",
-            "tokenSymbol": "SAMO",
-            "chain": "solana",
-            "type": "BUY",
-            "amount": 200000,
-            "amountUsd": 8200,
-            "price": 0.041,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          },
-          {
-            "id": "sol-trade-004",
-            "timestamp": 1737849600000,
-            "token": "2weMjPLLybRMMva1fM3U31goWWrCpF59CHWNhnCJ9Vyh",
-            "tokenSymbol": "SAMO",
-            "chain": "solana",
-            "type": "SELL",
-            "amount": 200000,
-            "amountUsd": 3400,
-            "price": 0.017,
-            "pnlPct": -58.54,
-            "pnlUsd": -4800,
-            "holdDurationDays": 5
-          }
-        ],
-        "count": 2,
-        "costUsd": 7200,
-        "insight": "You sold SAMO at -58% during a 5-day dip. It recovered to +37% 3 days later. Panic exits cost $7,200."
-      }
-    ]
+    "guard": []
   },
   {
-    "walletAddress": "0x3F8c2B1a9D5e7460C0912d45Ef8369a1b2C3D7A9",
+    "walletAddress": "0xd97c85d61337f8e4366bff2d8b482cfc59d76340",
     "chain": "xlayer",
     "amplify": [
       {
         "id": "AMP-05",
-        "tag": "Steady Farmer",
+        "tag": "Gas Optimizer",
         "type": "AMPLIFY",
-        "confidence": "HIGH",
-        "evidence": [
-          {
-            "id": "xl-trade-004",
-            "timestamp": 1739059200000,
-            "token": "0x74c6cADE3eF61Dc6AA57e3e2C6C9f3B9c687e5B8",
-            "tokenSymbol": "xETH",
-            "chain": "xlayer",
-            "type": "BUY",
-            "amount": 2,
-            "amountUsd": 6780,
-            "price": 3390,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          },
-          {
-            "id": "xl-trade-005",
-            "timestamp": 1739836800000,
-            "token": "0x74c6cADE3eF61Dc6AA57e3e2C6C9f3B9c687e5B8",
-            "tokenSymbol": "xETH",
-            "chain": "xlayer",
-            "type": "SELL",
-            "amount": 2,
-            "amountUsd": 8340,
-            "price": 4170,
-            "pnlPct": 23.01,
-            "pnlUsd": 1560,
-            "holdDurationDays": 9
-          }
-        ],
-        "count": 3,
-        "insight": "Consistent +20-25% exits on ETH/L2 plays. You farm yields, not gamble."
+        "confidence": "MEDIUM",
+        "evidence": [],
+        "count": 1,
+        "insight": "avg gas 0.02 gwei, at or below median"
       }
     ],
-    "guard": [
-      {
-        "id": "GRD-05",
-        "tag": "Over-Diversified",
-        "type": "GUARD",
-        "confidence": "LOW",
-        "evidence": [
-          {
-            "id": "xl-trade-001",
-            "timestamp": 1737158400000,
-            "token": "0xe538905cf8410324e03a5A23C1B5C1cFeDc761c0",
-            "tokenSymbol": "USDC",
-            "chain": "xlayer",
-            "type": "BUY",
-            "amount": 8000,
-            "amountUsd": 8000,
-            "price": 1.0,
-            "pnlPct": 0,
-            "pnlUsd": 0,
-            "holdDurationDays": 0
-          }
-        ],
-        "count": 1,
-        "costUsd": 680,
-        "insight": "40% of your portfolio sits idle in stablecoins. You're leaving yield on the table."
-      }
-    ]
+    "guard": []
   }
 ]
