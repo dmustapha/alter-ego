@@ -11,9 +11,30 @@ Source of truth for the remediation arc. Detailed plans are written **roll-wave*
 - **Chains analyzed:** Ethereum (1), Solana (501), X Layer (196). The trade-history spike (Plan 1 Task 1) MUST probe `chainIndex: 196` too, not only Ethereum.
 - **Genesis differentiator the brief rewards:** decision-to-action lineage (AI decision → on-chain tx/intent id). Currently absent; candidate for a later plan if scoring needs it.
 
+## LISTING REJECTION WORKSTREAM (2026-07-21) — READ FIRST
+
+Agent #6013 was **rejected again** for three protocol failures. Full analysis + corrected facts: `docs/LISTING-REJECTION-ANALYSIS.md` (authoritative — all x402/A2MCP/A2A work references it). The rejection is about the **agent protocol layer**, which the original six plans barely covered. Reason → fix owner:
+
+| OKX rejection reason | Root cause | Fix |
+|----------------------|-----------|-----|
+| 1. Endpoint unreachable | `serviceList: []` on-chain + submitted URL is Vercel-auth-walled (302) | Plan 2 (register reachable `wine-mu` URL) + deploy-protection-off check |
+| 2. x402 validation failed | Wrong token/version/network + hand-rolled (USDG/18dp/v1/xlayer). OKX needs USDT0/6dp/v2/eip155:196 via `@okxweb3/x402` SDK | Plan 3 (corrected + MANDATORY) → Plan 2 |
+| 3. Task timed out / no response | A2A daemon scoped presence-only; nothing answers XMTP task messages | **NEW Plan 7** (full always-on daemon + AI adapter) |
+
+**Two service surfaces both required:** A2MCP HTTP endpoint (`/api/a2mcp`, x402-gated, in `serviceList`) AND the A2A XMTP channel (`communicationAddress`, daemon-served). **x402 is now MANDATORY, not optional.**
+
 ## Sequence
 
-`1 (live spine) → 2 (A2MCP) → 4 (a11y, parallel) → 5 (honesty) → 6 (demo)`; **3 (x402) optional**, run before 5 only if the payment track matters for scoring. Each plan must be green before the next detailed plan is written. Est. ~3-4 focused days.
+Listing-critical path first (the active blocker), then product/submission polish:
+
+`1 (live data) → 3 (x402 via OKX SDK, MANDATORY) + 2 (A2MCP endpoint + serviceList) → 7 (A2A daemon, full) → 8 (listing-readiness gate: pass OKX's 3 tests) → 4 (a11y) → 5 (honesty) → 6 (demo)`
+
+Plan 2 and Plan 3 interleave (the `/api/a2mcp` endpoint issues the SDK's x402 402). **No resubmission to OKX until Plan 8's three tests are all green** (per Dami's directive). Each plan green before the next is written. Est. ~5-6 focused days.
+
+## New plans (listing workstream)
+
+- **Plan 7 — A2A daemon (full, always-on):** `docs/superpowers/plans/2026-07-21-a2a-daemon-full.md`. Deploy the full `okx-a2a` daemon (XMTP + `task` + `ai` adapter) to the cloud; AI adapter delivers Alter Ego analysis; responds to `a2a-agent-chat` + user prompts within timeout. Supersedes the presence-only spec `docs/superpowers/specs/2026-07-20-presence-daemon-fly-design.md`.
+- **Plan 8 — Listing-readiness gate (terminal):** `docs/superpowers/plans/2026-07-21-listing-readiness-gate.md`. Run OKX's 3 tests (reachable+registered, `curl -i -X POST`→402+PAYMENT-REQUIRED, live A2A response) against the live deploy + on-chain state. Hard gate before any resubmit.
 
 ---
 

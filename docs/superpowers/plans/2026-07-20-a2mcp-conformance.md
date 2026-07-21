@@ -7,11 +7,11 @@
 **Architecture:** Split the current single-shape `POST` into three surfaces on the same route file, each grounded in the OKX skills:
 1. `GET /api/a2mcp` returns the **agent card** — a static, deterministic JSON document (`capabilities[]`, `input` JSON Schema, `output` JSON Schema, `pricing`, `x402` accepts block) built from a new `src/lib/a2mcp/agent-card.ts` module. No wallet, no network, pure function → trivially testable.
 2. `POST /api/a2mcp` first classifies the request body by SHAPE (envelope-first, exactly like the `okx-ai` skill's "Inbound envelope activation" table): an A2A system-event envelope (`{agentId, message:{source:"system", event, jobId}}`) or an A2A agent-chat envelope (`{msgType:"a2a-agent-chat", jobId, sender:{role}}`) is acknowledged via a dedicated handler; a plain analyze body (`{address|addresses, chains}`) runs the paid analyze path.
-3. The paid analyze path enforces payment: if the request carries no valid `X-PAYMENT` header, respond `402` with a `PAYMENT-REQUIRED` (v2, base64 JSON) challenge whose `accepts[]` is the x402 `exact` scheme on X Layer USDG; if it carries `X-PAYMENT`, verify (stub-verify in this plan, real settlement is Plan 3) then serve the real analysis from Plan 1's `getWalletTrades` → `classifyPatterns` → `generatePersona`.
+3. The paid analyze path enforces payment by DELEGATING to Plan 3's OKX Payment SDK module `enforceX402(req, resourceUrl)` from `src/lib/x402/okx-x402.ts` (do NOT hand-roll the 402). `enforceX402` returns `{ paid: true }` or `{ paid: false, challenge: Response }` where `challenge` is a real SDK-issued `402` carrying the base64 `PAYMENT-REQUIRED` v2 challenge (`{ x402Version: 2, resource: { url, description, mimeType: "application/json" }, accepts: [ ... ] }`) whose `accepts[]` is the x402 `exact` scheme on X Layer USDT0 (`network: "eip155:196"`, 6 decimals, `maxTimeoutSeconds: 300`). Unpaid → return `challenge`; paid → serve the real analysis from Plan 1's `getWalletTrades` → `classifyPatterns` → `generatePersona`. **Dependency:** Plan 3's `src/lib/x402/okx-x402.ts` must land with or before this task.
 
 The agent card's `output` schema is derived directly from `AnalyzeResponse` in `src/lib/types.ts` so card and payload can never drift. A conformance test asserts the served payload validates against the card's own `output` schema — the differential guard Plan 1 introduced, now extended to protocol shape.
 
-**Tech Stack:** Next.js 16 (App Router, `runtime = "nodejs"`), TypeScript, Node `fetch`, Vitest for unit + route tests, `ajv` (add) for JSON-Schema validation in the conformance test only, Playwright (existing) for the live protocol probe. USDG on X Layer for the x402 accepts block.
+**Tech Stack:** Next.js 16 (App Router, `runtime = "nodejs"`), TypeScript, Node `fetch`, Vitest for unit + route tests, `ajv` (add) for JSON-Schema validation in the conformance test only, Playwright (existing) for the live protocol probe. USDT0 on X Layer (`eip155:196`, 6 decimals) for the x402 accepts block, issued via Plan 3's OKX Payment SDK.
 
 ## Global Constraints
 
@@ -19,7 +19,7 @@ The agent card's `output` schema is derived directly from `AnalyzeResponse` in `
 - No em-dashes in any user-facing copy, agent-card `description`, or docs (standing rule). Use "→", commas, or full stops.
 - OKX REST base `https://web3.okx.com`; project header `OKX-ACCESS-PROJECT: 4d156bf0c61130f2692d097ecb68dbe4`; auth headers `OKX-ACCESS-KEY / -SIGN / -TIMESTAMP / -PASSPHRASE`; prehash `timestamp + method + path + body`, HMAC-SHA256, base64. Credentials come only from `process.env` — never committed, never in `public/`. (The agent card itself is public and carries NO credentials.)
 - Chain: **X Layer, chain index 196**. ERC-8004 agent identity (ASP #6013) is minted on X Layer; identities are XLayer-only (`okx-ai` skill Gate "Chain-fixed" — never pass `--chain` to an `agent` command).
-- x402 accepts block pays in **USDG** `0x4ae46a509f6b1d9056937ba4500cb143933d2dc8` (18 decimals) on `network: "xlayer"` (chain 196), `scheme: "exact"`, `requiredDeadlineSeconds: 300` (`DEEP-RESEARCH.md:18,20`). These are the SAME literals Plan 3 will settle against; keep them in one shared const so Plan 3 reuses them.
+- x402 accepts block pays in **USDT0** (**6 decimals**, exact X Layer address pinned by Plan 3's OKX Payment SDK spike — do NOT hardcode a guessed address) on `network: "eip155:196"` (X Layer), `scheme: "exact"`, `maxTimeoutSeconds: 300`, `x402Version: 2` (`docs/LISTING-REJECTION-ANALYSIS.md`, supersedes DEEP-RESEARCH's USDG/18dp/`xlayer`/`requiredDeadlineSeconds`). The 402 is ISSUED BY Plan 3's OKX Payment SDK module, not hand-rolled here; this plan only calls `enforceX402`. These are the SAME literals Plan 3 settles against; they live in Plan 3's `src/lib/x402/okx-x402.ts`, which this plan imports (do not duplicate them).
 - Externally-defined protocol literals stay byte-for-byte exact wherever the protocol requires them (`okx-agent-payments-protocol` skill Rule 3): the JSON field `x402Version`, the HTTP headers `X-PAYMENT` / `PAYMENT-REQUIRED` / `PAYMENT-SIGNATURE` / `WWW-Authenticate: Payment`, and the URL `https://x402.org`. Do not rename these to be "nicer".
 - ASP service metadata contract (`okx-ai` skill `identity-register.md` §Step 2 / §6): a service has a **name** (5–30 char noun phrase, no price in the name), a **2-part description** (① core capability + who it is for; ② what the user must provide, each part ≤200 CJK chars, no example prompts / no links / no tech-stack), a **type** of literal `A2MCP` for an API service, a **fee** that is a plain number sent as a **quoted string** in digits only (currency is always USDT by default — no `USDT`/`USDG`/symbol in the value), and an **endpoint** that must be a publicly reachable `https://` URL ≤512 chars (reject `http`/`localhost`/private IPs/placeholders).
 - Target hackathon: **OKX.AI Genesis** (ASP agent **#6013** on the OKX.AI marketplace) + DoraHacks Details tab. This plan makes the marketplace-facing endpoint real; agent judges probe the protocol, so shape correctness is scored.
@@ -67,7 +67,7 @@ git commit -m "docs: reconcile A2MCP plan with Plan 1 upstream output (branch se
 
 **Files:**
 - Create: `docs/A2MCP-CONTRACT.md` (the spike deliverable — the agent-card shape + 402 accepts shape + inbound-envelope shapes this plan builds to).
-- Reference: `~/.claude/skills/okx-ai/SKILL.md` (§"Inbound envelope activation" table — the two A2A envelope shapes), `~/.claude/skills/okx-ai/references/identity-register.md` (§Step 2 service fields + §6 endpoint rules), `~/.claude/skills/okx-agent-payments-protocol/SKILL.md` (§Step A2/A3-Accepts — the `PAYMENT-REQUIRED` v2 `accepts[]` shape and `X-PAYMENT` replay), `DEEP-RESEARCH.md:18,20` (PaymentRequirements literals + USDG).
+- Reference: `~/.claude/skills/okx-ai/SKILL.md` (§"Inbound envelope activation" table — the two A2A envelope shapes), `~/.claude/skills/okx-ai/references/identity-register.md` (§Step 2 service fields + §6 endpoint rules), `~/.claude/skills/okx-agent-payments-protocol/SKILL.md` (§Step A2/A3-Accepts — the `PAYMENT-REQUIRED` v2 `accepts[]` shape and `X-PAYMENT` replay), `docs/LISTING-REJECTION-ANALYSIS.md` §"Corrected x402 facts" (AUTHORITATIVE PaymentRequirements literals: USDT0 / 6 dp / v2 / `eip155:196` / `maxTimeoutSeconds`; supersedes DEEP-RESEARCH's USDG).
 
 **Interfaces:**
 - Produces: `docs/A2MCP-CONTRACT.md` documenting (1) the agent-card JSON shape, (2) the `402` `PAYMENT-REQUIRED` challenge shape with the exact `accepts[0]` object, (3) the two inbound A2A envelope shapes and this agent's acknowledgement, (4) the ASP #6013 `serviceList` service object. Consumed by Tasks 2-6.
@@ -79,8 +79,8 @@ git commit -m "docs: reconcile A2MCP plan with Plan 1 upstream output (branch se
   - `capabilities: string[]` — the human-readable capability list (e.g. `"wallet-behavior-analysis"`, `"multi-chain-persona"`, `"trade-pattern-classification"`). These name what the agent does; ground them in the actual routes/classifier, not aspiration.
   - `input` — a JSON Schema for the analyze request body, derived from `AnalyzeRequest` in `src/lib/types.ts` (`addresses: [{ address, chains }]`, with the `{ address, chains }` shorthand also accepted).
   - `output` — a JSON Schema for `AnalyzeResponse` in `src/lib/types.ts` (`wallets`, `chains`, `totalTxns`, `patterns[]`, `personas[]`, `comparison`).
-  - `pricing` — `{ scheme: "exact", network: "xlayer", asset: "0x4ae46a509f6b1d9056937ba4500cb143933d2dc8", amount: "<atomic USDG for the fee>", payTo: "<ASP payout address>", requiredDeadlineSeconds: 300 }`. The `amount` is the fee in USDG atomic units (18 decimals); document the conversion from the quoted USDT fee digits.
-- [ ] **Step 3: Lock the `402` challenge shape.** Per `okx-agent-payments-protocol` §A2/A3-Accepts, the v2 challenge is a **`PAYMENT-REQUIRED` response header** carrying **base64-encoded JSON** `{ x402Version: 1, accepts: [ <PaymentRequirements> ], resource, ... }`, where `accepts[0]` = the `pricing` object above expressed in x402 `exact` form (`scheme`, `network`, `maxAmountRequired`, `asset`/`paymentTokenAddress`, `payToAddress`/`payTo`, `resource`, `requiredDeadlineSeconds: 300`). Record the exact field names (there is `maxAmountRequired` in the v1 body vs `amount` in v2 per §A4 — document both and pick v2 `PAYMENT-REQUIRED` header as primary since Plan 3 uses `payment pay --payload`). Keep `x402Version`, `PAYMENT-REQUIRED`, `X-PAYMENT` byte-exact.
+  - `pricing` — `{ scheme: "exact", network: "eip155:196", asset: "<USDT0 X Layer address, pinned by Plan 3's SDK spike>", amount: "<atomic USDT0 for the fee>", payTo: "<ASP payout address>", maxTimeoutSeconds: 300 }`. The `amount` is the fee in USDT0 atomic units (6 decimals); document the conversion from the quoted USDT fee digits.
+- [ ] **Step 3: Lock the `402` challenge shape (issued by Plan 3's OKX Payment SDK — do NOT hand-roll).** Per `docs/LISTING-REJECTION-ANALYSIS.md`, the v2 challenge is a **`PAYMENT-REQUIRED` response header** carrying **base64-encoded JSON** `{ x402Version: 2, resource: { url, description, mimeType: "application/json" }, accepts: [ <PaymentRequirements> ] }`, where `accepts[0]` = the `pricing` object above in x402 `exact` form (`scheme`, `network: "eip155:196"`, `maxAmountRequired`/`amount`, `asset` = USDT0, `payTo`, `resource`, `maxTimeoutSeconds: 300`). The seller-side 402 is produced by Plan 3's `enforceX402` (OKX Payment SDK `@okxweb3/x402-*`), which this plan calls; record the SDK's exact emitted field names from the Plan 3 spike, do not re-derive them. Keep `x402Version`, `PAYMENT-REQUIRED`, `X-PAYMENT` byte-exact.
 - [ ] **Step 4: Lock the inbound A2A envelope shapes.** Copy verbatim from `okx-ai` SKILL §"Inbound envelope activation": (1) system event `{agentId, message:{source:"system", event, jobId, ...}}`; (2) agent-chat `{msgType:"a2a-agent-chat", jobId, sender:{role}, ...}`. Document that on receiving either, this endpoint MUST recognise the shape (not treat it as an analyze body) and return a well-formed acknowledgement, deferring the actual task lifecycle to the `okx-ai` skill (this endpoint is a listing target, not a task executor in this plan).
 - [ ] **Step 5: Decision gate.** If Step 1 found a live shape that CONTRADICTS the skill-grounded fallback → build to the live shape and note the delta. If only the fallback is reachable → build to the fallback AND add a Downstream Item (see Self-Review notes) to re-validate against the live marketplace before Plan 5. If a required field is specified by NEITHER a probe NOR a skill → STOP and escalate; do not invent it.
 - [ ] **Step 6: Commit.**
@@ -113,11 +113,11 @@ export interface A2mcpService {
 }
 export interface A2mcpPricing {
   scheme: "exact";
-  network: "xlayer";
-  asset: string;                // USDG 0x4ae46a...2dc8
-  amount: string;               // atomic USDG (18 decimals) for `fee`
+  network: "eip155:196";
+  asset: string;                // USDT0 X Layer address (pinned by Plan 3 SDK spike)
+  amount: string;               // atomic USDT0 (6 decimals) for `fee`
   payTo: string;                // ASP payout address (env-driven)
-  requiredDeadlineSeconds: 300;
+  maxTimeoutSeconds: 300;
 }
 export interface A2mcpAgentCard {
   name: string;
@@ -130,16 +130,20 @@ export interface A2mcpAgentCard {
 }
 export function buildAgentCard(): A2mcpAgentCard;
 ```
-- Consumes: `process.env.A2MCP_ENDPOINT_URL`, `process.env.A2MCP_PAYTO_ADDRESS` (both public, no secret); constants from a shared `src/lib/a2mcp/constants.ts` (USDG address, network, deadline).
+- Consumes: `process.env.A2MCP_ENDPOINT_URL`, `process.env.A2MCP_PAYTO_ADDRESS` (both public, no secret); the x402 network/asset/decimals/timeout constants re-exported from Plan 3's `src/lib/x402/okx-x402.ts` (USDT0 address, `eip155:196`, 6 decimals, 300s) — do NOT define a second copy here.
 
-- [ ] **Step 1: Create the shared constants** `src/lib/a2mcp/constants.ts` (reused by Plan 3):
+- [ ] **Step 1: Create the shared constants** `src/lib/a2mcp/constants.ts` — re-export the x402 literals from Plan 3's module (single source of truth) rather than redefining them:
 
 ```ts
-export const XLAYER_NETWORK = "xlayer" as const;
-export const XLAYER_CHAIN_INDEX = 196 as const;
-export const USDG_ADDRESS = "0x4ae46a509f6b1d9056937ba4500cb143933d2dc8" as const; // 18 decimals
-export const USDG_DECIMALS = 18 as const;
-export const X402_DEADLINE_SECONDS = 300 as const;
+// Re-export the canonical x402 literals from Plan 3's OKX Payment SDK module.
+// Do NOT hardcode the USDT0 address here; Plan 3's spike pins it.
+export {
+  XLAYER_NETWORK,      // "eip155:196"
+  XLAYER_CHAIN_INDEX,  // 196
+  USDT0_ADDRESS,       // USDT0 X Layer address (pinned by Plan 3 SDK spike)
+  USDT0_DECIMALS,      // 6
+  X402_TIMEOUT_SECONDS,// 300
+} from "@/lib/x402/okx-x402";
 ```
 
 - [ ] **Step 2: Write the failing agent-card test.** Ground every assertion in `docs/A2MCP-CONTRACT.md`:
@@ -148,7 +152,7 @@ export const X402_DEADLINE_SECONDS = 300 as const;
 // src/lib/a2mcp/agent-card.test.ts
 import { describe, it, expect, beforeEach } from "vitest";
 import { buildAgentCard } from "./agent-card";
-import { USDG_ADDRESS } from "./constants";
+import { USDT0_ADDRESS } from "./constants";
 
 describe("buildAgentCard", () => {
   beforeEach(() => {
@@ -167,12 +171,12 @@ describe("buildAgentCard", () => {
     expect(out).toContain("personas");
   });
 
-  it("prices in USDG on xlayer with a 300s deadline (x402 exact)", () => {
+  it("prices in USDT0 on eip155:196 with a 300s timeout (x402 v2 exact)", () => {
     const c = buildAgentCard();
     expect(c.pricing.scheme).toBe("exact");
-    expect(c.pricing.network).toBe("xlayer");
-    expect(c.pricing.asset.toLowerCase()).toBe(USDG_ADDRESS);
-    expect(c.pricing.requiredDeadlineSeconds).toBe(300);
+    expect(c.pricing.network).toBe("eip155:196");
+    expect(c.pricing.asset.toLowerCase()).toBe(USDT0_ADDRESS.toLowerCase());
+    expect(c.pricing.maxTimeoutSeconds).toBe(300);
     expect(/^\d+$/.test(c.pricing.amount)).toBe(true); // atomic units, digits only
   });
 
@@ -190,7 +194,7 @@ describe("buildAgentCard", () => {
 
 - [ ] **Step 3: Run it, verify it fails.** `npx vitest run src/lib/a2mcp/agent-card.test.ts` → FAIL (`buildAgentCard` not exported).
 
-- [ ] **Step 4: Implement `buildAgentCard`.** Fill every field from `docs/A2MCP-CONTRACT.md`; keep the copy honest per the Task-0 branch (if Plan-1B honest-demo, the description says "analysis over demo wallets" not "live per-request fetch"). Convert `fee` USDT digits to `pricing.amount` atomic USDG using `USDG_DECIMALS`. The `input`/`output` are hand-written JSON Schemas mirroring `AnalyzeRequest`/`AnalyzeResponse` (do not import a runtime schema lib here; keep it a plain object literal so the card is a static document).
+- [ ] **Step 4: Implement `buildAgentCard`.** Fill every field from `docs/A2MCP-CONTRACT.md`; keep the copy honest per the Task-0 branch (if Plan-1B honest-demo, the description says "analysis over demo wallets" not "live per-request fetch"). Convert `fee` USDT digits to `pricing.amount` atomic USDT0 using `USDT0_DECIMALS` (6). The `input`/`output` are hand-written JSON Schemas mirroring `AnalyzeRequest`/`AnalyzeResponse` (do not import a runtime schema lib here; keep it a plain object literal so the card is a static document).
 
 - [ ] **Step 5: Run it, verify it passes.** `npx vitest run src/lib/a2mcp/agent-card.test.ts` → PASS.
 
@@ -212,90 +216,68 @@ git commit -m "feat(a2mcp): real agent card (capabilities + input/output schema 
 
 ---
 
-## Task 3: `402` → `X-PAYMENT` handshake helpers
+## Task 3: Delegate the `402` handshake to Plan 3's OKX Payment SDK module
+
+> **Do NOT hand-roll x402.** OKX's "x402 standard validation" checks integration via the OKX Payment SDK (`@okxweb3/x402-*`). This task does NOT build its own challenge encoder or `isPaid` check; it CALLS Plan 3's `enforceX402(req, resourceUrl)` from `src/lib/x402/okx-x402.ts`, which issues the real SDK 402 and verifies `X-PAYMENT`. **Dependency:** Plan 3's `src/lib/x402/okx-x402.ts` must land with or before this task; if it is not present, STOP and finish/ship Plan 3 first.
 
 **Files:**
-- Create: `src/lib/a2mcp/payment.ts` (challenge builder + header check).
-- Create: `src/lib/a2mcp/payment.test.ts`.
-- Reference: `docs/A2MCP-CONTRACT.md` §402 shape, `okx-agent-payments-protocol` §A2/A3-Accepts, `src/lib/a2mcp/constants.ts`.
+- Reference only (do NOT create a local payment module): `src/lib/x402/okx-x402.ts` (Plan 3's OKX Payment SDK wrapper — owns the challenge shape, USDT0 address, `eip155:196`, `maxTimeoutSeconds`, verify/settle).
+- Reference: `docs/LISTING-REJECTION-ANALYSIS.md` §"Corrected x402 facts", `docs/A2MCP-CONTRACT.md` §402 shape, the `okx-agent-payments-protocol` skill.
 
 **Interfaces:**
-- Produces:
+- Consumes (from Plan 3, do NOT redefine):
 ```ts
-// src/lib/a2mcp/payment.ts
-export interface PaymentRequirements {
-  scheme: "exact";
-  network: "xlayer";
-  maxAmountRequired: string;    // atomic USDG
-  asset: string;                // USDG address
-  payTo: string;
-  resource: string;             // the endpoint URL
-  requiredDeadlineSeconds: number;
-}
-// Build the base64-encoded JSON body for the PAYMENT-REQUIRED header (x402 v2).
-export function buildPaymentRequiredHeader(resource: string): string;
-// Build a 402 NextResponse carrying the PAYMENT-REQUIRED header (byte-exact header name).
-export function paymentRequired(resource: string): Response;
-// True when the caller supplied a usable X-PAYMENT header (presence + shape only in this plan;
-// real verify/settle is Plan 3).
-export function hasValidPayment(req: Request): boolean;
+// src/lib/x402/okx-x402.ts (Plan 3 — imported, not implemented here)
+// Issues the SDK-standard v2 402 and verifies the X-PAYMENT header.
+export function enforceX402(
+  req: Request,
+  resourceUrl: string,
+): Promise<{ paid: true } | { paid: false; challenge: Response }>;
+// challenge = a real SDK-issued 402 carrying a base64 PAYMENT-REQUIRED header:
+//   { x402Version: 2, resource: { url, description, mimeType: "application/json" },
+//     accepts: [ { scheme: "exact", network: "eip155:196", asset: <USDT0>,
+//                  maxAmountRequired, payTo, resource, maxTimeoutSeconds: 300 } ] }
 ```
-- Consumes: `constants.ts`, `process.env.A2MCP_PAYTO_ADDRESS`, `process.env.A2MCP_FEE_ATOMIC` (atomic USDG for the fee; default derived from the card).
+- Produces: nothing new. Task 4's `POST` calls `enforceX402` directly. There is NO `src/lib/a2mcp/payment.ts`.
 
-- [ ] **Step 1: Write the failing payment test.**
+- [ ] **Step 1: Confirm Plan 3's module exists.** `grep -n "export function enforceX402" src/lib/x402/okx-x402.ts`. If absent → STOP: Plan 3 (OKX Payment SDK seller-side) is a hard dependency and must land first. Record the blocker and hand back.
+
+- [ ] **Step 2: Write the delegation contract test** (asserts `enforceX402`'s SDK 402 has the corrected v2 shape — this exercises Plan 3's module, catching drift):
 
 ```ts
-// src/lib/a2mcp/payment.test.ts
-import { describe, it, expect, beforeEach } from "vitest";
-import { buildPaymentRequiredHeader, paymentRequired, hasValidPayment } from "./payment";
-import { USDG_ADDRESS } from "./constants";
+// src/lib/a2mcp/x402-delegation.test.ts
+import { describe, it, expect } from "vitest";
+import { enforceX402 } from "@/lib/x402/okx-x402";
 
 const RES = "https://alter-ego-wine-mu.vercel.app/api/a2mcp";
 
-describe("x402 handshake", () => {
-  beforeEach(() => {
-    process.env.A2MCP_PAYTO_ADDRESS = "0x000000000000000000000000000000000000dEaD";
-    process.env.A2MCP_FEE_ATOMIC = "1000000000000000000"; // 1 USDG (18 decimals)
-  });
-
-  it("encodes a v2 PAYMENT-REQUIRED challenge with the exact USDG/xlayer accepts entry", () => {
-    const b64 = buildPaymentRequiredHeader(RES);
-    const decoded = JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
-    expect(decoded.x402Version).toBe(1);
+describe("enforceX402 delegation (SDK-issued v2 402)", () => {
+  it("returns an unpaid challenge that is a real 402 with a v2 PAYMENT-REQUIRED header", async () => {
+    const r = await enforceX402(new Request(RES, { method: "POST" }), RES);
+    expect(r.paid).toBe(false);
+    if (r.paid) return;
+    expect(r.challenge.status).toBe(402);
+    const b64 = r.challenge.headers.get("PAYMENT-REQUIRED");
+    expect(b64).toBeTruthy();
+    const decoded = JSON.parse(Buffer.from(b64!, "base64").toString("utf8"));
+    expect(decoded.x402Version).toBe(2);
+    expect(decoded.resource.mimeType).toBe("application/json");
     const a = decoded.accepts[0];
     expect(a.scheme).toBe("exact");
-    expect(a.network).toBe("xlayer");
-    expect(a.asset.toLowerCase()).toBe(USDG_ADDRESS);
-    expect(a.requiredDeadlineSeconds).toBe(300);
+    expect(a.network).toBe("eip155:196");
+    expect(a.maxTimeoutSeconds).toBe(300);
     expect(/^\d+$/.test(a.maxAmountRequired)).toBe(true);
-  });
-
-  it("returns a 402 carrying the byte-exact PAYMENT-REQUIRED header", () => {
-    const res = paymentRequired(RES);
-    expect(res.status).toBe(402);
-    expect(res.headers.get("PAYMENT-REQUIRED")).toBeTruthy();
-  });
-
-  it("detects the presence of an X-PAYMENT header", () => {
-    const withPay = new Request(RES, { method: "POST", headers: { "X-PAYMENT": "eyJ4NDAyIjp0cnVlfQ==" } });
-    const without = new Request(RES, { method: "POST" });
-    expect(hasValidPayment(withPay)).toBe(true);
-    expect(hasValidPayment(without)).toBe(false);
   });
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails.** `npx vitest run src/lib/a2mcp/payment.test.ts` → FAIL.
+- [ ] **Step 3: Run it.** `npx vitest run src/lib/a2mcp/x402-delegation.test.ts` → PASS against Plan 3's module. If it fails on shape, fix Plan 3's `okx-x402.ts` (source of truth), not a local copy.
 
-- [ ] **Step 3: Implement the helpers.** `buildPaymentRequiredHeader` builds `{ x402Version: 1, accepts: [PaymentRequirements], resource }` and returns `Buffer.from(JSON.stringify(...)).toString("base64")`. `paymentRequired` returns `new Response(JSON.stringify({ error: "payment required" }), { status: 402, headers: { "content-type": "application/json", "PAYMENT-REQUIRED": buildPaymentRequiredHeader(resource) } })` (header name byte-exact). `hasValidPayment` returns `!!req.headers.get("X-PAYMENT")` — presence-only in this plan; add a `// Plan 3: replace with POST /api/v6/x402/verify` comment so real settlement is not silently skipped. Do NOT claim settlement here.
-
-- [ ] **Step 4: Run it, verify it passes.** `npx vitest run src/lib/a2mcp/payment.test.ts` → PASS.
-
-- [ ] **Step 5: Commit.**
+- [ ] **Step 4: Commit.**
 
 ```bash
-git add src/lib/a2mcp/payment.ts src/lib/a2mcp/payment.test.ts
-git commit -m "feat(a2mcp): 402 -> X-PAYMENT handshake helpers (x402 exact/USDG/xlayer, verify deferred to Plan 3)"
+git add src/lib/a2mcp/x402-delegation.test.ts
+git commit -m "test(a2mcp): assert Plan 3 enforceX402 issues the corrected v2 402 (USDT0/eip155:196/maxTimeoutSeconds)"
 ```
 
 ---
@@ -321,7 +303,7 @@ export type Inbound =
 export function classifyInbound(body: unknown): Inbound;   // envelope shape wins, per okx-ai skill
 export function a2aAck(inbound: Extract<Inbound, { kind: "a2a-system" | "a2a-chat" }>): object;
 ```
-- Consumes: `getWalletTrades` + `classifyPatterns` + `generatePersona` (via Plan 1's wiring), `hasValidPayment` / `paymentRequired` (Task 3), the address sanitizer Plan 1 Task 3 Step 3 adds.
+- Consumes: `getWalletTrades` + `classifyPatterns` + `generatePersona` (via Plan 1's wiring), `enforceX402` from `@/lib/x402/okx-x402` (Plan 3), the address sanitizer Plan 1 Task 3 Step 3 adds.
 
 - [ ] **Step 1: Write the failing envelope test.** Ground the shapes verbatim in the `okx-ai` skill table:
 
@@ -364,10 +346,10 @@ describe("classifyInbound (envelope shape wins)", () => {
   1. Parse the body (`await req.json().catch(() => ({}))`), run `classifyInbound`.
   2. `a2a-system` / `a2a-chat` → return `NextResponse.json(a2aAck(inbound))`. (No payment for envelope acks.)
   3. `empty` → return the agent-card `GET` payload as a showcase (or the honest-demo cache per the Task-0 branch), NOT a 500.
-  4. `analyze` → run the address sanitizer (length bound + `/[<>"'&\`\\]/` reject, copied from `analyze/route.ts` per Plan 1 Task 3 Step 3). Then enforce payment: `if (!hasValidPayment(req)) return paymentRequired(resourceUrl);`.
+  4. `analyze` → run the address sanitizer (length bound + `/[<>"'&\`\\]/` reject, copied from `analyze/route.ts` per Plan 1 Task 3 Step 3). Then enforce payment by delegating to Plan 3's SDK: `const pay = await enforceX402(req, resourceUrl); if (!pay.paid) return pay.challenge;` (the returned `challenge` is a real SDK-issued 402 + v2 `PAYMENT-REQUIRED` header). Do NOT hand-roll the 402.
   5. Paid → serve the REAL analysis: build `WalletData` via `getWalletTrades` + balances (per the Task-0 branch — live fetch, or honest-demo cache), run `classifyPatterns` + `generatePersona`, return `AnalyzeResponse`. Strip any `_debug` field from the response and its type (Plan 1 Task 3 Step 3 also removes it).
 
-- [ ] **Step 5: Write the route test** (mock `okx-api` and payment):
+- [ ] **Step 5: Write the route test** (mock `okx-api` AND Plan 3's `enforceX402` — the 402/paid decision is delegated, so the test controls it via the mock, not a hand-rolled header check):
 
 ```ts
 // src/app/api/a2mcp/route.test.ts
@@ -378,6 +360,16 @@ vi.mock("@/lib/okx-api", () => ({
   ]),
   getAllTokenBalances: vi.fn().mockResolvedValue({ data: [] }),
 }));
+// Delegate to Plan 3's SDK: unpaid unless X-PAYMENT present. Mock returns a real 402 challenge.
+vi.mock("@/lib/x402/okx-x402", () => ({
+  enforceX402: vi.fn(async (req: Request) =>
+    req.headers.get("X-PAYMENT")
+      ? { paid: true }
+      : { paid: false, challenge: new Response(JSON.stringify({ error: "payment required" }), {
+          status: 402,
+          headers: { "content-type": "application/json", "PAYMENT-REQUIRED": "eyJ4NDAyVmVyc2lvbiI6Mn0=" },
+        }) }),
+}));
 import { POST, GET } from "./route";
 
 const URL = "http://x/api/a2mcp";
@@ -387,7 +379,7 @@ describe("POST /api/a2mcp", () => {
     expect(res.status).toBe(200);
     expect((await res.json()).jobId).toBe("j1");
   });
-  it("returns 402 with PAYMENT-REQUIRED when an analyze call lacks X-PAYMENT", async () => {
+  it("returns 402 with PAYMENT-REQUIRED (SDK challenge) when an analyze call lacks X-PAYMENT", async () => {
     const res = await POST(new Request(URL, { method:"POST", body: JSON.stringify({ address:"0xabc", chains:["ethereum"] }) }));
     expect(res.status).toBe(402);
     expect(res.headers.get("PAYMENT-REQUIRED")).toBeTruthy();
@@ -495,7 +487,7 @@ const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 test("GET /api/a2mcp returns a conformant agent card", async ({ request }) => {
   const card = await (await request.get(`${BASE}/api/a2mcp`)).json();
   expect(Array.isArray(card.capabilities)).toBe(true);
-  expect(card.pricing.network).toBe("xlayer");
+  expect(card.pricing.network).toBe("eip155:196");
   expect(card.service.type).toBe("A2MCP");
 });
 test("POST analyze without X-PAYMENT returns 402 + PAYMENT-REQUIRED", async ({ request }) => {
@@ -512,7 +504,33 @@ test("POST an A2A system envelope is acknowledged (200, jobId echoed)", async ({
 
 - [ ] **Step 3: Run against a live build.** `BASE_URL=http://localhost:3000 npx playwright test tests/a2mcp-protocol.spec.ts` → PASS. Then, if PROD is deployed, run once more with `BASE_URL=https://alter-ego-wine-mu.vercel.app`.
 
-- [ ] **Step 4: Perform the on-chain update (REQUIRED, VERIFIED — not just docs).** Invoke the `okx-ai` skill's interactive flow to run `agent update asp` on ASP #6013, writing the service object from `docs/A2MCP-LISTING.md` into `serviceList` with `endpoint` = the PROD URL (`https://alter-ego-wine-mu.vercel.app/api/a2mcp`). The skill enforces its own gates (pre-flight, confirm card, XLayer-only, never `--chain`). This is the guaranteed on-chain write; do NOT downgrade it to a runbook. Capture the resulting **X Layer transaction hash** the skill returns. Record only the tx hash + the fact of the update (NOT credentials) in `docs/A2MCP-LISTING.md` alongside the service object. If the marketplace agent-card shape from the Task 1 probe differs from what we built, resolve the Downstream Item now before submitting.
+- [ ] **Step 3a: Reachability gate — confirm Vercel deployment protection is OFF (BEFORE registering).** The prior rejection registered the auth-walled `alter-ego-demo` (302 → `vercel.com/sso-api`). Before any on-chain write, assert the URL you are about to register resolves publicly:
+
+```bash
+curl -sI https://alter-ego-wine-mu.vercel.app/api/a2mcp | head -1
+```
+
+Must be `HTTP/2 200` (or `405` for a GET-only-mismatch that still proves reachability), NOT `HTTP/2 302` to `sso`. If it is 302 → deployment protection is ON: disable it in Vercel project settings (Deployment Protection → Vercel Authentication → OFF for Production) and re-check until 200. Do NOT register a 302-walled URL. This closes rejection Reason 1.
+
+- [ ] **Step 3b: OKX x402 self-test — run OKX's own paid-path check on the registered URL.** Reproduce OKX's Test 2 (`docs/LISTING-REJECTION-ANALYSIS.md` §"OKX's own three tests") against the reachable endpoint:
+
+```bash
+curl -i -X POST https://alter-ego-wine-mu.vercel.app/api/a2mcp \
+  -H "content-type: application/json" \
+  -d '{"address":"0xabc","chains":["ethereum"]}'
+```
+
+Assert: status is `402`; a `PAYMENT-REQUIRED` header is present; base64-decoding it yields valid v2 JSON `{ x402Version: 2, resource, accepts: [ { scheme:"exact", network:"eip155:196", asset:<USDT0>, maxTimeoutSeconds:300, ... } ] }`. Decode inline to verify:
+
+```bash
+curl -s -D - -o /dev/null -X POST https://alter-ego-wine-mu.vercel.app/api/a2mcp \
+  -H "content-type: application/json" -d '{"address":"0xabc","chains":["ethereum"]}' \
+  | awk -F': ' 'tolower($1)=="payment-required"{print $2}' | tr -d '\r' | base64 -d
+```
+
+If the decoded challenge is missing or is not the v2 USDT0/`eip155:196` shape → the SDK 402 (Plan 3) is not wired through correctly; STOP and fix before registering. This closes rejection Reason 2.
+
+- [ ] **Step 4: Perform the on-chain update (REQUIRED, VERIFIED — not just docs).** Invoke the `okx-ai` skill's interactive flow to run `agent update asp` on ASP #6013, writing the service object from `docs/A2MCP-LISTING.md` into `serviceList` with `endpoint` = the REACHABLE PROD URL (`https://alter-ego-wine-mu.vercel.app/api/a2mcp`, verified 200 in Step 3a — NEVER the auth-walled `alter-ego-demo`). The skill enforces its own gates (pre-flight, confirm card, XLayer-only, never `--chain`). This is the guaranteed on-chain write; do NOT downgrade it to a runbook. Capture the resulting **X Layer transaction hash** the skill returns. Record only the tx hash + the fact of the update (NOT credentials) in `docs/A2MCP-LISTING.md` alongside the service object. If the marketplace agent-card shape from the Task 1 probe differs from what we built, resolve the Downstream Item now before submitting.
 
 - [ ] **Step 5: Verify the on-chain write (assert, do not assume).** Re-fetch the agent from the registry and assert the write landed:
 
@@ -533,15 +551,15 @@ git commit -m "feat(a2mcp): ASP #6013 serviceList on-chain update (verified tx) 
 
 ## Self-Review notes
 
-- **Spec coverage:** Every N5 sub-claim maps to a task: agent card with capability + input schema + output schema + pricing (T2), `402` → `X-PAYMENT` handshake (T3), A2A envelope parsing for both documented shapes (T4), ASP #6013 `serviceList` populated on-chain (T6). The conformance test (T5) is the protocol-shape analogue of Plan 1's differential guard: it fails the moment served payload and advertised card drift. x402 real settlement is explicitly deferred to Plan 3 (`hasValidPayment` is presence-only with an in-code `// Plan 3` marker so it cannot be mistaken for real verification).
+- **Spec coverage:** Every N5 sub-claim maps to a task: agent card with capability + input schema + output schema + pricing (T2), `402` → `X-PAYMENT` handshake DELEGATED to Plan 3's OKX Payment SDK `enforceX402` (T3), A2A envelope parsing for both documented shapes (T4), ASP #6013 `serviceList` populated on-chain with the REACHABLE URL + OKX self-test (T6). The conformance test (T5) is the protocol-shape analogue of Plan 1's differential guard: it fails the moment served payload and advertised card drift. x402 issuance AND verification are owned by Plan 3's SDK module (this plan hand-rolls nothing); the corrected facts are USDT0 / 6 decimals / `x402Version: 2` / `network: "eip155:196"` / `maxTimeoutSeconds: 300` (`docs/LISTING-REJECTION-ANALYSIS.md`).
 - **Guaranteed on-chain write (covers the "zero guaranteed on-chain writes" scoring weakness):** Task 6 Step 4 performs the ASP #6013 `agent update` (`serviceList` → prod endpoint) as a REQUIRED, VERIFIED deliverable, and Step 5 re-fetches (`onchainos agent get-agents --agent-ids 6013`) and asserts the write landed with the tx hash confirmed on X Layer (chain 196). This guarantees at least ONE genuine on-chain write independent of whether optional Plan 3 (x402 settlement) ships, so the OKX.AI Genesis / X Layer submission is never in a zero-on-chain-writes state.
 - **Upstream gating is real, not decorative:** Task 0 is a genuine gate. If Plan 1 is not green, or the trade-API contract forked to Plan-1B honest-demo, the branch selected in `docs/A2MCP-UPSTREAM-RECONCILE.md` changes what Task 4 serves and what Task 2/3 advertise (live-fetch vs honest-demo copy, no overclaim). If reality matches no documented branch, the plan STOPS and is amended before Task 1.
-- **No invented protocol fields:** Task 1 is a gated spike. Every agent-card, 402, envelope, and service field is grounded in `okx-ai` (`identity-register` §Step 2 service fields, §"Inbound envelope activation" table) or `okx-agent-payments-protocol` (§A2/A3-Accepts, §A4 accepts shape) or `DEEP-RESEARCH.md` (USDG address, PaymentRequirements literals). Where the live marketplace card shape cannot be probed before deadline, the plan builds to the skill-grounded fallback AND records a Downstream Item.
+- **No invented protocol fields:** Task 1 is a gated spike. Every agent-card, 402, envelope, and service field is grounded in `okx-ai` (`identity-register` §Step 2 service fields, §"Inbound envelope activation" table), `okx-agent-payments-protocol` (§A2/A3-Accepts), or `docs/LISTING-REJECTION-ANALYSIS.md` (the AUTHORITATIVE corrected x402 facts: USDT0 / 6 dp / v2 / `eip155:196` / `maxTimeoutSeconds`, superseding DEEP-RESEARCH's USDG). The x402 asset/network/timeout literals are pinned by Plan 3's OKX Payment SDK spike, not re-derived here. Where the live marketplace card shape cannot be probed before deadline, the plan builds to the skill-grounded fallback AND records a Downstream Item.
 - **Downstream Items (for the pipeline ledger / Plan 5):**
   1. Re-validate the A2MCP agent-card shape and the `402` `accepts[]` shape against the live OKX.AI marketplace before final submission — this plan built to the skill-grounded fallback if no live probe was available (Task 1 Step 5). Owner: Plan 5 (submission honesty) / whoever has live marketplace access.
-  2. Replace `hasValidPayment` presence-check with real `POST /api/v6/x402/verify` + `/settle` — owner: Plan 3.
+  2. Pin the exact USDT0 X Layer address + confirm the OKX Payment SDK (`@okxweb3/x402-*`) seller-side `enforceX402` runs on Vercel serverless — owner: Plan 3 (hard dependency of this plan's Task 3/4).
   3. Confirm the ASP #6013 endpoint URL in the on-chain listing points at the PROD URL, not the auth-walled `alter-ego-demo` — owner: Plan 5.
 - **Type consistency:** `buildAgentCard().output` is a JSON Schema mirror of `AnalyzeResponse` (`src/lib/types.ts`); the `POST` analyze path returns `AnalyzeResponse`; the conformance test (T5) compiles the schema and validates the payload, so any type drift fails a test. `A2mcpService` mirrors the exact ASP `serviceList` fields, so the card and the on-chain listing (T6) cannot diverge.
 - **Honesty guard:** the `POST` no longer 500s on an empty body (returns the card/showcase), the `_debug` leak is stripped, and no field claims live per-request data if the Task-0 branch is Plan-1B. This keeps the endpoint consistent with the honest `description.md` limitations block that Plan 5 will finalize.
-- **Constraints honored:** `runtime="nodejs"` + `maxDuration=60` (Vercel-viable), no em-dashes in card copy, credentials only from `process.env` (the card is public and credential-free), X Layer 196 + USDG `0x4ae46a...2dc8`, ASP #6013, target OKX.AI Genesis. Protocol literals (`x402Version`, `PAYMENT-REQUIRED`, `X-PAYMENT`) kept byte-exact.
+- **Constraints honored:** `runtime="nodejs"` + `maxDuration=60` (Vercel-viable), no em-dashes in card copy, credentials only from `process.env` (the card is public and credential-free), X Layer `eip155:196` + USDT0 (6 dp, address pinned by Plan 3), ASP #6013, target OKX.AI Genesis. Protocol literals (`x402Version` = 2, `PAYMENT-REQUIRED`, `X-PAYMENT`) kept byte-exact. The registered `serviceList` endpoint is the reachable `alter-ego-wine-mu` URL (200-verified, Task 6 Step 3a), never the auth-walled `alter-ego-demo`.
 - **Assumption to confirm before T1:** that the OKX.AI marketplace accepts an HTTP GET on the registered endpoint URL as the agent-card fetch (vs a dedicated card path). If the marketplace expects a different card-discovery mechanism, Task 2's `GET` wiring and Task 6's listing endpoint must adjust; this is the primary risk the Task 1 probe exists to retire.
