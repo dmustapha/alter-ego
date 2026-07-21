@@ -26,9 +26,6 @@ export function RoastBattle({ battle }: { battle: RoastBattleType }) {
             className="p-4 border border-[rgba(255,45,149,.1)] bg-[#0a0a1a]">
             <h3 className="text-[#f0f0ff] font-bold">{w.emojiSignature} {w.walletLabel}</h3>
             <p className="text-[rgba(160,160,210,.45)] text-sm mt-1">{w.archetype}</p>
-            <p className={w.pnlTotal > 0 ? "text-[#00ffff] text-sm mt-2" : "text-[#ff2d95] text-sm mt-2"}>
-              PnL: {w.pnlTotal > 0 ? "+" : ""}${w.pnlTotal.toLocaleString()}
-            </p>
           </motion.div>
         ))}
       </div>
