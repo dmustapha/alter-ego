@@ -18,8 +18,12 @@ export const XLAYER_CHAIN_INDEX = 196 as const;
 export const USDT0_ADDRESS = "0x779ded0c9e1022225f8e0630b35a9b54be713736" as const;
 export const USDT0_DECIMALS = 6 as const;
 export const X402_TIMEOUT_SECONDS = 300 as const;
-// Price string the ExactEvmScheme converts to USDT0 atomic units ("$0.01" -> "10000" at 6dp).
-export const X402_PRICE = process.env.X402_PRICE || "$0.01";
+// Price string the ExactEvmScheme converts to USDT0 atomic units ("$1" -> "1000000" at 6dp).
+// 1 USDT0 keeps the marketplace fee (digits-only integer), the agent card, and the x402
+// challenge one consistent honest number. Override with X402_PRICE if needed.
+export const X402_PRICE = process.env.X402_PRICE || "$1";
+export const X402_AMOUNT_ATOMIC = process.env.X402_AMOUNT_ATOMIC || "1000000"; // 1 USDT0 at 6dp
+export const X402_FEE_USDT = process.env.X402_FEE_USDT || "1"; // marketplace fee, digits only
 
 export type EnforceResult =
   | { paid: true; paymentResponse?: string }
@@ -39,7 +43,7 @@ export interface X402Server {
   }>;
 }
 
-// Lazy singleton — no network at import; facilitator /supported is fetched on first request.
+// Lazy singleton: no network at import; facilitator /supported is fetched on first request.
 let serverPromise: Promise<X402Server> | null = null;
 function getServer(): Promise<X402Server> {
   if (!serverPromise) {
