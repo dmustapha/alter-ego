@@ -11,6 +11,7 @@ import { classifyPatterns } from "@/lib/classifier";
 import { generatePersona } from "@/lib/persona";
 import { loadComparison, loadAllDemoData, cacheExists } from "@/lib/cache";
 import { rateLimit } from "@/lib/ratelimit";
+import { buildAgentCard } from "@/lib/a2mcp/agent-card";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -211,18 +212,5 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  return NextResponse.json({
-    agent: "Alter Ego",
-    version: "1.0.0",
-    status: "online",
-    service: "Trading Persona Analysis",
-    description:
-      "Multi-chain, multi-wallet behavioral fingerprinting. AMPLIFY your strengths, GUARD against costly patterns.",
-    endpoints: {
-      analyze: "/api/a2mcp",
-      persona: "/api/persona",
-      compare: "/api/compare",
-      roast: "/api/roast",
-    },
-  });
+  return NextResponse.json(buildAgentCard());
 }
