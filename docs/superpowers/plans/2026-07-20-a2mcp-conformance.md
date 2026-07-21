@@ -474,14 +474,15 @@ git commit -m "test(a2mcp): conformance guard - served payload validates against
 ## Task 6: Populate ASP #6013 `serviceList` + live protocol probe
 
 **Files:**
-- Create: `docs/A2MCP-LISTING.md` (the exact `serviceList` service object + the update procedure, human-run).
+- Create: `docs/A2MCP-LISTING.md` (the exact `serviceList` service object + the update procedure + the confirmed on-chain `agent update` tx hash and read-back `serviceList`).
 - Create: `tests/a2mcp-protocol.spec.ts` (Playwright — live GET card + 402 probe).
 - Modify: `playwright.config.ts` (reuse the `webServer` block Plan 1 Task 6 adds; no change if already present).
 - Reference: `okx-ai` skill (identity update / `serviceList`), `buildAgentCard().service`.
 
 **Interfaces:**
 - Consumes: `buildAgentCard().service` (the single source of truth for the on-chain service fields), the live `/api/a2mcp` endpoint.
-- Produces: (1) `docs/A2MCP-LISTING.md` with the copy-exact service object to put on ASP #6013 (name, 2-part description, `type:"A2MCP"`, quoted-string fee, `https://` endpoint) + the note that the update runs through the `okx-ai` skill (never `--chain`, XLayer-only, card+confirm gate); (2) a Playwright probe asserting the live endpoint's protocol shape.
+- Produces: (1) `docs/A2MCP-LISTING.md` with the copy-exact service object put on ASP #6013 (name, 2-part description, `type:"A2MCP"`, quoted-string fee, `https://` endpoint) PLUS the X Layer transaction hash of the confirmed on-chain `agent update` and the on-chain-confirmed `serviceList` read back from the registry; (2) a Playwright probe asserting the live endpoint's protocol shape.
+- **On-chain-write guarantee:** the on-chain `agent update` (Step 4) that writes `serviceList` → prod endpoint is a REQUIRED, VERIFIED deliverable of this task, not just documentation. It guarantees at least ONE genuine on-chain write on X Layer (chain 196) independent of whether optional Plan 3 (x402 settlement) ships. Task 6 is not complete until the tx hash is captured and the read-back verification (Step 5) passes.
 
 - [ ] **Step 1: Emit the listing doc.** From `buildAgentCard().service`, write `docs/A2MCP-LISTING.md` containing the exact `{ name, description, type: "A2MCP", fee, endpoint }` object and a checklist: endpoint is the PROD URL (`alter-ego-wine-mu.vercel.app/api/a2mcp`, not the auth-walled `alter-ego-demo`), fee is digits-only, description has both parts and no em-dash/links/tech-stack. Note that the actual on-chain `agent update` is performed by invoking the `okx-ai` skill (it enforces pre-flight, the confirm card, and XLayer-only), NOT by a raw CLI call in this repo.
 
@@ -511,20 +512,29 @@ test("POST an A2A system envelope is acknowledged (200, jobId echoed)", async ({
 
 - [ ] **Step 3: Run against a live build.** `BASE_URL=http://localhost:3000 npx playwright test tests/a2mcp-protocol.spec.ts` → PASS. Then, if PROD is deployed, run once more with `BASE_URL=https://alter-ego-wine-mu.vercel.app`.
 
-- [ ] **Step 4: Perform the on-chain update.** Invoke the `okx-ai` skill to run `agent update` on ASP #6013 with the service object from `docs/A2MCP-LISTING.md` (skill enforces its own gates). Record only the fact of the update (not credentials) in `docs/A2MCP-LISTING.md`. If the marketplace agent-card shape from the Task 1 probe differs from what we built, resolve the Downstream Item now before submitting.
+- [ ] **Step 4: Perform the on-chain update (REQUIRED, VERIFIED — not just docs).** Invoke the `okx-ai` skill's interactive flow to run `agent update asp` on ASP #6013, writing the service object from `docs/A2MCP-LISTING.md` into `serviceList` with `endpoint` = the PROD URL (`https://alter-ego-wine-mu.vercel.app/api/a2mcp`). The skill enforces its own gates (pre-flight, confirm card, XLayer-only, never `--chain`). This is the guaranteed on-chain write; do NOT downgrade it to a runbook. Capture the resulting **X Layer transaction hash** the skill returns. Record only the tx hash + the fact of the update (NOT credentials) in `docs/A2MCP-LISTING.md` alongside the service object. If the marketplace agent-card shape from the Task 1 probe differs from what we built, resolve the Downstream Item now before submitting.
 
-- [ ] **Step 5: Commit.**
+- [ ] **Step 5: Verify the on-chain write (assert, do not assume).** Re-fetch the agent from the registry and assert the write landed:
+
+```bash
+onchainos agent get-agents --agent-ids 6013
+```
+
+Assert all of: (a) `serviceList` is non-empty; (b) the service `endpoint` equals the PROD URL `https://alter-ego-wine-mu.vercel.app/api/a2mcp` (not the auth-walled `alter-ego-demo`); (c) the service `type` is `A2MCP` and `fee` is digits-only; (d) the Step-4 tx hash is confirmed on X Layer (chain index 196) — check via the OKX explorer / `onchainos` tx status, not just presence. Paste the on-chain-confirmed `serviceList` object and the confirmed tx hash into `docs/A2MCP-LISTING.md`. If any assertion fails → the on-chain write did NOT land; STOP, re-run Step 4, do not mark Task 6 complete. This read-back is what makes the write a verified deliverable: at least ONE genuine on-chain write is now proven regardless of whether optional Plan 3 ships.
+
+- [ ] **Step 6: Commit.**
 
 ```bash
 git add docs/A2MCP-LISTING.md tests/a2mcp-protocol.spec.ts playwright.config.ts
-git commit -m "feat(a2mcp): ASP #6013 serviceList listing doc + live protocol probe (card/402/envelope)"
+git commit -m "feat(a2mcp): ASP #6013 serviceList on-chain update (verified tx) + listing doc + live protocol probe"
 ```
 
 ---
 
 ## Self-Review notes
 
-- **Spec coverage:** Every N5 sub-claim maps to a task: agent card with capability + input schema + output schema + pricing (T2), `402` → `X-PAYMENT` handshake (T3), A2A envelope parsing for both documented shapes (T4), ASP #6013 `serviceList` populated (T6). The conformance test (T5) is the protocol-shape analogue of Plan 1's differential guard: it fails the moment served payload and advertised card drift. x402 real settlement is explicitly deferred to Plan 3 (`hasValidPayment` is presence-only with an in-code `// Plan 3` marker so it cannot be mistaken for real verification).
+- **Spec coverage:** Every N5 sub-claim maps to a task: agent card with capability + input schema + output schema + pricing (T2), `402` → `X-PAYMENT` handshake (T3), A2A envelope parsing for both documented shapes (T4), ASP #6013 `serviceList` populated on-chain (T6). The conformance test (T5) is the protocol-shape analogue of Plan 1's differential guard: it fails the moment served payload and advertised card drift. x402 real settlement is explicitly deferred to Plan 3 (`hasValidPayment` is presence-only with an in-code `// Plan 3` marker so it cannot be mistaken for real verification).
+- **Guaranteed on-chain write (covers the "zero guaranteed on-chain writes" scoring weakness):** Task 6 Step 4 performs the ASP #6013 `agent update` (`serviceList` → prod endpoint) as a REQUIRED, VERIFIED deliverable, and Step 5 re-fetches (`onchainos agent get-agents --agent-ids 6013`) and asserts the write landed with the tx hash confirmed on X Layer (chain 196). This guarantees at least ONE genuine on-chain write independent of whether optional Plan 3 (x402 settlement) ships, so the OKX.AI Genesis / X Layer submission is never in a zero-on-chain-writes state.
 - **Upstream gating is real, not decorative:** Task 0 is a genuine gate. If Plan 1 is not green, or the trade-API contract forked to Plan-1B honest-demo, the branch selected in `docs/A2MCP-UPSTREAM-RECONCILE.md` changes what Task 4 serves and what Task 2/3 advertise (live-fetch vs honest-demo copy, no overclaim). If reality matches no documented branch, the plan STOPS and is amended before Task 1.
 - **No invented protocol fields:** Task 1 is a gated spike. Every agent-card, 402, envelope, and service field is grounded in `okx-ai` (`identity-register` §Step 2 service fields, §"Inbound envelope activation" table) or `okx-agent-payments-protocol` (§A2/A3-Accepts, §A4 accepts shape) or `DEEP-RESEARCH.md` (USDG address, PaymentRequirements literals). Where the live marketplace card shape cannot be probed before deadline, the plan builds to the skill-grounded fallback AND records a Downstream Item.
 - **Downstream Items (for the pipeline ledger / Plan 5):**

@@ -196,7 +196,7 @@ Expected: both opacities are `"1"` within 200ms (no 500ms fade), proving the ent
 
 **Files:**
 - Modify: `src/app/globals.css` (expand `@theme`, add computed AA colors)
-- Reference: `DESIGN_SYSTEM.md`, `brand.json` (source of the five conflicting palettes)
+- Modify: `DESIGN_SYSTEM.md`, `brand.json` (rewrite their color system to reference the single canonical token set — closes the "docware disconnected from code" root)
 
 **Interfaces:**
 - Produces: one canonical token set (`--color-bg`, `--color-surface`, `--color-surface-input`, `--color-accent`, `--color-secondary`, `--color-warning`, `--color-text`, `--color-text-2`, `--color-dim`, `--color-eth`, `--color-sol`, plus glow custom props). Every component in Tasks 3-6 consumes these instead of literal hex.
@@ -301,7 +301,24 @@ process.exit(fail ? 1 : 0);
 
 `node scripts/check-contrast.mjs` — expected: all PASS, exit 0. (`--color-eth`/`--color-sol` are non-text UI so 3:1 would suffice, but both clear 4.5 anyway.)
 
-- [ ] **Step 6: Commit.** `rm scripts/check-contrast.mjs; git add src/app/globals.css && git commit -m "design: single @theme token set; fix AA contrast on dim text and sol badge (2.42 to 6.3:1)"`
+- [ ] **Step 6: Rewrite `DESIGN_SYSTEM.md` and `brand.json` to reference the canonical token set.** Hoisting the CSS into one `@theme` set does NOT fix the audit's "five conflicting palettes / docware disconnected from code" root unless the design docs are re-pointed at that same set — otherwise `DESIGN_SYSTEM.md` (bg `#0a0a0f`, surface `#0d0d1a`, dim `rgba(200,200,255,0.5)`) and `brand.json` (background `#0a0a0f`, textPrimary `#00ffff`, textMuted `rgba(200,200,255,0.5)`) keep asserting palettes that no longer match the shipped CSS. Rewrite BOTH docs so their color system is the single canonical palette, hex-for-hex identical to the `@theme` custom properties from Step 1 (`bg #050510`, surface `#0a0a1a`, surface-deep `#0d0d1a`, input `#08081a`, accent `#ff2d95`, secondary `#00ffff`, warning `#ffff00`, text `#f0f0ff`, text-2 `#d0d0f0`, dim `#8f8fbf`, eth `#627eea`, sol `#8b6dff`). Each doc color entry names the token it maps to (e.g. `--color-dim` / `text-dim`) so the docs read as documentation OF the tokens, not a parallel source of truth. Remove every stale/conflicting hex: `#0a0a0f`, the old surface duplicates, `rgba(200,200,255,0.5)`, textPrimary `#00ffff`-as-body, and the old sol `#9945ff`. State in a one-line header note that `src/app/globals.css` `@theme` is the source of truth and these docs mirror it. No em-dashes.
+
+- [ ] **Step 7: Verify no stale palette survives in the docs and the doc palette equals `@theme`.**
+
+```bash
+cd /Users/MAC/hackathon-toolkit/active/alter-ego
+# 1) old/conflicting palette values must be gone from both docs
+grep -nE '#0a0a0f|rgba\(200,\s*200,\s*255,\s*0?\.5\)|#9945ff' DESIGN_SYSTEM.md brand.json && echo "FAIL: stale palette remains" || echo "PASS: no stale palette hexes"
+# 2) every canonical @theme value appears in the docs (doc palette == theme)
+for hex in '#050510' '#0a0a1a' '#0d0d1a' '#08081a' '#ff2d95' '#00ffff' '#ffff00' '#f0f0ff' '#d0d0f0' '#8f8fbf' '#627eea' '#8b6dff'; do
+  grep -qi -- "$hex" DESIGN_SYSTEM.md && grep -qi -- "$hex" brand.json || echo "MISSING in docs: $hex"
+done
+echo "done"
+```
+
+Expected: `PASS: no stale palette hexes`, no `FAIL`/`MISSING` lines. Any hit means a conflicting palette still lives in the design docs and the docware-disconnect root is not closed.
+
+- [ ] **Step 8: Commit.** `rm scripts/check-contrast.mjs; git add src/app/globals.css DESIGN_SYSTEM.md brand.json && git commit -m "design: single @theme token set; repoint DESIGN_SYSTEM.md + brand.json at canonical tokens; fix AA contrast on dim text and sol badge (2.42 to 6.3:1)"`
 
 ---
 

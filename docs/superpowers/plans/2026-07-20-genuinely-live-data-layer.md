@@ -75,7 +75,19 @@ git commit -m "security: remove /api/diag info-leak endpoint"
 vercel --prod
 ```
 
-- [ ] **Step 5: Verify the baseline.** `curl -s -X POST https://alter-ego-wine-mu.vercel.app/api/analyze -H 'content-type: application/json' -d '{"address":"0xDemo...","chains":["ethereum"]}'` returns HTTP 200 with populated `patterns`/`personas` (not 500). `curl -s https://alter-ego-wine-mu.vercel.app/api/diag` returns 404.
+- [ ] **Step 5: Audit `public/` for committed secrets.** The old build wrote credentials into web-served `public/`; those were never audited or removed. Scan and purge.
+
+```bash
+cd /Users/MAC/hackathon-toolkit/active/alter-ego
+# find any file under public/ carrying a credential pattern
+grep -rIlE "OKX_(API|SECRET)|passphrase|[0-9a-f]{32}" public/
+```
+
+Delete every secret-bearing file the grep lists, and add its path to the SAME `git filter-repo` pass as Task 0 Step 2 (`--path <file> --invert-paths`) so it is purged from all history, not just the working tree. Add a build assertion that fails the build if `public/` still contains a credential pattern — e.g. in `package.json` `"prebuild"`: `! grep -rIqE "OKX_(API|SECRET)|passphrase|[0-9a-f]{32}" public/`.
+
+Expected: the grep returns no matches after cleanup, and the build asserts a clean `public/`. (Covers Q32.)
+
+- [ ] **Step 6: Verify the baseline.** `curl -s -X POST https://alter-ego-wine-mu.vercel.app/api/analyze -H 'content-type: application/json' -d '{"address":"0xDemo...","chains":["ethereum"]}'` returns HTTP 200 with populated `patterns`/`personas` (not 500). `curl -s https://alter-ego-wine-mu.vercel.app/api/diag` returns 404.
 
 ---
 
@@ -274,6 +286,43 @@ it("GRD-05 ratio stays within [0,1] and needs a shared micro-cap set", () => {
 
 - [ ] **Step 5: Commit.** `git add src/lib/classifier.ts src/lib/classifier.test.ts && git commit -m "fix: correct AMP-06 false-positive, GRD-05 incoherent ratio, remove dead AMP-04"`
 
+- [ ] **Step 6: Latent-bug catch-all sweep.** The debug phase left residual latent bugs. Run `npx tsc --noEmit` and do a targeted review of `src/lib/classifier.ts`, `src/lib/persona.ts`, and any residual parser code for the bugs debug missed. Create `docs/LATENT-BUGS.md` and log each finding as one row: `id | file:line | symptom | fix-or-defer | rationale`. Fix every entry marked `fix`; leave a one-line justification for every `defer`.
+
+```bash
+npx tsc --noEmit
+grep -nE "Math\.(min|max)|\.filter\(|\.reduce\(|pnl|winRate|\?\?|\|\| 0" src/lib/classifier.ts src/lib/persona.ts
+```
+
+Expected: `tsc --noEmit` clean, and `docs/LATENT-BUGS.md` lists every reviewed bug with a decision. (Covers Q13.)
+
+- [ ] **Step 7: Sign-loss regression test.** Prove no `\$?([\d,.]+)` sign-stripping survived the `onchainos.ts` deletion in the AGGREGATION path (`classifier.ts` / `persona.ts`), not just the Task-2 mapper. Write a failing test where a net-loss wallet yields NEGATIVE `realizedPnl` and `winRate < 50%`.
+
+```ts
+// src/lib/classifier.test.ts — append
+import { generatePersona } from "./persona";
+
+it("aggregation preserves negative sign end-to-end (no $-regex sign-strip)", () => {
+  const trades = [
+    { tokenSymbol: "PEPE", chain: "ethereum", action: "SELL", amountUsd: 900, pnlUsd: -820, pnlPct: -91, holdDurationDays: 0.02 },
+    { tokenSymbol: "WIF",  chain: "ethereum", action: "SELL", amountUsd: 400, pnlUsd: -310, pnlPct: -77, holdDurationDays: 0.5 },
+    { tokenSymbol: "BONK", chain: "ethereum", action: "SELL", amountUsd: 250, pnlUsd:  40, pnlPct:  16, holdDurationDays: 3 },
+  ];
+  const r = classifyPatterns({ ...base, trades });
+  expect(r.realizedPnl).toBeLessThan(0);      // -1090 net, sign preserved through aggregation
+  expect(r.winRate).toBeLessThan(50);         // 1 of 3 winners
+  const persona = generatePersona({ ...base, trades, realizedPnl: r.realizedPnl, winRate: r.winRate });
+  expect(JSON.stringify(persona)).not.toMatch(/\$1,?090\b(?!.*-)/); // loss never rendered as a positive figure
+});
+```
+
+Run it, fix any aggregation site that strips the sign (search for `\$?([\d,.]+)` / `.replace(/[$,]/` / `Math.abs` on PnL), then verify PASS. (Covers N6 beyond the mapper.)
+
+```bash
+npx vitest run src/lib/classifier.test.ts
+git add src/lib/classifier.ts src/lib/persona.ts src/lib/classifier.test.ts docs/LATENT-BUGS.md
+git commit -m "fix: catch residual latent bugs + sign-loss aggregation regression test (N6, Q13)"
+```
+
 ---
 
 ## Task 5: Regenerate the demo cache from the REAL engine
@@ -332,6 +381,122 @@ test("two distinct wallets produce different, non-empty analyses", async ({ play
 - [ ] **Step 3: Run against a live build with DEMO_MODE unset** (real path). `BASE_URL=http://localhost:3000 npx playwright test tests/differential.spec.ts`. Expected: PASS (proves the live engine differentiates real wallets).
 
 - [ ] **Step 4: Commit.** `git add tests/differential.spec.ts playwright.config.ts package.json && git commit -m "test: differential guard — distinct wallets yield distinct non-empty analyses"`
+
+---
+
+## Task 7: API abuse hardening + dead-export cleanup
+
+**Files:**
+- Create: `src/lib/ratelimit.ts`
+- Modify: `src/app/api/analyze/route.ts`, `src/app/api/a2mcp/route.ts` (apply limiter + caps)
+- Modify: `src/lib/okx-api.ts` (remove 5 unused exports)
+- Test: `src/lib/ratelimit.test.ts` (Create)
+- Docs: `docs/SCOPE-DECISIONS.md` (Create — the phase-timer retention note)
+
+**Interfaces:**
+- Consumes: the two open POST routes; `src/lib/okx-api.ts` export surface.
+- Produces: `export function rateLimit(ip: string): { ok: boolean; retryAfter: number }` and hardened routes that return 429 on breach and bound the `Promise.all` fan-out.
+
+- [ ] **Step 1: Write the failing limiter test.**
+
+```ts
+// src/lib/ratelimit.test.ts
+import { describe, it, expect } from "vitest";
+import { rateLimit } from "./ratelimit";
+
+describe("rateLimit (per-IP token bucket)", () => {
+  it("allows 10 requests then returns 429 on the 11th from one IP", () => {
+    const ip = "1.2.3.4";
+    for (let i = 0; i < 10; i++) expect(rateLimit(ip).ok).toBe(true);
+    const eleventh = rateLimit(ip);
+    expect(eleventh.ok).toBe(false);
+    expect(eleventh.retryAfter).toBeGreaterThan(0);
+  });
+});
+```
+
+- [ ] **Step 2: Run it, verify it fails.** `npx vitest run src/lib/ratelimit.test.ts` → FAIL (`rateLimit` not exported).
+
+- [ ] **Step 3: Implement the limiter** in `src/lib/ratelimit.ts` — an in-memory token bucket keyed by IP (10 req/min/IP). Note the production-durable option in a comment.
+
+```ts
+// src/lib/ratelimit.ts
+// In-memory per-IP token bucket. For production durability across serverless
+// instances, swap this Map for @upstash/ratelimit (Redis-backed).
+const WINDOW_MS = 60_000;
+const LIMIT = 10;
+const buckets = new Map<string, { count: number; resetAt: number }>();
+
+export function rateLimit(ip: string): { ok: boolean; retryAfter: number } {
+  const now = Date.now();
+  const b = buckets.get(ip);
+  if (!b || now >= b.resetAt) {
+    buckets.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return { ok: true, retryAfter: 0 };
+  }
+  if (b.count >= LIMIT) {
+    return { ok: false, retryAfter: Math.ceil((b.resetAt - now) / 1000) };
+  }
+  b.count += 1;
+  return { ok: true, retryAfter: 0 };
+}
+```
+
+- [ ] **Step 4: Run it, verify it passes.** `npx vitest run src/lib/ratelimit.test.ts` → PASS.
+
+- [ ] **Step 5: Apply the limiter + caps to BOTH routes.** At the top of the `POST` handler in `src/app/api/analyze/route.ts` and `src/app/api/a2mcp/route.ts`:
+
+```ts
+import { rateLimit } from "@/lib/ratelimit";
+// ...
+const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+const rl = rateLimit(ip);
+if (!rl.ok) {
+  return new Response(JSON.stringify({ error: "rate_limited" }), {
+    status: 429,
+    headers: { "content-type": "application/json", "retry-after": String(rl.retryAfter) },
+  });
+}
+```
+
+Enforce the existing ≤5-wallets/request cap (reject with 400 if exceeded) AND add a chains-per-wallet cap (e.g. `MAX_CHAINS = 5`) so the `Promise.all` fan-out is bounded to `wallets * chains` and cannot be inflated by a caller.
+
+- [ ] **Step 6: Write the route 429 test** (mock `okx-api` as in Task 3): the 11th rapid request from one IP returns HTTP 429.
+
+```ts
+// src/app/api/analyze/route.test.ts — append
+it("returns 429 on the 11th rapid request from one IP", async () => {
+  const mk = () => new Request("http://x/api/analyze", {
+    method: "POST",
+    headers: { "x-forwarded-for": "9.9.9.9" },
+    body: JSON.stringify({ address: "0xabc", chains: ["ethereum"] }),
+  });
+  let last: Response | undefined;
+  for (let i = 0; i < 11; i++) last = await POST(mk());
+  expect(last!.status).toBe(429);
+});
+```
+
+Run: `npx vitest run src/app/api/analyze/route.test.ts` → PASS. (Covers F27/P3-10.)
+
+- [ ] **Step 7: Remove the 5 dead exports** from `src/lib/okx-api.ts`. First grep-confirm zero importers, then delete `getLeaderboard`, `getTotalValue`, `checkWalletStatus`, `loginWallet`, `verifyOtp`.
+
+```bash
+for f in getLeaderboard getTotalValue checkWalletStatus loginWallet verifyOtp; do
+  echo "== $f =="; grep -rn "\b$f\b" src --include="*.ts" --include="*.tsx" | grep -v "okx-api.ts"
+done
+```
+
+Expected: each grep returns no external importer; then remove the functions. (Covers F26.)
+
+- [ ] **Step 8: Record the phase-timer scope decision.** Create `docs/SCOPE-DECISIONS.md` with a documented DECISION (not a rebuild): the `page.tsx` phase-timer UX (the ~2s / 20s / 58s `setTimeout` chain) is RETAINED as an intentional demo-pacing choice and is deliberately NOT re-architected, because the demo capture (Plan 6) and the screenshots (Plan 4) depend on those exact timings, and re-architecting mid-remediation is high-risk for zero scoring gain. This makes Q7 a conscious scope decision, not an oversight.
+
+- [ ] **Step 9: Commit.**
+
+```bash
+git add src/lib/ratelimit.ts src/lib/ratelimit.test.ts src/app/api/analyze/route.ts src/app/api/a2mcp/route.ts src/app/api/analyze/route.test.ts src/lib/okx-api.ts docs/SCOPE-DECISIONS.md
+git commit -m "feat: per-IP rate limiting + bounded fan-out on open routes; drop 5 dead exports; document phase-timer retention (F26, F27, Q7)"
+```
 
 ---
 

@@ -101,3 +101,14 @@ Full plans are written up front, but each carries **branch caveats** (documented
 | 4 | independent of 1-3; current `globals.css`/components | (no upstream fork) | always runs; parallelizable; only `package.json`/`playwright.config.ts` are shared (additive) |
 | 5 | Plans 1-4 final state + live URL + whether Plan 3 shipped | x402 real vs simulated; A2MCP live vs metadata-only; tx count from regenerated cache | rewrite copy to whichever is TRUE; ONE canonical tx number from Plan 1's cache |
 | 6 | Plan 1 live-500 fixed on prod + `video/REHEARSAL-LOG.md` + whether 2/3 shipped | live flow works with real wallet / still 500s | works → record; 500 → **HALT (never record over a broken flow)**; VO claims only what shipped |
+
+## Pipeline-skill tickets (process-level — NOT product plans)
+
+A full reconciliation of both audits against the six plans (2026-07-21) confirmed **no silent product gaps**: 1 true gap (rate-limiting) and 6 partials were closed by patch edits into Plans 1/2/4/5. The findings below are about the **hackathon pipeline skills themselves**, not the Alter Ego product — they belong in the skill definitions, not these plans. Logged here so they are acknowledged, not dropped:
+
+- **Critique gate enforcement** — the `hackathon-critique` skill was silently skipped; the conductor did not enforce it. Fix: make critique a hard, ledgered gate. (Q3 / N2 / ML-1)
+- **Differential-test kill-zone** — verify/forge self-audit gates measure presence + HTTP-200 and reward mocks (scored a `setTimeout` 3/5, a zeros-returning path 15/15). Fix: every gate must run the product on ≥2 distinct real inputs and assert outputs differ + are non-empty. (Q2 / Q17 / Q18 / Q19 / F17 / ML-2 / ML-3) — product-side already instantiated as Plan 1 T6 differential test.
+- **Debug requires tests** — the debug gate self-certified "ACCEPTED" with `testCount:0`. Fix: debug must require ≥1 new committed test. (Q11)
+- **Interrogate integrity** — delete the P21 "defense-attorney" persona, remove severity caps on the honesty/architecture/sponsor lanes, fix the 93-vs-72 count arithmetic. (Q37 / Q38 / Q39 / ML-4)
+
+These route to `~/.claude/skills/` (conductor, hackathon-verify, hackathon-debug, hackathon-interrogate), tracked as a separate workstream.
