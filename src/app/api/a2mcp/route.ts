@@ -12,6 +12,8 @@ import { generatePersona } from "@/lib/persona";
 import { loadComparison, loadAllDemoData, cacheExists } from "@/lib/cache";
 import { rateLimit } from "@/lib/ratelimit";
 import { buildAgentCard } from "@/lib/a2mcp/agent-card";
+import { classifyInbound, a2aAck } from "@/lib/a2mcp/envelope";
+import { enforceX402 } from "@/lib/x402/okx-x402";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -46,32 +48,21 @@ export async function POST(req: Request) {
 
     const body = await req.json().catch(() => ({}));
 
-    // Extract addresses from flexible formats
-    const addresses: AnalyzeRequest["addresses"] = [];
-    if (body.addresses && Array.isArray(body.addresses)) {
-      addresses.push(...body.addresses);
-    } else if (body.address && typeof body.address === "string") {
-      addresses.push({ address: body.address, chains: body.chains || ["ethereum"] });
+    // Envelope shape wins over analyze detection (okx-ai "Inbound envelope activation").
+    const inbound = classifyInbound(body);
+
+    // A2A envelopes are acknowledged (no payment). Task lifecycle belongs to the OKX AI runtime.
+    if (inbound.kind === "a2a-system" || inbound.kind === "a2a-chat") {
+      return NextResponse.json(a2aAck(inbound));
     }
 
-    // If no addresses provided, return demo data as a showcase
-    if (addresses.length === 0) {
-      if (process.env.DEMO_MODE === "true" || cacheExists()) {
-        const cached = await loadAllDemoData();
-        return NextResponse.json({
-          wallets: 3,
-          chains: ["ethereum", "solana", "xlayer"],
-          totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
-          patterns: cached.patterns,
-          personas: cached.personas,
-          comparison: cached.comparison,
-        } satisfies AnalyzeResponse);
-      }
-      return NextResponse.json(
-        { error: "No wallet addresses provided. Send { addresses: [{ address, chains }] }" },
-        { status: 400 }
-      );
+    // Bodyless / unrecognised request: serve the agent card as a showcase (never a 400/500).
+    if (inbound.kind === "empty") {
+      return NextResponse.json(buildAgentCard());
     }
+
+    // analyze path
+    const addresses: AnalyzeRequest["addresses"] = inbound.addresses;
 
     // Input validation (mirrors analyze route)
     if (addresses.length > 5) {
@@ -86,20 +77,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Demo mode: use pre-cached data
-    if (process.env.DEMO_MODE === "true") {
-      const cached = await loadAllDemoData();
-      return NextResponse.json({
-        wallets: 3,
-        chains: ["ethereum", "solana", "xlayer"],
-        totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
-        patterns: cached.patterns,
-        personas: cached.personas,
-        comparison: cached.comparison,
-      } satisfies AnalyzeResponse);
-    }
-
-    // Validate chain names
+    // Validate chain names (malformed input returns 400 before payment; it is not charged)
     for (const addr of addresses) {
       const chains = addr.chains || [];
       if (chains.length === 0) {
@@ -116,6 +94,29 @@ export async function POST(req: Request) {
           );
         }
       }
+    }
+
+    // Payment gate: every valid analyze request must carry a settled X-PAYMENT (issued by the OKX
+    // Payment SDK). This runs even under DEMO_MODE so OKX's `curl -i -X POST {address,chains}`
+    // self-test receives the standard 402. Only after paid do we serve the analysis.
+    const gate = await enforceX402(req, new URL(req.url).toString());
+    if (!gate.paid) return gate.challenge;
+    const paymentResponse = gate.paymentResponse;
+
+    // Demo mode: serve pre-cached data (content fallback), still behind the paid gate above
+    if (process.env.DEMO_MODE === "true") {
+      const cached = await loadAllDemoData();
+      return NextResponse.json(
+        {
+          wallets: 3,
+          chains: ["ethereum", "solana", "xlayer"],
+          totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
+          patterns: cached.patterns,
+          personas: cached.personas,
+          comparison: cached.comparison,
+        } satisfies AnalyzeResponse,
+        paymentResponse ? { headers: { "PAYMENT-RESPONSE": paymentResponse } } : undefined
+      );
     }
 
     // Live mode: build one WalletData per address, aggregated across all its chains
@@ -170,14 +171,17 @@ export async function POST(req: Request) {
     // If live mode returned nothing, fall back to demo cache
     if (walletResults.length === 0 && cacheExists()) {
       const cached = await loadAllDemoData();
-      return NextResponse.json({
-        wallets: 3,
-        chains: ["ethereum", "solana", "xlayer"],
-        totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
-        patterns: cached.patterns,
-        personas: cached.personas,
-        comparison: cached.comparison,
-      } satisfies AnalyzeResponse);
+      return NextResponse.json(
+        {
+          wallets: 3,
+          chains: ["ethereum", "solana", "xlayer"],
+          totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
+          patterns: cached.patterns,
+          personas: cached.personas,
+          comparison: cached.comparison,
+        } satisfies AnalyzeResponse,
+        paymentResponse ? { headers: { "PAYMENT-RESPONSE": paymentResponse } } : undefined
+      );
     }
 
     const allPatterns = walletResults.map((w) => classifyPatterns(w));
@@ -196,14 +200,17 @@ export async function POST(req: Request) {
       // Comparison unavailable -- proceed without
     }
 
-    return NextResponse.json({
-      wallets: walletResults.length,
-      chains: [...new Set(addresses.flatMap((a) => a.chains || []))],
-      totalTxns: walletResults.reduce((s, w) => s + w.totalTxns, 0),
-      patterns: allPatterns,
-      personas,
-      comparison,
-    } satisfies AnalyzeResponse);
+    return NextResponse.json(
+      {
+        wallets: walletResults.length,
+        chains: [...new Set(addresses.flatMap((a) => a.chains || []))],
+        totalTxns: walletResults.reduce((s, w) => s + w.totalTxns, 0),
+        patterns: allPatterns,
+        personas,
+        comparison,
+      } satisfies AnalyzeResponse,
+      paymentResponse ? { headers: { "PAYMENT-RESPONSE": paymentResponse } } : undefined
+    );
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[A2MCP] Error:", msg);
