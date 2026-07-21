@@ -47,18 +47,18 @@ A static, deterministic document. No wallet, no network, no credentials (the car
 
 Field grounding (`identity-register.md` §Step 2 + §6):
 
-- `service.name` — 5 to 30 char noun phrase, not the agent name, no price in the name.
-- `service.description` — 2-part: (1) core capability + who it is for, (2) what the user must
+- `service.name`: 5 to 30 char noun phrase, not the agent name, no price in the name.
+- `service.description`: 2-part, (1) core capability + who it is for, (2) what the user must
   provide. No em-dashes, no links, no tech-stack, no disclaimers, each part <=200 CJK chars.
-- `service.type` — literal `A2MCP` for an API service.
-- `service.fee` — plain number sent as a quoted string, digits only, USDT is the default currency
+- `service.type`: literal `A2MCP` for an API service.
+- `service.fee`: plain number sent as a quoted string, digits only, USDT is the default currency
   (no symbol, no unit in the value). Here `"1"` (1 USDT0).
-- `service.endpoint` — publicly reachable `https://` URL, <=512 chars. The PROD URL
+- `service.endpoint`: publicly reachable `https://` URL, <=512 chars. The PROD URL
   `https://alter-ego-wine-mu.vercel.app/api/a2mcp`, NEVER the auth-walled `alter-ego-demo`.
-- `capabilities[]` — grounded in the real routes and classifier, not aspiration.
-- `input` / `output` — hand-written JSON Schemas mirroring `AnalyzeRequest` / `AnalyzeResponse`
+- `capabilities[]`: grounded in the real routes and classifier, not aspiration.
+- `input` / `output`: hand-written JSON Schemas mirroring `AnalyzeRequest` / `AnalyzeResponse`
   (`src/lib/types.ts`). `output` MUST include `patterns` and `personas` keys.
-- `pricing` — the x402 `exact` block; `asset` is the SDK-pinned USDT0 X Layer address,
+- `pricing`: the x402 `exact` block; `asset` is the SDK-pinned USDT0 X Layer address,
   `amount` is the fee in USDT0 atomic units (6 decimals): 1 USDT0 = `1000000`.
 
 ## 2. The 402 challenge shape (issued by the OKX Payment SDK, NOT hand-rolled)
