@@ -1,17 +1,17 @@
 {
-  "userWinRate": 41,
-  "topTraderWinRate": 72,
-  "userAvgExit": -8.3,
-  "topTraderAvgExit": 34.6,
-  "gapCostUsd": 31500,
-  "worstHabit": "You hold losers 3x longer than winners. The top trader exits losing positions in under 48 hours.",
-  "theirStrategy": "Scalps 2-3% moves with tight stops. Never holds past a 5% drawdown. Takes profit at 20% regardless of narrative.",
+  "userWinRate": 0,
+  "topTraderWinRate": 0,
+  "userAvgExit": 0,
+  "topTraderAvgExit": 0,
+  "gapCostUsd": 0,
+  "worstHabit": "None detected",
+  "theirStrategy": "Diversified across chains, low risk-flagged exposure, activity within 30 days",
   "topTrader": {
     "rank": 1,
-    "walletAddress": "6bZk5xN2fP8qR1cW9yA3tG7vL4mH0sD6jF8kB2nE5pX",
-    "realizedPnlUsd": "2874500",
-    "winRatePercent": "72.0",
-    "txs": "1247",
-    "txVolume": "8900000"
+    "walletAddress": "0x0000000000000000000000000000000000000000",
+    "realizedPnlUsd": "0",
+    "winRatePercent": "0",
+    "txs": "0",
+    "txVolume": "0"
   }
 }
