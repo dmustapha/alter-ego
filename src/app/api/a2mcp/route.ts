@@ -115,17 +115,17 @@ export async function POST(req: Request) {
             getWalletTxns(addr.address, chainIndex),
             getWalletBalances(addr.address, chainIndex),
           ]);
-          allTxns.push(...txns);
+          allTxns.push(...txns.map((tx) => ({ ...(tx as object), _chainIndex: chainIndex })));
           allBalances.push(...balances);
         }
 
         // Sample up to 25 txns for detail/gas data
-        const sampleTxns = allTxns.slice(0, 25) as Array<{ txHash?: string }>;
+        const sampleTxns = allTxns.slice(0, 25) as Array<{ txHash?: string; _chainIndex?: string }>;
         const details = await Promise.all(
           sampleTxns
             .filter((tx) => tx.txHash)
             .map((tx) => {
-              const chainIndex = CHAIN_INDEX[(addr.chains || ["ethereum"])[0]]!;
+              const chainIndex = tx._chainIndex ?? CHAIN_INDEX[(addr.chains || ["ethereum"])[0]]!;
               return getTxDetail(chainIndex, tx.txHash!);
             })
         );
