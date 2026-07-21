@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import type { Persona } from "@/lib/types";
 
 export function PersonaCard({ persona, delay = 0 }: { persona: Persona; delay?: number }) {
-  const isPositive = persona.pnlTotal > 0;
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay, duration: 0.5 }}
@@ -11,9 +10,6 @@ export function PersonaCard({ persona, delay = 0 }: { persona: Persona; delay?: 
     >
       <div className="flex items-center justify-between">
         <h3 className="text-[#f0f0ff] font-bold text-lg">{persona.emojiSignature} {persona.walletLabel}</h3>
-        <span className={`font-pixel text-[15px] ${isPositive ? "text-[#00ffff]" : "text-[#ff2d95]"}`}>
-          {isPositive ? "+" : ""}${Math.abs(persona.pnlTotal).toLocaleString()}
-        </span>
       </div>
       <div className="space-y-1 text-sm">
         <p><span className="text-[rgba(160,160,210,.45)]">Archetype:</span> <span className="text-[#00ffff]">{persona.archetype}</span></p>
