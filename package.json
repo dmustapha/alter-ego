@@ -7,7 +7,8 @@
     "prebuild": "! grep -rIqE 'OKX_(API|SECRET)|passphrase|[0-9a-f]{32}' public/",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run"
   },
   "dependencies": {
     "framer-motion": "^12.42.2",
