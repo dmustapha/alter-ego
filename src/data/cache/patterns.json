@@ -9,8 +9,8 @@
         "type": "AMPLIFY",
         "confidence": "HIGH",
         "evidence": [],
-        "count": 2779,
-        "insight": "2779 tokens, top position 35%"
+        "count": 2796,
+        "insight": "2796 tokens, top position 35%"
       },
       {
         "id": "AMP-03",
@@ -27,7 +27,7 @@
         "type": "AMPLIFY",
         "confidence": "HIGH",
         "evidence": [],
-        "count": 2779,
+        "count": 2796,
         "insight": "0% risk-flagged tokens"
       },
       {

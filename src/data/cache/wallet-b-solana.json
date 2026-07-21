@@ -713,7 +713,7 @@
   "networkMedianGasGwei": 0,
   "signals": {
     "totalTxns": 50,
-    "daysSinceLastTx": 0.015311469907407407,
+    "daysSinceLastTx": 0.020593240740740742,
     "activeSpanDays": 3.84,
     "uniqueTokens": 2483,
     "uniqueChains": 1,
@@ -721,7 +721,7 @@
     "tokensHeld": 2473,
     "riskTokenCount": 0,
     "riskTokenPct": 0,
-    "topHoldingPct": 41.92582588252656,
+    "topHoldingPct": 41.93144157445996,
     "avgGasGwei": 0,
     "networkMedianGasGwei": 0
   }
