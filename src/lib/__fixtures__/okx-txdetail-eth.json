@@ -1,0 +1,42 @@
+{
+  "code": "0",
+  "msg": "success",
+  "data": [
+    {
+      "chainIndex": "1",
+      "height": "25574281",
+      "txTime": "1784554775000",
+      "txhash": "0x2e8317fd7d3f44a2e24fbf33f35ec5a4b8a8dec843781a38af2e38ee65277170",
+      "gasLimit": "25000",
+      "gasUsed": "21679",
+      "gasPrice": "151673437",
+      "nonce": "0",
+      "symbol": "ETH",
+      "amount": "0",
+      "txStatus": "success",
+      "methodId": "0x45746820",
+      "l1OriginHash": "",
+      "txFee": "0.000003288128440723",
+      "fromDetails": [
+        {
+          "address": "0x56843086b472066e2c188cf0cad4731f6e9cfb10",
+          "vinIndex": "",
+          "preVoutIndex": "",
+          "txHash": "",
+          "isContract": false,
+          "amount": ""
+        }
+      ],
+      "toDetails": [
+        {
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          "voutIndex": "",
+          "isContract": false,
+          "amount": ""
+        }
+      ],
+      "internalTransactionDetails": [],
+      "tokenTransferDetails": []
+    }
+  ]
+}

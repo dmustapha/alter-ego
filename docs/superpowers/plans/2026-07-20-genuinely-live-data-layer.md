@@ -506,3 +506,107 @@ git commit -m "feat: per-IP rate limiting + bounded fan-out on open routes; drop
 - **Known gate:** Task 1 is a real spike; if no REST trade endpoint exists, execution stops and forks to the "honest demo" branch (Plan 1B) rather than fabricating data. This is intentional, not a placeholder.
 - **Type consistency:** `getWalletTrades`/`mapDexHistoryToTrades` produce `Trade[]` per `types.ts`; routes consume it; classifier consumes `Trade[]`; seed + differential test consume the route output. Names are consistent across tasks.
 - **Assumption to confirm before T1:** target hackathon is OKX.AI Genesis (agent #6013 on the marketplace), not OKX Build X / X Layer. If Build X, the integration priorities change (needs on-chain X Layer activity) and Plan 2 must lead.
+
+---
+
+## PATH B AMENDMENT (2026-07-21) — supersedes Tasks 2-5 above
+
+**Reconciliation trigger:** Task 1 spike (`docs/OKX-TRADE-API-CONTRACT.md`) surfaced a third
+branch neither documented fork anticipated: genuinely-live data IS available, but OKX exposes
+**no realized-per-trade PnL endpoint**, and the agentic `priapi` surface the app ships is DEAD
+(405). Owner chose **Path B: re-aim the analysis onto live behavioral signals** and drop the
+PnL-dependent rules. This amendment redefines the data contract, the client (Task 2), the route
+wiring (Task 3), the classifier + personas (Task 4), and cache regen (Task 5). Tasks 6 (differential
+test) and 7 (rate limiting) stand unchanged in intent.
+
+### Confirmed live endpoints (public Web3 API, `OK-ACCESS-*` headers, base `https://web3.okx.com`)
+
+All GET, prehash = `timestamp + "GET" + path(+query) + ""`, HMAC-SHA256 base64, header set
+`OK-ACCESS-KEY / -SIGN / -TIMESTAMP / -PASSPHRASE / -PROJECT`. Verified 200 on chain `1` and `196`.
+
+- Tx history: `/api/v5/dex/post-transaction/transactions-by-address?address&chains[&limit&cursor]` → `data[0].transactions[]`, each: `{ chainIndex, txHash, itype ("0"|"1"|"2"), methodId, nonce, txTime (ms string), from:[{address,amount}], to:[{address,amount}], tokenContractAddress, amount, symbol, txFee, txStatus, hitBlacklist }`. NOTE: the LIST has NO `tokenTransferDetails` — derive BUY/SELL from `from`/`to` direction vs the wallet address; `hitBlacklist` is an extra per-tx risk signal.
+- Tx detail: `/api/v5/dex/post-transaction/transaction-detail-by-txhash?chainIndex&txHash` → `data[0]` (`gasPrice, gasUsed, txFee, tokenTransferDetails[]`). Needed ONLY for `avgGasGwei` (sample ~25 txns); do NOT call per-tx for direction.
+- Balances: `/api/v5/dex/balance/all-token-balances-by-address?address&chains` → `data[0].tokenAssets[]` (`symbol, balance, tokenPrice, isRiskToken (BOOLEAN), rawBalance, tokenContractAddress`). CAVEATS: `isRiskToken` is a **boolean** (not the string types.ts declares — FIX the type), and the flag is CONSERVATIVE/sparse (obvious spam is often `false`) — do not treat riskTokenCount as the sole signal; `tokenPrice` is spam-polluted, filter aggressively.
+- Total value: `/api/v5/wallet/asset/total-value-by-address?address&chains` (SPAM-POLLUTED — do not trust for scoring)
+
+### New data contract — `src/lib/types.ts`
+
+Add a `WalletSignals` block to `WalletData` (keep `Trade[]` as tx evidence, but its `pnlUsd/pnlPct/
+holdDurationDays/price/amountUsd` are NOT populated from live data and NOT read by any new rule —
+`type` (BUY/SELL) is derived from `tokenTransferDetails` direction; `timestamp/token/tokenSymbol/
+chain` are real). New reliable fields (all derived from the 3 working endpoints):
+
+```ts
+export interface WalletSignals {
+  totalTxns: number;          // count from tx history
+  daysSinceLastTx: number;    // (now - max txTime) / 86400_000
+  activeSpanDays: number;     // (max - min txTime) / 86400_000
+  uniqueTokens: number;       // distinct tokenContractAddress touched
+  uniqueChains: number;       // distinct chainIndex across requested chains
+  swapCount: number;          // txns with a non-empty tokenContractAddress + symbol (token-moving txns)
+  tokensHeld: number;         // tokenAssets.length after spam filter
+  riskTokenCount: number;     // tokenAssets where isRiskToken === true (boolean) OR held token also hitBlacklist in txns
+  riskTokenPct: number;       // riskTokenCount / max(tokenAssets.length,1) * 100
+  topHoldingPct: number;      // largest holding value / total (spam-filtered) * 100
+  avgGasGwei: number;         // mean gasPrice from tx detail sample, in gwei
+  networkMedianGasGwei: number;
+}
+```
+
+`WalletData` gains `signals: WalletSignals`. `realizedPnl`/`winRate` are retained in the type for
+back-compat but set to `0` and marked deprecated; no new rule reads them.
+
+### Task 2 (REPLACES) — live client + signal builder
+
+`src/lib/okx-api.ts`: fix the ESM `require` (Task 2 Step 1 stands). Replace the DEAD agentic calls.
+Add, using the `OK-ACCESS-*` signer:
+- `getWalletTxns(address, chain): Promise<RawTxn[]>`
+- `getTxDetail(chain, txHash): Promise<RawTxDetail>` (batched/sampled — cap at ~25 detail calls per wallet for gas + swap direction; document the cap)
+- `getWalletBalances(address, chain): Promise<RawTokenAsset[]>`
+- `buildWalletSignals(txns, details, balances, chain): WalletSignals` (pure, unit-tested with fixtures)
+- `deriveTrades(txns, details, chain): Trade[]` (BUY/SELL from transfer direction; pnl fields = 0)
+
+Fixtures: real redacted responses saved from the spike for chain 1 AND 196. TDD: `buildWalletSignals`
+test asserts real counts from a fixture (uniqueTokens, riskTokenCount, uniqueChains) before impl.
+Chain map: `1→ethereum, 501→solana, 196→xlayer` (both directions).
+
+### Task 3 (unchanged intent) — wire into routes
+
+`analyze/route.ts` + `a2mcp/route.ts`: per wallet+chain, call the three live endpoints, build
+`signals` + `trades`, set `totalTxns = signals.totalTxns`, `avgGasGwei = signals.avgGasGwei`.
+`runtime="nodejs"`, `maxDuration=60`, `Promise.all` fan-out, address sanitizer on a2mcp, drop `_debug`.
+EVM and Solana still need separate calls per DEEP-RESEARCH gotcha #2.
+
+### Task 4 (REPLACES) — behavioral pattern catalog + personas
+
+Rewrite `classifier.ts` to read `wallet.signals` (not PnL). New catalog (thresholds are starting
+points; tune with TDD):
+
+AMPLIFY: `AMP-01 Multi-Chain Operator` (uniqueChains ≥ 2; HIGH ≥ 3) · `AMP-02 Portfolio Diversifier`
+(tokensHeld ≥ 8 && topHoldingPct < 40) · `AMP-03 Active Trader` (totalTxns ≥ 50 && daysSinceLastTx ≤ 14)
+· `AMP-04 Clean Operator` (tokensHeld ≥ 3 && riskTokenPct < 20) · `AMP-05 Gas Optimizer`
+(avgGasGwei ≤ networkMedianGasGwei).
+
+GUARD: `GRD-01 Risk-Token Exposure` (riskTokenCount ≥ 3) · `GRD-02 Concentration Risk`
+(topHoldingPct > 60 && tokensHeld ≥ 2) · `GRD-03 Gas Guzzler` (avgGasGwei > 2× median — KEEP as-is)
+· `GRD-04 Dormant Wallet` (daysSinceLastTx > 90 && totalTxns > 0) · `GRD-05 Spam Magnet`
+(riskTokenPct > 50 && tokensHeld ≥ 4).
+
+Every rule needs a firing test AND a non-firing test (kills the always-true/always-false class of
+bug the audit found). No `costUsd` on guards unless a spam-filtered USD figure is genuinely available;
+prefer a count/percentage `insight`. `persona.ts`: pick the archetype from the dominant pattern set
+(not `realizedPnl`); replace `pnlTotal` display with an honest activity/exposure summary. Update any
+persona test + the `Persona.pnlTotal` usage.
+
+### Task 5 (unchanged intent) — regenerate cache from the real engine
+
+`scripts/seed-demo.mjs` runs the real live client + new classifier for 3 chosen wallets (one multi-chain,
+one X Layer-active, one high-risk-exposure) and writes `src/data/cache/*.json`. Roast/comparison copy
+interpolates ONLY real signal figures (tx counts, token counts, risk %, chains). Drop `gapCostUsd`
+unless a spam-filtered volume figure exists; otherwise omit the dollar figure. Self-consistency grep stands.
+
+### Honesty guardrail (feeds Plan 5)
+
+No surface may claim realized PnL, win rate, or dollar-denominated gains from live data — those are not
+retrievable. Claims are limited to: transaction activity, token/chain diversity, risk-token exposure,
+concentration, and gas behavior. Flag this to Plan 5 as a Downstream Item.
