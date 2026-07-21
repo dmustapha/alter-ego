@@ -10,6 +10,7 @@ import {
 import { classifyPatterns } from "@/lib/classifier";
 import { generatePersona } from "@/lib/persona";
 import { loadComparison } from "@/lib/cache";
+import { rateLimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -21,8 +22,19 @@ const CHAIN_INDEX: Record<string, string> = {
   xlayer: "196",
 };
 
+const MAX_CHAINS = 5;
+
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const rl = rateLimit(ip);
+    if (!rl.ok) {
+      return new Response(JSON.stringify({ error: "rate_limited" }), {
+        status: 429,
+        headers: { "content-type": "application/json", "retry-after": String(rl.retryAfter) },
+      });
+    }
+
     const body: AnalyzeRequest = await req.json();
 
     // Input validation
@@ -66,6 +78,9 @@ export async function POST(req: Request) {
     for (const addr of body.addresses) {
       if (!addr.chains || !Array.isArray(addr.chains) || addr.chains.length === 0) {
         return NextResponse.json({ error: `Missing or invalid chains for address: ${addr.address?.slice(0, 10)}...` }, { status: 400 });
+      }
+      if (addr.chains.length > MAX_CHAINS) {
+        return NextResponse.json({ error: `Maximum ${MAX_CHAINS} chains per wallet` }, { status: 400 });
       }
       for (const chainName of addr.chains) {
         if (!CHAIN_INDEX[chainName]) {
