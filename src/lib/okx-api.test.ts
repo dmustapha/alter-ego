@@ -38,13 +38,13 @@ describe("buildWalletSignals -- eth fixture", () => {
   });
 
   it("daysSinceLastTx equals hand-computed value", () => {
-    const expected = (NOW_MS - ETH_MAX_TX_TIME) / 86400000;
-    expect(signals.daysSinceLastTx).toBeCloseTo(expected, 5);
+    // (1785000000000 - 1784554775000) / 86400000 = 5.15306712962963
+    expect(signals.daysSinceLastTx).toBeCloseTo(5.15306712962963, 5);
   });
 
   it("activeSpanDays equals hand-computed value", () => {
-    const expected = (ETH_MAX_TX_TIME - ETH_MIN_TX_TIME) / 86400000;
-    expect(signals.activeSpanDays).toBeCloseTo(expected, 5);
+    // (1784554775000 - 1784272487000) / 86400000 = 3.2672222222222222
+    expect(signals.activeSpanDays).toBeCloseTo(3.2672222222222222, 5);
   });
 
   it("uniqueTokens is union of txn and balance contract addresses", () => {
@@ -96,6 +96,8 @@ describe("buildWalletSignals -- empty inputs", () => {
     expect(signals.riskTokenPct).toBe(0);
     expect(signals.topHoldingPct).toBe(0);
     expect(signals.avgGasGwei).toBe(0);
+    // networkMedianGasGwei is a per-chain constant, not a per-wallet signal
+    expect(signals.networkMedianGasGwei).toBe(20);
   });
 });
 
