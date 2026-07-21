@@ -72,6 +72,14 @@ Plan 2 and Plan 3 interleave (the `/api/a2mcp` endpoint issues the SDK's x402 40
 **Spike:** none. ~0.5 day.
 
 ## Plan 5 — Submission honesty pass
+
+> **HARD RESUBMISSION GATE (from Plan 1 final whole-branch review, 2026-07-21):** `src/app/page.tsx`
+> hero + `src/components/{PersonaCard,CompareCard,RoastBattle}.tsx` still render HARDCODED fabricated
+> PnL/win-rate/tx figures (`+$12,847`, `61% Win Rate`, `4,463 TRANSACTIONS`, `$4,527 NET PNL`). This IS
+> the original OKX rejection reason and it is NOT caught by Plan 8's three technical tests. Must be fixed
+> here (bind to real/cached data or make the hero a visibly-labeled mock; hide the permanently-`0`
+> PnL/win-rate rows in the 3 components) BEFORE any resubmission to OKX.
+
 **Goal:** remove every falsifiable overclaim and broken link before resubmission.
 **Depends on:** Plans 1-4 (needs the final truth about what runs).
 **Tasks (skeleton):**
