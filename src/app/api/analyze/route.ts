@@ -79,6 +79,7 @@ export async function POST(req: Request) {
           tokenScans: scans,
           avgGasGwei: 0,
           networkMedianGasGwei: 30,
+          signals: { totalTxns: 0, daysSinceLastTx: 0, activeSpanDays: 0, uniqueTokens: 0, uniqueChains: 0, swapCount: 0, tokensHeld: 0, riskTokenCount: 0, riskTokenPct: 0, topHoldingPct: 0, avgGasGwei: 0, networkMedianGasGwei: 0 },
         });
       }
 
@@ -98,6 +99,7 @@ export async function POST(req: Request) {
           tokenScans: [],
           avgGasGwei: 0,
           networkMedianGasGwei: 0,
+          signals: { totalTxns: 0, daysSinceLastTx: 0, activeSpanDays: 0, uniqueTokens: 0, uniqueChains: 0, swapCount: 0, tokensHeld: 0, riskTokenCount: 0, riskTokenPct: 0, topHoldingPct: 0, avgGasGwei: 0, networkMedianGasGwei: 0 },
         });
       }
     }

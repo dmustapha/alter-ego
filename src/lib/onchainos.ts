@@ -196,7 +196,7 @@ function parseTokenAssets(output: string): TokenAsset[] {
         balance: cols[3],
         rawBalance: cols[4],
         tokenPrice: cols[5],
-        isRiskToken: cols[6] || "false",
+        isRiskToken: (cols[6] || "false") === "true",
       });
     }
   }

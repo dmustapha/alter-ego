@@ -5,10 +5,10 @@ export interface TokenAsset {
   chainIndex: string;        // String "1", "501", "196"
   tokenContractAddress: string;
   symbol: string;
-  balance: string;           // String — parseFloat() before math
+  balance: string;           // String -- parseFloat() before math
   rawBalance: string;
   tokenPrice: string;
-  isRiskToken: string;       // "true" | "false"
+  isRiskToken: boolean;      // Real API returns boolean, not string
 }
 
 export interface PortfolioOverview {
@@ -66,18 +66,36 @@ export interface Trade {
   holdDurationDays: number;
 }
 
+export interface WalletSignals {
+  totalTxns: number;
+  daysSinceLastTx: number;
+  activeSpanDays: number;
+  uniqueTokens: number;
+  uniqueChains: number;
+  swapCount: number;
+  tokensHeld: number;
+  riskTokenCount: number;
+  riskTokenPct: number;
+  topHoldingPct: number;
+  avgGasGwei: number;
+  networkMedianGasGwei: number;
+}
+
 export interface WalletData {
   address: string;
   chain: string;
   chainId: number;
   totalTxns: number;
+  /** @deprecated Path B: no PnL from live data */
   realizedPnl: number;
+  /** @deprecated Path B: no PnL from live data */
   winRate: number;           // 0-100
   trades: Trade[];
   approvals: ApprovalEntry[];
   tokenScans: TokenScanResult[];
   avgGasGwei: number;
   networkMedianGasGwei: number;
+  signals: WalletSignals;
 }
 
 export interface Pattern {
