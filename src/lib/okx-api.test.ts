@@ -16,11 +16,9 @@ const ETH_BALANCES = ethBalancesRaw.data[0].tokenAssets;
 const XLAYER_TXNS = xlayerTxnsRaw.data[0].transactions;
 const ETH_DETAIL = txDetailRaw.data[0];
 
-// Fixed nowMs so daysSinceLastTx is deterministic
+// Fixed nowMs so daysSinceLastTx is deterministic.
+// eth fixture txTime range: max 1784554775000, min 1784272487000 (used in the literals below).
 const NOW_MS = 1785000000000;
-// max txTime in eth fixture = 1784554775000
-const ETH_MAX_TX_TIME = 1784554775000;
-const ETH_MIN_TX_TIME = 1784272487000;
 
 describe("buildWalletSignals -- eth fixture", () => {
   const signals = buildWalletSignals(ETH_TXNS, ETH_BALANCES, [ETH_DETAIL], "1", NOW_MS);
