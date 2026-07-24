@@ -26,14 +26,21 @@ if (!Array.isArray(challenge.accepts) || challenge.accepts.length === 0) fail("a
 const a = challenge.accepts[0];
 if (a.network !== "eip155:196") fail(`accepts[0].network is ${a.network}, expected eip155:196 (X Layer)`);
 
-// USDT0, 6 decimals, never USDG, never 18dp
-const decimals = a.asset?.decimals ?? a.decimals;
-if (Number(decimals) !== 6) fail(`asset decimals is ${decimals}, expected 6 (USDT0)`);
-const sym = (a.asset?.symbol ?? a.assetSymbol ?? "").toUpperCase();
-if (sym && sym !== "USDT0" && sym !== "USDT") fail(`asset symbol is ${sym}, expected USDT0`);
+// Asset identity. OKX's real x402 SDK format encodes the token as a bare contract
+// ADDRESS in `asset` plus a human name in `extra.name` (e.g. "USD₮0"); it does NOT
+// carry a `decimals` field (6dp is implied by the USDT0 contract on X Layer). Assert
+// the address is the canonical USDT0 contract and reject the old USDG address.
+const USDT0 = "0x779ded0c9e1022225f8e0630b35a9b54be713736";
 const badUsdg = "0x4ae46a";
 const assetAddr = (a.asset?.address ?? a.asset ?? "").toString().toLowerCase();
 if (assetAddr.startsWith(badUsdg)) fail("asset is the old USDG address (0x4ae46a...) -> must be USDT0");
+if (assetAddr !== USDT0) fail(`asset is ${assetAddr}, expected the USDT0 contract ${USDT0}`);
+// name check: accept USDT0 / USDT / USD₮0 (the ₮ glyph) from asset.symbol or extra.name
+const name = (a.asset?.symbol ?? a.assetSymbol ?? a.extra?.name ?? "").toString().toUpperCase().replace("₮", "T");
+if (name && !name.startsWith("USDT")) fail(`asset name is ${name}, expected USDT0`);
+// If a decimals field IS present (some encoders include it), it must be 6.
+const decimals = a.asset?.decimals ?? a.decimals;
+if (decimals !== undefined && Number(decimals) !== 6) fail(`asset decimals is ${decimals}, expected 6 (USDT0)`);
 
 // maxTimeoutSeconds (field name is maxTimeoutSeconds, not requiredDeadlineSeconds)
 const timeout = a.maxTimeoutSeconds ?? challenge.maxTimeoutSeconds;
