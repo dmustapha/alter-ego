@@ -1,0 +1,29 @@
+# Always-on presence daemon for OKX agent #6013 (Scope B).
+# No [http_service]: presence is an outbound heartbeat + XMTP client, never inbound HTTP.
+# One machine, always running (never autostop) so onlineStatus never drops.
+app = "alter-ego-daemon"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile.daemon"
+
+[env]
+  HOME = "/data"
+  OKX_AGENT_TASK_HOME = "/data/.okx-agent-task"
+
+[[mounts]]
+  source = "alter_ego_daemon_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[[restart]]
+  policy = "always"
+
+# Never sleep: a sleeping daemon misses heartbeats and #6013 goes offline (the failure we fix).
+[machines]
+  min_machines_running = 1
+  auto_stop_machines = false
+  auto_start_machines = false
