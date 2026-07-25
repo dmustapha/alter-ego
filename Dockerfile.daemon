@@ -1,0 +1,26 @@
+# Always-on presence daemon for OKX agent #6013 (Scope B).
+# Runs `okx-a2a run` (npm @okxweb3/a2a-node) which self-heartbeats via viem + keeps the
+# XMTP client alive, holding onlineStatus:1 without this project's Mac. No onchainos binary
+# is needed: @okxweb3/a2a-node's deps are pure @xmtp/* + viem + ws, and it emits the
+# "[onchainos] heartbeat sent" tick itself. Identity files are injected at boot from Fly
+# secrets (see daemon/entrypoint.sh); none are baked into the image or committed to git.
+FROM node:24-slim
+
+# ca-certificates for TLS to the OKX backend + XMTP network; tini for clean signal handling.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates tini \
+  && rm -rf /var/lib/apt/lists/*
+
+# Pin the same version the Mac runs. npm resolves the Linux build of @xmtp/node-bindings.
+RUN npm install -g @okxweb3/a2a-node@0.1.10 \
+  && okx-a2a --version
+
+# Identity + XMTP state live on the persistent volume mounted at /data.
+ENV HOME=/data \
+    OKX_AGENT_TASK_HOME=/data/.okx-agent-task \
+    NODE_ENV=production
+
+COPY daemon/entrypoint.sh /daemon/entrypoint.sh
+RUN chmod +x /daemon/entrypoint.sh
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/daemon/entrypoint.sh"]
