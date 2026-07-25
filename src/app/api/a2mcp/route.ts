@@ -56,12 +56,33 @@ export async function POST(req: Request) {
       return NextResponse.json(a2aAck(inbound));
     }
 
-    // Bodyless / unrecognised request: serve the agent card as a showcase (never a 400/500).
-    if (inbound.kind === "empty") {
-      return NextResponse.json(buildAgentCard());
+    // Payment gate FIRST. POST /api/a2mcp is the paid service surface, so EVERY non-A2A request
+    // (bodyless, unrecognised, or a real analyze body) must carry a settled X-PAYMENT. Any unpaid
+    // request receives the standard x402 402 challenge here. This is exactly what OKX's x402
+    // validation requires: "unpaid requests must return a standard 402 challenge." The free
+    // discovery surface is GET /api/a2mcp (the agent card), never POST.
+    const gate = await enforceX402(req, new URL(req.url).toString());
+    if (!gate.paid) return gate.challenge;
+    const paymentResponse = gate.paymentResponse;
+
+    // PAID from here (facilitator verified + settled the payment above). Demo mode, and any
+    // bodyless/unrecognised paid request, serve the pre-cached persona showcase.
+    if (process.env.DEMO_MODE === "true" || inbound.kind === "empty") {
+      const cached = await loadAllDemoData();
+      return NextResponse.json(
+        {
+          wallets: 3,
+          chains: ["ethereum", "solana", "xlayer"],
+          totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
+          patterns: cached.patterns,
+          personas: cached.personas,
+          comparison: cached.comparison,
+        } satisfies AnalyzeResponse,
+        paymentResponse ? { headers: { "PAYMENT-RESPONSE": paymentResponse } } : undefined
+      );
     }
 
-    // analyze path
+    // analyze path (live mode, paid)
     const addresses: AnalyzeRequest["addresses"] = inbound.addresses;
 
     // Input validation (mirrors analyze route)
@@ -77,7 +98,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Validate chain names (malformed input returns 400 before payment; it is not charged)
+    // Validate chain names
     for (const addr of addresses) {
       const chains = addr.chains || [];
       if (chains.length === 0) {
@@ -94,29 +115,6 @@ export async function POST(req: Request) {
           );
         }
       }
-    }
-
-    // Payment gate: every valid analyze request must carry a settled X-PAYMENT (issued by the OKX
-    // Payment SDK). This runs even under DEMO_MODE so OKX's `curl -i -X POST {address,chains}`
-    // self-test receives the standard 402. Only after paid do we serve the analysis.
-    const gate = await enforceX402(req, new URL(req.url).toString());
-    if (!gate.paid) return gate.challenge;
-    const paymentResponse = gate.paymentResponse;
-
-    // Demo mode: serve pre-cached data (content fallback), still behind the paid gate above
-    if (process.env.DEMO_MODE === "true") {
-      const cached = await loadAllDemoData();
-      return NextResponse.json(
-        {
-          wallets: 3,
-          chains: ["ethereum", "solana", "xlayer"],
-          totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
-          patterns: cached.patterns,
-          personas: cached.personas,
-          comparison: cached.comparison,
-        } satisfies AnalyzeResponse,
-        paymentResponse ? { headers: { "PAYMENT-RESPONSE": paymentResponse } } : undefined
-      );
     }
 
     // Live mode: build one WalletData per address, aggregated across all its chains
