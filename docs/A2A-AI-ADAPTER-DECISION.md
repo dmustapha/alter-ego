@@ -11,8 +11,9 @@ em-dashes (standing rule).
    "the provider." So the plan's Candidate B ("wire the adapter as a custom provider")
    is not directly supported.
 
-   key (`claude` is an alias to `claude --dangerously-skip-permissions`, using
-   `~/.claude` credentials; no `ANTHROPIC_API_KEY` in env). Running that headless in a
+2. **The default provider authenticates via CLI subscription oauth, not a portable API
+   key** (it is an alias to a `--dangerously-skip-permissions` CLI using local
+   `~/.<cli>` credentials; no `ANTHROPIC_API_KEY` in env). Running that headless in a
    Fly container is auth-fragile and heavy. `codex` is present but has the same
    subscription-auth problem. This is the plan's flagged "single biggest unknown," and
    the evidence says it is a real cost/reliability liability.
