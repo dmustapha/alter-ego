@@ -81,8 +81,19 @@ describe("POST /api/a2mcp", () => {
     expect(JSON.stringify(json)).not.toContain("_debug");
   });
 
-  it("GET returns an agent card with capabilities", async () => {
-    const json = await (await GET()).json();
+  it("GET unpaid returns a 402 with PAYMENT-REQUIRED and the agent card in the body", async () => {
+    const res = await GET(new Request(URL, { method: "GET" }));
+    expect(res.status).toBe(402);
+    expect(res.headers.get("PAYMENT-REQUIRED")).toBeTruthy();
+    const json = await res.json();
+    expect(Array.isArray(json.capabilities)).toBe(true);
+    expect(json.error).toBe("payment required");
+  });
+
+  it("GET paid returns the agent card 200", async () => {
+    const res = await GET(new Request(URL, { method: "GET", headers: { "X-PAYMENT": "x" } }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
     expect(Array.isArray(json.capabilities)).toBe(true);
   });
 });
