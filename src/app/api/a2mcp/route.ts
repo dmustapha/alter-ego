@@ -216,6 +216,21 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
-  return NextResponse.json(buildAgentCard());
+// GET is also x402-gated: OKX's x402 validation probes the endpoint (including a bodyless
+// GET) and requires a standard 402 challenge on any unpaid request ("not a valid x402
+// service" if it returns 200). So GET returns 402 + the PAYMENT-REQUIRED header, and embeds
+// the agent card in the body so discovery still works from the same response.
+export async function GET(req: Request) {
+  const gate = await enforceX402(req, new URL(req.url).toString());
+  if (gate.paid) {
+    return NextResponse.json(
+      buildAgentCard(),
+      gate.paymentResponse ? { headers: { "PAYMENT-RESPONSE": gate.paymentResponse } } : undefined
+    );
+  }
+  const paymentRequired = gate.challenge.headers.get("PAYMENT-REQUIRED") || "";
+  return new Response(JSON.stringify({ ...buildAgentCard(), error: "payment required" }), {
+    status: 402,
+    headers: { "PAYMENT-REQUIRED": paymentRequired, "Content-Type": "application/json" },
+  });
 }
