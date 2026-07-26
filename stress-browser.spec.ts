@@ -1,5 +1,5 @@
-// stress-browser.spec.ts — Alter Ego Browser Stress Test
-// Playwright 1.60 — tests the actual rendered UI, not just API responses
+// stress-browser.spec.ts - Alter Ego Browser Stress Test
+// Playwright 1.60 - tests the actual rendered UI, not just API responses
 
 import { test, expect, chromium } from "@playwright/test";
 import path from "path";
@@ -30,16 +30,16 @@ async function waitForPhase(page: any, phaseText: string, timeout = 90_000) {
 
 // ─── F1: Landing Page ───────────────────────────
 
-test.describe("F1 — Landing Page", () => {
+test.describe("F1 - Landing Page", () => {
   test("ST-F1-FUNC-01: page loads 200 with correct title", async ({ page }) => {
     const res = await page.goto(BASE, { waitUntil: "networkidle" });
     expect(res?.status()).toBe(200);
-    await expect(page).toHaveTitle("Alter Ego — Every wallet has a story");
+    await expect(page).toHaveTitle("Alter Ego: Every wallet has a story");
   });
 
   test("ST-F1-FUNC-02-03: hero text and description render", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
-    // h1 is animated via Framer Motion SlideIn — check text content rather than visibility
+    // h1 is animated via Framer Motion SlideIn - check text content rather than visibility
     const h1Text = await page.locator("h1").innerText();
     expect(h1Text).toContain("EVERY WALLET");
     expect(h1Text).toContain("STORY");
@@ -66,7 +66,7 @@ test.describe("F1 — Landing Page", () => {
 
   test("ST-F1-VIS-01-05: CRT effects and colors present", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
-    // Verify scanlines via body::after — check body background
+    // Verify scanlines via body::after - check body background
     const bodyBg = await page.evaluate(() => getComputedStyle(document.body).background);
     expect(bodyBg).toContain("5"); // #050510 or rgb(5,5,16)
     // Verify glitch layers exist in DOM
@@ -94,7 +94,7 @@ test.describe("F1 — Landing Page", () => {
     expect(bodyFont.toLowerCase()).toContain("space mono");
   });
 
-  test("ST-F1-RESP-01: 320px viewport — no overflow beyond tolerance", async ({ page }) => {
+  test("ST-F1-RESP-01: 320px viewport - no overflow beyond tolerance", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     await page.goto(BASE, { waitUntil: "networkidle" });
     await page.waitForTimeout(2000);
@@ -107,7 +107,7 @@ test.describe("F1 — Landing Page", () => {
     await screenshot(page, "landing-320");
   });
 
-  test("ST-F1-RESP-03: 1440px viewport — centered, max-width", async ({ page }) => {
+  test("ST-F1-RESP-03: 1440px viewport - centered, max-width", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(BASE, { waitUntil: "networkidle" });
     const maxW = await page.evaluate(() => {
@@ -131,7 +131,7 @@ test.describe("F1 — Landing Page", () => {
 
 // ─── F2: Wallet Input + Analyze ────────────────
 
-test.describe("F2 — Wallet Input + API", () => {
+test.describe("F2 - Wallet Input + API", () => {
   test("ST-F2-FUNC-01: submit valid addresses triggers analyze", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     const textarea = page.locator("textarea");
@@ -153,7 +153,7 @@ test.describe("F2 — Wallet Input + API", () => {
     await expect(page.locator("text=SOLANA SELF").first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test("ST-F2-EDGE-01: empty input — should show error", async ({ page }) => {
+  test("ST-F2-EDGE-01: empty input - should show error", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     // Try clicking ANALYZE with empty input
     const btn = page.locator('button:has-text("ANALYZE")');
@@ -169,7 +169,7 @@ test.describe("F2 — Wallet Input + API", () => {
     await expect(page.locator("text=Maximum 5 wallets")).toBeVisible({ timeout: 5_000 });
   });
 
-  test("ST-F2-EDGE-07: rapid double-click — no duplicate submission", async ({ page }) => {
+  test("ST-F2-EDGE-07: rapid double-click - no duplicate submission", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     const textarea = page.locator("textarea");
     await textarea.fill("0xDemo... ethereum");
@@ -184,7 +184,7 @@ test.describe("F2 — Wallet Input + API", () => {
 
 // ─── F3-F4: Scanning + Results Phases ──────────
 
-test.describe("F3-F4 — Scanning + Results", () => {
+test.describe("F3-F4 - Scanning + Results", () => {
   test("ST-F3-FUNC-01-03: scanning renders then transitions to results", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await page.locator("textarea").fill("0xDemo... ethereum\nSolDemo... solana");
@@ -232,7 +232,7 @@ test.describe("F3-F4 — Scanning + Results", () => {
 
 // ─── F5: Roast Battle ────────────────────────────
 
-test.describe("F5 — Roast Battle", () => {
+test.describe("F5 - Roast Battle", () => {
   test("ST-F5-FUNC-01-05: full 5-round roast battle renders", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await page.locator("textarea").fill("0xDemo... ethereum\nSolDemo... solana");
@@ -267,7 +267,7 @@ test.describe("F5 — Roast Battle", () => {
 
 // ─── F6: Crowd Comparison ────────────────────────
 
-test.describe("F6 — Crowd Comparison", () => {
+test.describe("F6 - Crowd Comparison", () => {
   test("ST-F6-FUNC-01-03: compare card renders after battle", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await page.locator("textarea").fill("0xDemo... ethereum\nSolDemo... solana");
@@ -294,7 +294,7 @@ test.describe("F6 — Crowd Comparison", () => {
 
 // ─── F7: CTA Phase ───────────────────────────────
 
-test.describe("F7 — CTA + Payment", () => {
+test.describe("F7 - CTA + Payment", () => {
   test("ST-F7-FUNC-01-04: CTA phase renders fully", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await page.locator("textarea").fill("0xDemo... ethereum\nSolDemo... solana");
@@ -302,7 +302,7 @@ test.describe("F7 — CTA + Payment", () => {
     // Wait for CTA phase (76s from analyze trigger)
     await waitForText(page, "Know thyself", PHASE_TIMEOUT);
     await screenshot(page, "phase-cta");
-    await expect(page.locator("text=TEE Attestation — Simulated for Demo")).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("text=TEE Attestation: Simulated for Demo")).toBeVisible({ timeout: 5_000 });
     await expect(page.locator("text=Snapshot")).toBeVisible({ timeout: 5_000 });
     await expect(page.locator("text=OKX.AI")).toBeVisible({ timeout: 5_000 });
   });
@@ -310,7 +310,7 @@ test.describe("F7 — CTA + Payment", () => {
 
 // ─── F8: Proof Page ──────────────────────────────
 
-test.describe("F8 — Proof Page", () => {
+test.describe("F8 - Proof Page", () => {
   test("ST-F8-FUNC-01-02: proof page loads with content", async ({ page }) => {
     const res = await page.goto(`${BASE}/proof`, { waitUntil: "networkidle" });
     expect(res?.status()).toBe(200);
@@ -323,7 +323,7 @@ test.describe("F8 — Proof Page", () => {
 
 // ─── A11y: Keyboard Navigation ───────────────────
 
-test.describe("A11y — Keyboard & Focus", () => {
+test.describe("A11y - Keyboard & Focus", () => {
   test("ST-F1-A11Y-03: keyboard tab navigation works", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     // Tab through the page
@@ -350,7 +350,7 @@ test.describe("A11y — Keyboard & Focus", () => {
     expect(["INPUT", "TEXTAREA", "BUTTON", "A"]).toContain(activeEl.tag);
   });
 
-  test("ST-F1-A11Y-01-02: color contrast — check via computed styles", async ({ page }) => {
+  test("ST-F1-A11Y-01-02: color contrast - check via computed styles", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     // Verify text on dark background is readable
     const contrastOk = await page.evaluate(() => {
@@ -373,7 +373,7 @@ test.describe("A11y — Keyboard & Focus", () => {
 
 // ─── Network: Slow 3G ────────────────────────────
 
-test.describe("NET — Network Throttle", () => {
+test.describe("NET - Network Throttle", () => {
   test("ST-F2-NET-01: page loads on slow 3G", async ({ browser }) => {
     const ctx = await browser.newContext({
       // Simulate slow 3G via Playwright built-in
@@ -399,7 +399,7 @@ test.describe("NET — Network Throttle", () => {
 
 // ─── Recovery: Browser Refresh ───────────────────
 
-test.describe("REC — Recovery & Resilience", () => {
+test.describe("REC - Recovery & Resilience", () => {
   test("ST-F1-EDGE-02: browser refresh returns to landing", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await page.reload({ waitUntil: "networkidle" }); await page.waitForTimeout(2000);

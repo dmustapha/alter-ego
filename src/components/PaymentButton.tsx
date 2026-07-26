@@ -1,4 +1,4 @@
-// [DEMO MODE] x402 payment simulation — no real USDC settlement. Post-hackathon: integrate @okx/x402-sdk.
+// [DEMO MODE] x402 payment simulation - no real USDC settlement. Post-hackathon: integrate @okx/x402-sdk.
 "use client";
 import { useState } from "react";
 

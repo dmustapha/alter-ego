@@ -35,7 +35,7 @@ export async function loadPersonas(): Promise<Persona[]> {
   if (fs.existsSync(personaPath)) {
     return JSON.parse(fs.readFileSync(personaPath, "utf-8")) as Persona[];
   }
-  // Dynamic generation — use ESM dynamic import (no require() in ESM context)
+  // Dynamic generation - use ESM dynamic import (no require() in ESM context)
   const { generatePersona } = await import("./persona");
   return patterns
     .filter(p => p.chain !== "xlayer")
