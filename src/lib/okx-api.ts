@@ -63,6 +63,28 @@ async function okxPublicCall(method: string, path: string) {
 // ─── Public endpoints ────────────────────────────────
 
 /**
+ * Testable core: caller returns the raw OKX json for one page given a cursor.
+ */
+export async function getWalletTxnsPagedWith(
+  caller: (cursor: string) => Promise<any>,
+  address: string,
+  chain: string,
+  maxPages = 6
+): Promise<unknown[]> {
+  const all: unknown[] = [];
+  let cursor = "";
+  for (let page = 0; page < maxPages; page++) {
+    const json = await caller(cursor);
+    const d = json?.data?.[0];
+    const txns = d?.transactions ?? d?.transactionList ?? [];
+    all.push(...txns);
+    cursor = d?.cursor ?? "";
+    if (!cursor || txns.length === 0) break;
+  }
+  return all;
+}
+
+/**
  * Returns the transaction list for a wallet on a given chain.
  * chain: numeric chainIndex string ("1", "196", "501")
  */
@@ -73,6 +95,22 @@ export async function getWalletTxns(
   const path = `/api/v5/dex/post-transaction/transactions-by-address?address=${address}&chains=${chain}&limit=50`;
   const json = await okxPublicCall("GET", path);
   return json?.data?.[0]?.transactions ?? [];
+}
+
+/**
+ * Returns paginated transactions for a wallet on a given chain using cursor pagination.
+ * Fetches up to maxPages (default 6, ~300-600 txns) and handles both transactions and transactionList.
+ */
+export async function getWalletTxnsPaged(
+  address: string,
+  chain: string,
+  maxPages = 6
+): Promise<unknown[]> {
+  return getWalletTxnsPagedWith(
+    (cursor) => okxPublicCall("GET",
+      `/api/v5/dex/post-transaction/transactions-by-address?address=${address}&chains=${chain}&limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`),
+    address, chain, maxPages
+  );
 }
 
 /**
