@@ -3,7 +3,7 @@
  * Uses offline fixtures -- no network calls.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { buildWalletSignals, deriveTrades } from "./okx-api";
 
 import ethTxnsRaw from "./__fixtures__/okx-txns-eth.json";
@@ -130,5 +130,20 @@ describe("deriveTrades", () => {
   it("sets timestamp from txTime", () => {
     const trades = deriveTrades([ETH_TXNS[0]], WALLET, "1");
     expect(trades[0].timestamp).toBe(Number(ETH_TXNS[0].txTime));
+  });
+});
+
+describe("getWalletTxnsPagedWith", () => {
+  it("loops cursor until empty or maxPages", async () => {
+    const pages = [
+      { data: [{ cursor: "c1", transactions: Array(50).fill({ txHash: "0x1" }) }] },
+      { data: [{ cursor: "",   transactions: Array(20).fill({ txHash: "0x2" }) }] },
+    ];
+    let i = 0;
+    const caller = vi.fn(async () => pages[i++]);
+    const { getWalletTxnsPagedWith } = await import("./okx-api");
+    const txns = await getWalletTxnsPagedWith(caller, "0xabc", "1", 6);
+    expect(txns.length).toBe(70);
+    expect(caller).toHaveBeenCalledTimes(2);
   });
 });
