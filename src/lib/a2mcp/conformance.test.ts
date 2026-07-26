@@ -22,11 +22,17 @@ vi.mock("@/lib/okx-api", () => ({
   }),
   deriveTrades: vi.fn().mockReturnValue([]),
 }));
-vi.mock("@/lib/x402/okx-x402", () => ({
-  enforceX402: vi.fn(async (req: Request) =>
-    req.headers.get("X-PAYMENT") ? { paid: true } : { paid: false, challenge: new Response(null, { status: 402 }) }
-  ),
+vi.mock("@okxweb3/x402-next", () => ({
+  withX402: (handler: (r: Request) => Promise<Response>) => async (req: Request) =>
+    req.headers.get("X-PAYMENT") ? handler(req) : new Response(null, { status: 402, headers: { "PAYMENT-REQUIRED": "eyJ4NDAyVmVyc2lvbiI6Mn0=" } }),
+  x402ResourceServer: class {
+    register() {
+      return this;
+    }
+  },
 }));
+vi.mock("@okxweb3/x402-core", () => ({ OKXFacilitatorClient: class {} }));
+vi.mock("@okxweb3/x402-evm/exact/server", () => ({ ExactEvmScheme: class {} }));
 
 import { POST } from "@/app/api/a2mcp/route";
 import { buildAgentCard } from "./agent-card";

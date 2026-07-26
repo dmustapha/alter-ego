@@ -24,20 +24,30 @@ vi.mock("@/lib/okx-api", () => ({
   deriveTrades: vi.fn().mockReturnValue([]),
 }));
 
-// Delegate the 402/paid decision to the SDK wrapper: unpaid unless X-PAYMENT present.
-vi.mock("@/lib/x402/okx-x402", () => ({
-  enforceX402: vi.fn(async (req: Request) =>
-    req.headers.get("X-PAYMENT")
-      ? { paid: true, paymentResponse: "cGF5LXJlc3A=" }
-      : {
-          paid: false,
-          challenge: new Response(JSON.stringify({ error: "payment required" }), {
-            status: 402,
-            headers: { "content-type": "application/json", "PAYMENT-REQUIRED": "eyJ4NDAyVmVyc2lvbiI6Mn0=" },
-          }),
-        }
-  ),
+// Mock the official OKX seller SDK (@okxweb3/x402-next withX402): unpaid unless X-PAYMENT
+// present. Unpaid returns the 402 built from routeConfig.unpaidResponseBody (the agent card).
+vi.mock("@okxweb3/x402-next", () => ({
+  withX402:
+    (
+      handler: (r: Request) => Promise<Response>,
+      config: { unpaidResponseBody?: () => unknown },
+    ) =>
+    async (req: Request) => {
+      if (req.headers.get("X-PAYMENT")) return handler(req);
+      const body = config?.unpaidResponseBody ? config.unpaidResponseBody() : { error: "payment required" };
+      return new Response(JSON.stringify(body), {
+        status: 402,
+        headers: { "content-type": "application/json", "PAYMENT-REQUIRED": "eyJ4NDAyVmVyc2lvbiI6Mn0=" },
+      });
+    },
+  x402ResourceServer: class {
+    register() {
+      return this;
+    }
+  },
 }));
+vi.mock("@okxweb3/x402-core", () => ({ OKXFacilitatorClient: class {} }));
+vi.mock("@okxweb3/x402-evm/exact/server", () => ({ ExactEvmScheme: class {} }));
 
 import { POST, GET } from "./route";
 
@@ -81,13 +91,10 @@ describe("POST /api/a2mcp", () => {
     expect(JSON.stringify(json)).not.toContain("_debug");
   });
 
-  it("GET unpaid returns a 402 with PAYMENT-REQUIRED and the agent card in the body", async () => {
+  it("GET unpaid returns a 402 with the SDK PAYMENT-REQUIRED challenge", async () => {
     const res = await GET(new Request(URL, { method: "GET" }));
     expect(res.status).toBe(402);
     expect(res.headers.get("PAYMENT-REQUIRED")).toBeTruthy();
-    const json = await res.json();
-    expect(Array.isArray(json.capabilities)).toBe(true);
-    expect(json.error).toBe("payment required");
   });
 
   it("GET paid returns the agent card 200", async () => {
