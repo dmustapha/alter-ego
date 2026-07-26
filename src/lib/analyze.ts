@@ -21,6 +21,8 @@ const CHAIN_INDEX: Record<string, string> = {
 const MAX_CHAINS = 5;
 const BAD_CHARS = /[<>"'&`\\]/;
 
+export class ValidationError extends Error {}
+
 export interface AddressInput {
   address: string;
   chains: string[];
@@ -32,13 +34,13 @@ export interface AnalyzeOpts {
 
 function validateInput(addresses: AddressInput[]): void {
   if (!Array.isArray(addresses)) {
-    throw new Error("Invalid request: addresses must be an array");
+    throw new ValidationError("Invalid request: addresses must be an array");
   }
   if (addresses.length === 0) {
-    throw new Error("At least one address required");
+    throw new ValidationError("At least one address required");
   }
   if (addresses.length > 5) {
-    throw new Error("Maximum 5 wallets per analysis");
+    throw new ValidationError("Maximum 5 wallets per analysis");
   }
   for (const addr of addresses) {
     if (
@@ -47,20 +49,20 @@ function validateInput(addresses: AddressInput[]): void {
       addr.address.length < 6 ||
       addr.address.length > 100
     ) {
-      throw new Error(`Invalid address: ${addr.address?.slice(0, 10)}...`);
+      throw new ValidationError(`Invalid address: ${addr.address?.slice(0, 10)}...`);
     }
     if (BAD_CHARS.test(addr.address)) {
-      throw new Error("Invalid address: contains disallowed characters");
+      throw new ValidationError("Invalid address: contains disallowed characters");
     }
     if (!addr.chains || !Array.isArray(addr.chains) || addr.chains.length === 0) {
-      throw new Error(`Missing or invalid chains for address: ${addr.address?.slice(0, 10)}...`);
+      throw new ValidationError(`Missing or invalid chains for address: ${addr.address?.slice(0, 10)}...`);
     }
     if (addr.chains.length > MAX_CHAINS) {
-      throw new Error(`Maximum ${MAX_CHAINS} chains per wallet`);
+      throw new ValidationError(`Maximum ${MAX_CHAINS} chains per wallet`);
     }
     for (const chainName of addr.chains) {
       if (!CHAIN_INDEX[chainName]) {
-        throw new Error(`Unknown chain "${chainName}". Supported: ethereum, solana, xlayer`);
+        throw new ValidationError(`Unknown chain "${chainName}". Supported: ethereum, solana, xlayer`);
       }
     }
   }

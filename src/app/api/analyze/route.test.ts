@@ -51,46 +51,67 @@ const MOCK_DETAIL = { gasPrice: "20000000000" }; // 20 gwei
 
 // -- Mock setup --
 
-vi.mock("@/lib/okx-api", async (importActual) => {
-  const real = await importActual<typeof import("@/lib/okx-api")>();
+// Mock analyzeWallets so the route is testable in isolation without network.
+const MOCK_ANALYZE_RESULT = {
+  wallets: 1,
+  chains: ["ethereum"],
+  totalTxns: 2,
+  patterns: [{ walletAddress: "0xabc", chain: "ethereum", amplify: [], guard: [] }],
+  personas: [
+    {
+      walletLabel: "ETHEREUM SELF",
+      archetype: "The Test",
+      catchphrase: "test",
+      vice: "none",
+      superpower: "none",
+      kryptonite: "none",
+      tradingStyle: "test",
+      emojiSignature: "T",
+      pnlTotal: 0,
+      amplifyTags: [],
+      guardTags: [],
+    },
+  ],
+  comparison: null,
+};
+
+vi.mock("@/lib/analyze", async (importActual) => {
+  const real = await importActual<typeof import("@/lib/analyze")>();
   return {
     ...real,
-    getWalletTxns: vi.fn().mockResolvedValue(MOCK_TXNS),
-    getWalletBalances: vi.fn().mockResolvedValue(MOCK_BALANCES),
-    getTxDetail: vi.fn().mockResolvedValue(MOCK_DETAIL),
+    // Run real validation so ValidationError is raised for bad input (400 path).
+    // For valid input, short-circuit before hitting OKX and return the fixture.
+    analyzeWallets: vi.fn(async (addresses: Parameters<typeof real.analyzeWallets>[0]) => {
+      // validateInput is called as the first thing in analyzeWallets before any await.
+      // It throws ValidationError (a rejected Promise) for bad input. Awaiting the real
+      // call propagates that rejection immediately so the route can catch it as 400.
+      // For valid input the real call would proceed to OKX, so we detect valid input
+      // by checking the same conditions validateInput checks and bail early.
+      const BAD_CHARS = /[<>"'&`\\]/;
+      const VALID_CHAINS = new Set(["ethereum", "solana", "xlayer"]);
+      let valid = Array.isArray(addresses) && addresses.length > 0 && addresses.length <= 5;
+      if (valid) {
+        for (const addr of addresses) {
+          const a = addr.address;
+          if (!a || typeof a !== "string" || a.length < 6 || a.length > 100 || BAD_CHARS.test(a)) { valid = false; break; }
+          const chains = addr.chains;
+          if (!Array.isArray(chains) || chains.length === 0 || chains.length > 5) { valid = false; break; }
+          if (chains.some((c: string) => !VALID_CHAINS.has(c))) { valid = false; break; }
+        }
+      }
+      if (!valid) {
+        // Delegate to real impl which will reject with ValidationError immediately.
+        return real.analyzeWallets(addresses);
+      }
+      return MOCK_ANALYZE_RESULT;
+    }),
   };
 });
 
-// Mock cache and classifier/persona so route is testable in isolation
 vi.mock("@/lib/cache", () => ({
   loadComparison: vi.fn().mockReturnValue(null),
   loadAllDemoData: vi.fn(),
   cacheExists: vi.fn().mockReturnValue(false),
-}));
-
-vi.mock("@/lib/classifier", () => ({
-  classifyPatterns: vi.fn().mockReturnValue({
-    walletAddress: "0xabc",
-    chain: "ethereum",
-    amplify: [],
-    guard: [],
-  }),
-}));
-
-vi.mock("@/lib/persona", () => ({
-  generatePersona: vi.fn().mockReturnValue({
-    walletLabel: "ETHEREUM SELF",
-    archetype: "The Test",
-    catchphrase: "test",
-    vice: "none",
-    superpower: "none",
-    kryptonite: "none",
-    tradingStyle: "test",
-    emojiSignature: "T",
-    pnlTotal: 0,
-    amplifyTags: [],
-    guardTags: [],
-  }),
 }));
 
 // -- Tests --
