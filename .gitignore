@@ -57,6 +57,39 @@ research/
 warroom/
 proposals/
 debug-results/
+.interrogate-cache/
+.interrogate-findings/
+.interrogate-state.json
+.livetest-state.json
+.design-forge-state.json
+
+# Local docs (planning, reports, internal notes)
+docs/superpowers/
+docs/context/
+docs/listing-gate/
+docs/A2A-AI-ADAPTER-DECISION.md
+docs/MASTER-PLAN-TO-RESUBMIT.md
+docs/OKX-RESUBMIT-RUNBOOK.md
+docs/PIPELINE-QUALITY-AUDIT.md
+docs/PIPELINE-FORENSIC-CRITIQUE.md
+docs/LISTING-REJECTION-ANALYSIS.md
+docs/SCOPE-DECISIONS.md
+docs/SECURITY-ROTATION.md
+DEMO-SCRIPT.md
+FIX-PLAN.md
+HANDOFF.md
+HANDOFF-AVATAR-FIX.md
+INTERROGATE-REPORT.md
+LIVETEST-REPORT.md
+STRESS-TEST-REPORT.md
 
 # subagent-driven scratch
 .superpowers/
+
+# Spike/contract + video planning docs (local only)
+docs/A2MCP-CONTRACT.md
+docs/A2MCP-LISTING.md
+docs/OKX-TRADE-API-CONTRACT.md
+docs/X402-CONTRACT.md
+video/VIDEO-PLAN.md
+video/*.webm

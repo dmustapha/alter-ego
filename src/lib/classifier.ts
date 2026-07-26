@@ -119,7 +119,7 @@ function detectGuardPatterns(wallet: WalletData): Pattern[] {
     });
   }
 
-  // GRD-03: Gas Guzzler — guard against divide-by-zero for solana (median = 0)
+  // GRD-03: Gas Guzzler - guard against divide-by-zero for solana (median = 0)
   if (s.networkMedianGasGwei > 0 && s.avgGasGwei > s.networkMedianGasGwei * 2) {
     patterns.push({
       id: "GRD-03",

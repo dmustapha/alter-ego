@@ -107,7 +107,7 @@ export function Terminal({ children }: TerminalProps) {
           {children}
         </div>
 
-        {/* Corner brackets — rendered OUTSIDE the clipped card to avoid clipping */}
+        {/* Corner brackets - rendered OUTSIDE the clipped card to avoid clipping */}
         {/* Cyan top-left */}
         <div className="absolute pointer-events-none" style={{ top: 6, left: 6, width: 20, height: 20, border: "2px solid #00ffff", borderRight: 0, borderBottom: 0, boxShadow: "0 0 8px rgba(0,255,255,0.5)" }} />
         {/* Cyan top-right */}

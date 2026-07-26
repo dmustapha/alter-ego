@@ -5,7 +5,7 @@ Alter Ego is a TEE-ready agent (simulated attestation in demo) that ingests your
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-33%2F33-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-124%20passing-brightgreen)]()
 
 **Live:** [alter-ego-wine-mu.vercel.app](https://alter-ego-wine-mu.vercel.app)
 
@@ -63,8 +63,8 @@ Alter Ego is listed as an ASP agent on the OKX.AI marketplace, reachable at the 
 The CTA phase presents a payment-gated snapshot. Users see an "ATTESTATION VERIFIED" badge (TEE attestation simulated in demo), then pay $0.99 via the x402 gate (USDT0 on X Layer) to lock a shareable proof of their Alter Ego analysis.
 
 ```tsx
-// src/components/PaymentButton.tsx: 3-state transition (pink idle → simulating → cyan done)
-<PaymentButton onComplete={handleSnapshot} />
+// src/components/PaymentButton.tsx: 3-state transition (pink idle -> simulating -> cyan done)
+<PaymentButton tier="Snapshot" price="$0.99" />
 ```
 
 ---
@@ -136,7 +136,7 @@ Alter Ego's on-chain identity is an ERC-8004 agent (agent #6013) registered on X
 | Styling | Tailwind CSS 4 |
 | Animation | Framer Motion |
 | Fonts | Press Start 2P, Space Mono |
-| Testing | Playwright (33 browser tests) |
+| Testing | Vitest (86 unit/integration) + Playwright (38 browser) |
 | Payments | x402 micropayment gate (USDT0 on X Layer) |
 | Identity | TEE attestation (pre-computed for demo) |
 | Data | OKX OnchainOS REST API (OKX API gateway) |
@@ -145,21 +145,23 @@ Alter Ego's on-chain identity is an ERC-8004 agent (agent #6013) registered on X
 
 ## Testing
 
-33 Playwright browser tests cover the full 6-phase state machine, responsive layout at 320px and 1440px, keyboard navigation, network resilience, and visual design compliance.
+Two suites, 124 tests total: 86 Vitest unit and integration tests (classifier logic, API routes, x402 gate, A2MCP conformance) and 38 Playwright browser tests (33 stress + 5 accessibility).
 
 ```bash
-npx playwright test
-# Result: 33/33 passing
+npm test              # Vitest: 86 passing
+npx playwright test   # Playwright: 38 passing (stress + a11y)
 ```
 
 What the tests verify:
+- Classifier produces stable AMPLIFY/GUARD patterns from signal math (unit)
+- A2MCP route gates unpaid requests with a 402 and validates the served payload against its advertised schema (integration)
 - Landing page renders with hero text, wallet input, and integration strip
 - LOAD DEMO populates addresses and triggers the analysis pipeline
-- Each phase transitions correctly: scanning → results → battle → compare → CTA
+- Each phase transitions correctly: scanning -> results -> battle -> compare -> CTA
 - Glitch Core design elements (CRT scanlines, corner brackets, polygon clip-path) render correctly
 - Wallet input enforces max 5 wallets and disables ANALYZE on empty input
 - Network throttle (slow 3G) completes within 25 seconds
-- Keyboard tab navigation works with visible focus indicators
+- Keyboard focus rings render, prefers-reduced-motion is honored, and dim text meets WCAG AA contrast (a11y)
 
 ---
 
@@ -217,13 +219,16 @@ alter-ego/
 │   │   ├── CompareCard.tsx    # Side-by-side chain comparison
 │   │   └── PaymentButton.tsx  # x402 payment gate with 3-state transition
 │   └── lib/
+│       ├── classifier.ts      # Signal-based AMPLIFY/GUARD pattern engine
+│       ├── okx-api.ts         # OKX OnchainOS REST client (HMAC-signed)
+│       ├── x402/              # x402 seller gate (USDT0 on X Layer)
+│       ├── a2mcp/             # A2A agent card + conformance
 │       ├── types.ts           # Shared TypeScript interfaces
 │       └── cache.ts           # Cache management for analysis results
-├── public/
-│   ├── logo.svg               # Alter Ego logo
-│   └── tee-badge.svg          # TEE attestation badge
+├── public/                    # Logo, avatar, TEE badge, favicons
 ├── docs/images/               # Screenshots
 ├── playwright.config.ts       # Playwright test configuration
+├── a11y.spec.ts               # 5 accessibility tests
 └── stress-browser.spec.ts     # 33 browser test cases
 ```
 

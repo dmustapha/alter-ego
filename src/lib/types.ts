@@ -105,7 +105,7 @@ export interface Pattern {
   confidence: "HIGH" | "MEDIUM" | "LOW";
   evidence: Trade[];         // Supporting trades
   count: number;
-  costUsd?: number;          // Only for GUARD patterns — dollar cost of bad behavior
+  costUsd?: number;          // Only for GUARD patterns - dollar cost of bad behavior
   insight: string;           // Human-readable insight
 }
 
