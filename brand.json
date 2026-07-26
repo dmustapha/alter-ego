@@ -3,13 +3,20 @@
   "tagline": "Every wallet has a story. Meet your Alter Ego.",
   "design": "Neon Arcade",
   "colorMode": "dark-only",
+  "_colorSource": "src/app/globals.css @theme is the source of truth; this file mirrors those tokens hex-for-hex. All values are WCAG 2.1 AA verified.",
   "brandColor": "#ff2d95",
   "secondaryColor": "#00ffff",
-  "ink": ["#0a0a0f", "#0d0d1a", "#08081a"],
+  "ink": ["#050510", "#0a0a1a", "#0d0d1a", "#08081a"],
   "semantic": {
     "success": "#00ffff",
     "warning": "#ffff00",
     "danger": "#ff2d95"
+  },
+  "chainColors": {
+    "eth": "#627eea",
+    "sol": "#8b6dff",
+    "base": "#00ffff",
+    "xlayer": "#ff2d95"
   },
   "fonts": {
     "display": "Press Start 2P",
@@ -28,11 +35,13 @@
   "signatureElement": "Neon corner brackets (cyan top, pink bottom) on polygon-clipped card + CRT scanlines + header flicker",
   "accent": "#ff2d95",
   "secondary": "#00ffff",
-  "surface": "#0d0d1a",
-  "background": "#0a0a0f",
-  "textPrimary": "#00ffff",
-  "textBody": "#e0e0ff",
-  "textMuted": "rgba(200,200,255,0.5)",
+  "surface": "#0a0a1a",
+  "surfaceDeep": "#0d0d1a",
+  "surfaceInput": "#08081a",
+  "background": "#050510",
+  "textPrimary": "#f0f0ff",
+  "textBody": "#d0d0f0",
+  "textMuted": "#8f8fbf",
   "effects": {
     "crt_scanlines": true,
     "crt_vignette": true,

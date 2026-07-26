@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 export function Terminal({ children }: TerminalProps) {
   return (
@@ -18,8 +18,10 @@ export function Terminal({ children }: TerminalProps) {
               "polygon(0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px))",
           }}
         >
-          {/* Offset glitch layer — cyan */}
+          {/* Offset glitch layer: cyan */}
           <div
+            data-anim="glitch"
+            aria-hidden="true"
             className="absolute inset-0 pointer-events-none"
             style={{
               border: "2px solid #00ffff",
@@ -30,8 +32,10 @@ export function Terminal({ children }: TerminalProps) {
                 "polygon(0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px))",
             }}
           />
-          {/* Offset glitch layer — pink */}
+          {/* Offset glitch layer: pink */}
           <div
+            data-anim="glitch"
+            aria-hidden="true"
             className="absolute inset-0 pointer-events-none"
             style={{
               border: "2px solid #ff2d95",
@@ -59,6 +63,7 @@ export function Terminal({ children }: TerminalProps) {
                 style={{ boxShadow: "0 0 10px rgba(255,255,0,.8), 4px 0 0 rgba(255,255,0,.3)" }}
               />
               <span
+                data-anim="flicker"
                 className="ml-2 text-[9px] uppercase tracking-[2px] text-[#00ffff] font-pixel"
                 style={{
                   textShadow: "0 0 12px rgba(0,255,255,.6), 2px 0 0 rgba(255,45,149,.3)",
@@ -92,7 +97,7 @@ export function Terminal({ children }: TerminalProps) {
           {/* INTEGRATION STRIP */}
           <div className="flex gap-3 mb-10 flex-wrap">
             {["WALLET", "DEX-MARKET", "OKX-AI", "X402"].map((name) => (
-              <span key={name} className="text-[6px] uppercase text-[rgba(180,180,220,.45)] font-pixel flex items-center gap-1">
+              <span key={name} className="text-[10px] uppercase tracking-[1px] text-dim font-mono flex items-center gap-1">
                 <span className="w-1 h-1 bg-[#00ffff]" style={{ boxShadow: "0 0 6px rgba(0,255,255,.6)" }} />
                 {name}
               </span>
@@ -121,19 +126,26 @@ interface TerminalProps {
 }
 
 export function TypingText({ text, delay = 30 }: { text: string; delay?: number }) {
-  const [displayed, setDisplayed] = useState("");
-  const [done, setDone] = useState(false);
+  const reduce = useReducedMotion();
+  const [displayed, setDisplayed] = useState(reduce ? text : "");
+  const [done, setDone] = useState(!!reduce);
   useEffect(() => {
+    if (reduce) { setDisplayed(text); setDone(true); return; }
     let i = 0; setDisplayed(""); setDone(false);
     const interval = setInterval(() => { setDisplayed(text.slice(0, i + 1)); i++; if (i >= text.length) { clearInterval(interval); setDone(true); } }, delay);
     return () => clearInterval(interval);
-  }, [text, delay]);
+  }, [text, delay, reduce]);
   return (<span>{displayed}{!done && <span className="animate-pulse">▌</span>}</span>);
 }
 
 export function SlideIn({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
+  const reduce = useReducedMotion();
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={reduce ? { duration: 0 } : { delay, duration: 0.5 }}
+    >
       {children}
     </motion.div>
   );

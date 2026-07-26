@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:a11y": "playwright test a11y.spec.ts"
   },
   "dependencies": {
     "@okxweb3/x402-evm": "^0.2.1",
