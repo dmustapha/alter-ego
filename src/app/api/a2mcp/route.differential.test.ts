@@ -52,9 +52,18 @@ vi.mock("@/lib/okx-api", async (importActual) => {
 // The route now gates the analyze path on x402 payment (issued by the OKX Payment SDK, whose
 // facilitator host is unreachable from this machine). This test exercises the real engine, not
 // payment, so treat every request as paid. This does NOT weaken the differential assertion below.
-vi.mock("@/lib/x402/okx-x402", () => ({
-  enforceX402: vi.fn(async () => ({ paid: true })),
+// Always-paid: withX402 mock runs the handler directly so the differential exercises the
+// real classifier regardless of X-PAYMENT.
+vi.mock("@okxweb3/x402-next", () => ({
+  withX402: (handler: (r: Request) => Promise<Response>) => async (req: Request) => handler(req),
+  x402ResourceServer: class {
+    register() {
+      return this;
+    }
+  },
 }));
+vi.mock("@okxweb3/x402-core", () => ({ OKXFacilitatorClient: class {} }));
+vi.mock("@okxweb3/x402-evm/exact/server", () => ({ ExactEvmScheme: class {} }));
 
 // Cache is filesystem-based. Stub it out so the route takes the live analysis
 // path regardless of whether a demo seed exists on disk.
