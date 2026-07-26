@@ -1,14 +1,44 @@
 @import "tailwindcss";
 
-@theme inline {
+@theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, monospace;
   --font-pixel: 'Press Start 2P', cursive;
+
+  /* Surfaces (elevation ladder) */
+  --color-bg: #050510;            /* page background (matches rendered body) */
+  --color-surface: #0a0a1a;       /* card fill (canonicalized) */
+  --color-surface-deep: #0d0d1a;  /* outer terminal card */
+  --color-surface-input: #08081a; /* textarea fill */
+
+  /* Neon primaries */
+  --color-accent: #ff2d95;        /* pink: primary action, danger, guard */
+  --color-secondary: #00ffff;     /* cyan: system, success, amplify */
+  --color-warning: #ffff00;
+
+  /* Text (all AA-verified) */
+  --color-text: #f0f0ff;          /* headings */
+  --color-text-2: #d0d0f0;        /* strong body */
+  --color-dim: #8f8fbf;           /* muted body: was rgba(160,160,210,.45) @ 2.42:1, now 6.3-6.6:1 */
+
+  /* Chain badges */
+  --color-eth: #627eea;
+  --color-sol: #8b6dff;           /* was #9945ff @ 4.27:1 (FAIL), now 5.26:1 */
+  --color-base: #00ffff;
+  --color-xlayer: #ff2d95;
+}
+
+:root {
+  --glow-pink: 0 0 20px rgba(255,45,149,.25);
+  --glow-pink-strong: 0 0 40px rgba(255,45,149,.4);
+  --glow-cyan: 0 0 15px rgba(0,255,255,.15);
+  --glow-cyan-strong: 0 0 24px rgba(0,255,255,.35);
+  --ring-focus: 0 0 0 2px #050510, 0 0 0 4px #00ffff, 0 0 15px rgba(0,255,255,.5);
 }
 
 body {
-  background: #050510;
-  color: #d0d0f0;
+  background: var(--color-bg);
+  color: var(--color-text-2);
   font-family: 'Space Mono', monospace;
 }
 
@@ -42,4 +72,74 @@ body::before {
   40% { transform: translate(2px, -1px); }
   60% { transform: translate(-1px, -1px); }
   80% { transform: translate(1px, 1px); }
+}
+
+/* A11y: honor prefers-reduced-motion. Freeze CRT flicker/glitch at their opaque, un-shifted state. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-anim="flicker"] { opacity: 1 !important; }
+  [data-anim="glitch"]  { transform: none !important; }
+}
+
+/* A11y: keyboard-only focus ring (never on mouse click), offset from the dark bg so cyan reads. */
+:where(a, button, textarea, input, select, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+  border-radius: 2px;
+}
+:where(a, button, textarea, input, [tabindex]):focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Screen-reader-only text (visually hidden, still announced) */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@layer components {
+  .arcade-card {
+    background: var(--color-surface);
+    border: 1px solid rgba(255,45,149,.1);
+    padding: 2rem;
+  }
+  .btn-primary {
+    font-family: var(--font-pixel);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background: var(--color-accent);
+    color: #fff;
+    border: none;
+    box-shadow: var(--glow-pink);
+    transition: transform .15s ease, box-shadow .15s ease;
+    cursor: pointer;
+  }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--glow-pink-strong); }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); transition: none; }
+  .btn-primary:disabled { opacity: .3; cursor: not-allowed; }
+  .btn-ghost {
+    font-family: var(--font-pixel);
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.08);
+    color: var(--color-dim);
+    transition: border-color .15s ease, color .15s ease;
+    cursor: pointer;
+  }
+  .btn-ghost:hover { border-color: var(--color-secondary); color: var(--color-secondary); }
+  .input-arcade {
+    background: var(--color-surface-input);
+    border: 2px solid rgba(255,45,149,.2);
+    color: var(--color-secondary);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    resize: none;
+    outline: none;
+  }
+  .input-arcade::placeholder { color: rgba(0,255,255,.45); } /* was .10 (1.2:1), now .45 (3.74:1) */
+  .input-arcade:focus-visible { border-color: var(--color-accent); box-shadow: var(--glow-pink); }
 }

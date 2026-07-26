@@ -10,7 +10,7 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Alter Ego — Every wallet has a story",
+  title: "Alter Ego: Every wallet has a story",
   description: "Multi-chain behavioral fingerprinting agent. TEE-ready architecture. ERC-8004 registered. Built for OKX.AI Genesis.",
   icons: {
     icon: "/favicon.ico",
