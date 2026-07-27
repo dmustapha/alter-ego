@@ -61,12 +61,11 @@ export function buildRoastFacts(
       s.networkMedianGasGwei,
     ];
     for (const v of raw) {
-      if (v !== 0 || v === 0) {
-        // include zero too -- but round to avoid float drift
-        numbers.add(Math.round(v));
-        // also add the one-decimal form rounded so "22.00" matches 22
-        numbers.add(Math.round(v * 10) / 10);
-      }
+      // include zero too -- but round to avoid float drift
+      numbers.add(v); // exact value
+      numbers.add(Math.round(v));
+      // also add the one-decimal form rounded so "22.00" matches 22
+      numbers.add(Math.round(v * 10) / 10);
     }
   }
 
@@ -154,7 +153,7 @@ const TEMPLATE_FACTORIES: TemplateFactory[] = [
     onScreenTag: p.tag,
     onScreenData: p.insight,
   }),
-  (p, facts, round) => ({
+  (p, _facts, round) => ({
     round,
     speaker: "BOTH",
     text: `We are the same wallet, different chains -- both haunted by our own ${p.tag}.`,
@@ -273,11 +272,8 @@ export async function generateRoast(facts: RoastFacts): Promise<RoastLine[]> {
     }
 
     // Run numeric guard over every LLM line
-    const templateLines = buildTemplateRoast(facts);
     const guarded = validLines.map((line) => numericGuard(line, facts));
-
-    // If all lines were replaced (all fabricated), return template wholesale
-    return guarded.length > 0 ? guarded : templateLines;
+    return guarded;
   } catch {
     return buildTemplateRoast(facts);
   }
