@@ -36,10 +36,20 @@ export async function loadPersonas(): Promise<Persona[]> {
     return JSON.parse(fs.readFileSync(personaPath, "utf-8")) as Persona[];
   }
   // Dynamic generation - use ESM dynamic import (no require() in ESM context)
-  const { generatePersona } = await import("./persona");
+  const { generatePersona, ZERO_GRADE } = await import("./persona");
+  const { computeBehavioralGrade } = await import("./grade");
+  // Load wallet signals from cached wallet data when available for a real grade.
+  const wallets: Record<string, import("./types").WalletData | null> = {};
+  try { wallets["ethereum"] = loadWalletA(); } catch { wallets["ethereum"] = null; }
+  try { wallets["solana"] = loadWalletB(); } catch { wallets["solana"] = null; }
+  const NULL_PNL = { realizedPnl: null as null, winRate: null as null };
   return patterns
     .filter(p => p.chain !== "xlayer")
-    .map((p) => generatePersona(p, p.chain === "solana" ? "SOLANA SELF" : "ETHEREUM SELF", 0));
+    .map((p) => {
+      const walletData = wallets[p.chain] ?? null;
+      const grade = walletData ? computeBehavioralGrade(walletData.signals) : ZERO_GRADE;
+      return generatePersona(p, p.chain === "solana" ? "SOLANA SELF" : "ETHEREUM SELF", grade, NULL_PNL);
+    });
 }
 
 export function loadComparison(): CompareResult {
