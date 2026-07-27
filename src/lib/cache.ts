@@ -101,7 +101,8 @@ export async function loadRoastBattle(): Promise<RoastBattle> {
     // Load patterns (array: find by chain, fallback by index)
     const allPatterns = loadPatterns();
     const patternsEth = allPatterns.find(p => p.chain === "ethereum") ?? allPatterns[0];
-    const patternsSol = allPatterns.find(p => p.chain === "solana") ?? allPatterns[1];
+    const patternsSol = allPatterns.find(p => p.chain === "solana") ?? allPatterns.find(p => p !== patternsEth) ?? patternsEth;
+    if (!patternsEth || !patternsSol) throw new Error("Need at least 2 pattern entries for a roast");
 
     // Load personas (filtered to non-xlayer: index 0 = ethereum, index 1 = solana)
     const personas = await loadPersonas();
@@ -125,16 +126,17 @@ export async function loadRoastBattle(): Promise<RoastBattle> {
     roastCache.set(cacheKey, battle);
     return battle;
   } catch {
-    // Last-resort fallback: read from roast-lines.json if personas/patterns fail to load
+    // Last-resort fallback: read from roast-lines.json if personas/patterns fail to load.
+    // Guard loadPersonas separately so a missing patterns.json does not escape the catch.
     const linesPath = path.join(CACHE_DIR, "roast-lines.json");
     if (fs.existsSync(linesPath)) {
-      const lines = JSON.parse(fs.readFileSync(linesPath, "utf-8"));
-      const personas = await loadPersonas();
-      return {
-        walletA: personas[0],
-        walletB: personas[1],
-        lines,
-      };
+      try {
+        const lines = JSON.parse(fs.readFileSync(linesPath, "utf-8"));
+        const personas = await loadPersonas();
+        return { walletA: personas[0], walletB: personas[1], lines };
+      } catch {
+        // fall through to the pre-generated battle file
+      }
     }
     // Final fallback: pre-generated roast-battle.json
     return loadJson<RoastBattle>("roast-battle.json");
