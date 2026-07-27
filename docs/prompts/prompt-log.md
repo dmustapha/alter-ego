@@ -15,3 +15,15 @@
 ### Prompt 4
 > i think we shouldnt shorten the entire scope of the implementation because of the time. of course we should do something rn cos time is critical and i need a demo video, but we should still implement it after to the full scope. so think again and do extensive research. but ill like to do the demo video asap.
 **Action:** Researched the architecture, separated the demo release from the full implementation roadmap, and documented the approved design.
+
+### Prompt 5
+> just pick the bests for the demo. i dont have any in mind. doesnt have to necessarily be a popular wallet. just the onees that fit
+**Action:** Began selecting a real public-wallet cohort based on live analysis evidence, rather than legacy or celebrity wallets.
+
+### Prompt 6
+> after youre done with this, update the script and review the whole demo process. make sure its airtight, the whole process and make sure a critical review is done after to cut out any errors in any point of the process. im about to leave you for a while but i want you to keep going and making sure you review regularly to make sure youve not lost scope and youre doing the work dilligently
+**Action:** Expanded the release task into an end-to-end, independently reviewed demo-production pass.
+
+### Prompt 7
+> then proceed with the demo video after all that. you dont need any input from me again. i just need the final product
+**Action:** Took ownership of the remaining cohort selection, product correction, recording, narration, and release QA.

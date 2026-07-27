@@ -13,9 +13,14 @@ const launchDemo = (
   handle: (a: Array<{ address: string; chains: string[] }>, deep?: boolean) => void
 ) =>
   handle([
-    { address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", chains: ["ethereum"] },
-    { address: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM", chains: ["solana"] },
+    { address: "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", chains: ["solana"] },
+    { address: "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", chains: ["solana"] },
+    { address: "2fg5QD1eD7rzNNCsvnhmXFm5hqNgwTTG8p7kQ6f3rx6f", chains: ["solana"] },
   ]);
+
+function formatWalletHeading(chain: string, address: string): string {
+  return `${chain.toUpperCase()} · ${address.slice(0, 6)}…${address.slice(-4)}`;
+}
 
 export default function Home() {
   const [phase, setPhase] = useState<Phase>("landing");
@@ -199,7 +204,7 @@ export default function Home() {
       {phase === "results" && data && (
         <div className="space-y-8">
           <SlideIn><TypingText text={`${data.wallets} wallets. ${data.chains.length} chains. ${data.totalTxns.toLocaleString()} transactions. I see you. ALL of you.`} /></SlideIn>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {data.personas.map((p, i) => (<SlideIn key={i} delay={i * 0.5}><PersonaCard persona={p} delay={i * 0.3} /></SlideIn>))}
           </div>
           <SlideIn delay={1.5}><p className="text-center text-dim text-sm">Compare any selected wallets. The evidence stays attached to every profile.</p></SlideIn>
@@ -207,7 +212,7 @@ export default function Home() {
             <div key={i} className="space-y-2">
               <SlideIn delay={i * 0.3 + 2}>
                 <h3 className="font-mono text-[10px] uppercase tracking-[2px] text-dim border-b border-[rgba(255,45,149,.1)] pb-1 mb-2">
-                  {pr.chain === "solana" ? "SOLANA SELF" : "ETHEREUM SELF"}
+                  {formatWalletHeading(pr.chain, pr.walletAddress)}
                 </h3>
               </SlideIn>
               <div className="space-y-2">

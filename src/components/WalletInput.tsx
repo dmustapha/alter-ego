@@ -46,7 +46,7 @@ export function WalletInput({ onSubmit, isLoading, onDemoLaunch }: WalletInputPr
         id="wallets"
         value={addresses}
         onChange={(e) => setAddresses(e.target.value)}
-        placeholder={"0x...a3f7    Ethereum / X Layer / Base\nSvmBase58...  Solana\n\n# One address per line. Chains auto-detected."}
+        placeholder={"0x...a3f7    (ethereum, xlayer)\nSvmBase58...  (solana)\n\n# One address per line. Specify supported chains."}
         rows={4}
         aria-describedby={error ? "wallet-error" : undefined}
         aria-invalid={!!error}

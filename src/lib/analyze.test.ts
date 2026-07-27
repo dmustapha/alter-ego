@@ -13,7 +13,7 @@ it("analyzes a wallet end to end", async () => {
   expect(r.wallets).toBe(1);
   expect(r.totalTxns).toBe(60);
   expect(Array.isArray(r.patterns)).toBe(true);
-  expect(r.personas[0].walletLabel).toBe("ETHEREUM SELF");
+  expect(r.personas[0].walletLabel).toBe("ETHEREUM · 0xabc0…0000");
   // grade is wired from computeBehavioralGrade
   expect(typeof r.personas[0].grade.score).toBe("number");
   expect(typeof r.personas[0].grade.letter).toBe("string");
