@@ -1,16 +1,13 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Terminal, TypingText, SlideIn } from "@/components/Terminal";
 import { WalletInput } from "@/components/WalletInput";
 import { PatternCard } from "@/components/PatternCard";
 import { PersonaCard } from "@/components/PersonaCard";
-import { RoastBattle } from "@/components/RoastBattle";
-import { CompareCard } from "@/components/CompareCard";
-import { PaymentButton } from "@/components/PaymentButton";
 import { ScanProgress } from "@/components/ScanProgress";
 import type { AnalyzeResponse, AnalyzeProgress } from "@/lib/types";
 
-type Phase = "landing" | "scanning" | "results" | "battle" | "compare" | "cta" | "error";
+type Phase = "landing" | "scanning" | "results" | "error";
 
 const launchDemo = (
   handle: (a: Array<{ address: string; chains: string[] }>, deep?: boolean) => void
@@ -23,34 +20,15 @@ const launchDemo = (
 export default function Home() {
   const [phase, setPhase] = useState<Phase>("landing");
   const [data, setData] = useState<AnalyzeResponse | null>(null);
-  const [battleData, setBattleData] = useState<import("@/lib/types").RoastBattle | null>(null);
-  const [compareData, setCompareData] = useState<import("@/lib/types").CompareResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [addressCount, setAddressCount] = useState(0);
   const [progress, setProgress] = useState<AnalyzeProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const phaseTimers = useRef<NodeJS.Timeout[]>([]);
   const isAnalyzing = useRef(false);
-
-  useEffect(() => { return () => phaseTimers.current.forEach(clearTimeout); }, []);
-
-  // Post-analysis presentation reel, scheduled from the moment results land.
-  const startReel = () => {
-    const t1 = setTimeout(() => setPhase("results"), 600);
-    const t2 = setTimeout(() => {
-      fetch("/api/roast").then(r => r.json()).then(d => { if (d.battle) setBattleData(d.battle); setPhase("battle"); }).catch(() => { setError("Roast data unavailable, continuing demo"); setPhase("battle"); });
-    }, 18000);
-    const t3 = setTimeout(() => {
-      fetch("/api/compare").then(r => r.json()).then(d => { if (d.comparison) setCompareData(d.comparison); setPhase("compare"); }).catch(() => { setError("Comparison data unavailable, continuing demo"); setPhase("compare"); });
-    }, 56000);
-    const t4 = setTimeout(() => { setPhase("cta"); isAnalyzing.current = false; }, 74000);
-    phaseTimers.current = [t1, t2, t3, t4];
-  };
 
   const handleAnalyze = async (addresses: Array<{ address: string; chains: string[] }>, deep = false) => {
     if (isAnalyzing.current) return;
     isAnalyzing.current = true;
-    phaseTimers.current.forEach(clearTimeout);
     setError(null); setProgress(null);
     setLoading(true); setAddressCount(addresses.length); setPhase("scanning");
     try {
@@ -98,7 +76,8 @@ export default function Home() {
         pct: 100,
       });
       setData(result);
-      startReel();
+      setPhase("results");
+      isAnalyzing.current = false;
     } catch (e: any) {
       setError(e?.message || "Failed to analyze wallets. Please try again.");
       setPhase("error");
@@ -237,25 +216,23 @@ export default function Home() {
               </div>
             </div>
           ))}
-        </div>
-      )}
-      {phase === "battle" && battleData && (<SlideIn><RoastBattle battle={battleData} /></SlideIn>)}
-      {phase === "compare" && compareData && (<SlideIn><CompareCard comparison={compareData} /></SlideIn>)}
-      {phase === "cta" && (
-        <div className="space-y-8 text-center">
-          <SlideIn>
-            <span className="font-mono text-[10px] uppercase tracking-[1px] px-4 py-2 border border-[#00ffff] text-secondary bg-[rgba(0,255,255,.03)] inline-flex items-center gap-2">🔒 TEE Attestation: Simulated for Demo</span>
+          <SlideIn delay={2.5}>
+            <div className="pt-6 text-center">
+              <button
+                onClick={() => { setPhase("landing"); setData(null); setProgress(null); }}
+                className="btn-ghost text-[10px] tracking-[1px] px-5 py-3"
+              >
+                ANALYZE ANOTHER COHORT
+              </button>
+            </div>
           </SlideIn>
-          <SlideIn delay={0.5}><p className="text-text text-xl font-bold">Alter Ego. Know thyself. Then know everyone else.</p></SlideIn>
-          <SlideIn delay={1}><PaymentButton tier="Snapshot" price="$0.99" /></SlideIn>
-          <SlideIn delay={1.5}><p className="text-dim text-xs">Live on OKX.AI · Lifestyle Companion + Social Buzz · #OKXAI</p></SlideIn>
         </div>
       )}
       {phase === "error" && (
         <SlideIn>
           <div className="text-center space-y-6 py-12">
             <p className="text-accent text-lg font-bold">{error || "Something went wrong."}</p>
-            <button onClick={() => { setPhase("landing"); setError(null); setData(null); setBattleData(null); setCompareData(null); }}
+            <button onClick={() => { setPhase("landing"); setError(null); setData(null); setProgress(null); }}
               className="font-pixel text-[11px] uppercase tracking-[2px] px-8 py-4 bg-[#ff2d95] text-white">
               ▶ TRY AGAIN
             </button>
