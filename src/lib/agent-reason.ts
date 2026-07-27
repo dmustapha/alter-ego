@@ -112,7 +112,7 @@ export async function reasonReply(analysis: AnalyzeResponse, ctx: ReasonCtx): Pr
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userContent },
       ],
-      { max_tokens: 400, timeoutMs: 6000 } as Parameters<typeof llmChat>[1]
+      { maxTokens: 400, timeoutMs: 6000 }
     );
 
     const trimmed = raw.replace(/—/g, "-").trim();
