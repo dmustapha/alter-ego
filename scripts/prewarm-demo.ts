@@ -33,11 +33,10 @@ if (fs.existsSync(envPath)) {
 
 // ── Imports ──────────────────────────────────────────────────────────────────
 
-import { analyzeWallets } from "../src/lib/analyze.js";
 import {
   buildWalletSignals,
   deriveTrades,
-  getWalletTxns,
+  getWalletTxnsPaged,
   getWalletBalances,
   getTxDetail,
 } from "../src/lib/okx-api.js";
@@ -49,9 +48,8 @@ import type {
   Persona,
   CompareResult,
   RoastLine,
-  LeaderboardEntry,
   Pattern,
-} from "../src/lib/types.js";
+} from "../src/lib/types.js"; // LeaderboardEntry removed (unused)
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -87,7 +85,7 @@ async function fetchWalletDirect(
   console.log("  fetching txns...");
   let txns: unknown[] = [];
   try {
-    txns = await getWalletTxns(address, chainIndex);
+    txns = await getWalletTxnsPaged(address, chainIndex, 6);
     console.log(`  got ${txns.length} txns`);
   } catch (e) {
     console.warn(`  txns fetch failed: ${e}. Using empty.`);
@@ -288,12 +286,11 @@ async function main() {
     fs.mkdirSync(CACHE_DIR, { recursive: true });
   }
 
-  // Step 1: use analyzeWallets (the same path LOAD DEMO triggers live)
-  // This writes nothing itself; we extract the WalletData from it via
-  // the direct fetch path below (analyzeWallets does not expose WalletData).
-  // We use the direct fetch approach from seed-demo to get full WalletData
-  // (needed for roast line builders). The analyze call is for persona/pattern
-  // data which matches what the live /api/analyze route returns.
+  // Step 1: fetch wallet data using the shared pure pipeline
+  // The cache is built from the same logic that analyzeWallets runs
+  // (getWalletTxnsPaged + buildWalletSignals + classifyPatterns + generatePersona),
+  // but we build WalletData directly because analyzeWallets does not expose
+  // per-wallet WalletData, only AnalyzeResponse (counts/patterns/personas).
 
   console.log("\n[Phase 1] Fetching wallet data directly (for roast/comparison builders)...");
   const walletA = await fetchWalletDirect(DEMO_ETH, "1", "ethereum", 1, "A (ETH)");
