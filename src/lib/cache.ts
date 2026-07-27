@@ -33,7 +33,11 @@ export async function loadPersonas(): Promise<Persona[]> {
   // Fallback: generate personas from patterns if persona cache doesn't exist
   const personaPath = path.join(CACHE_DIR, "personas.json");
   if (fs.existsSync(personaPath)) {
-    return JSON.parse(fs.readFileSync(personaPath, "utf-8")) as Persona[];
+    const cached = JSON.parse(fs.readFileSync(personaPath, "utf-8")) as Persona[];
+    // Self-healing guard: if cache is empty or predates the grade field, fall through to regenerate.
+    // personas.json written before the grade field was added will crash PersonaCard (grade.letter).
+    if (cached.length > 0 && cached[0].grade !== undefined) return cached;
+    // else fall through to regenerate with grade
   }
   // Dynamic generation - use ESM dynamic import (no require() in ESM context)
   const { generatePersona, ZERO_GRADE } = await import("./persona");
