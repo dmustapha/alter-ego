@@ -9,6 +9,8 @@ import {
 import { withBackoff } from "./okx-cache";
 import { classifyPatterns } from "./classifier";
 import { generatePersona } from "./persona";
+import { computeBehavioralGrade } from "./grade";
+import { computePnl } from "./pnl";
 import { loadComparison } from "./cache";
 
 // Chain name to OKX numeric chainIndex
@@ -106,6 +108,7 @@ export async function analyzeWallets(
       const primaryChainIndex = CHAIN_INDEX[addr.chains[0]]!;
       const signals = buildWalletSignals(allTxns, allBalances, details, primaryChainIndex, Date.now());
       const trades = deriveTrades(allTxns, addr.address, primaryChainIndex);
+      const pnl = await computePnl(trades, addr.chains[0]);
 
       return {
         address: addr.address,
@@ -118,20 +121,24 @@ export async function analyzeWallets(
         signals,
         approvals: [],
         tokenScans: [],
-        realizedPnl: 0,
-        winRate: 0,
+        realizedPnl: pnl.realizedPnl,
+        winRate: pnl.winRate,
       } satisfies WalletData;
     })
   );
 
   const allPatterns = walletResults.map((w) => classifyPatterns(w));
-  const personas = allPatterns.map((p, i) =>
-    generatePersona(
+  const personas = allPatterns.map((p, i) => {
+    const w = walletResults[i];
+    const grade = computeBehavioralGrade(w.signals);
+    const pnl = { realizedPnl: w.realizedPnl, winRate: w.winRate };
+    return generatePersona(
       p,
-      walletResults[i].chain === "solana" ? "SOLANA SELF" : "ETHEREUM SELF",
-      walletResults[i].realizedPnl
-    )
-  );
+      w.chain === "solana" ? "SOLANA SELF" : "ETHEREUM SELF",
+      grade,
+      pnl
+    );
+  });
 
   let comparison = null;
   try {
