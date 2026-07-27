@@ -129,6 +129,7 @@ export interface Persona {
   kryptonite: string;
   tradingStyle: string;
   emojiSignature: string;
+  /** @deprecated Do not render or feed to text/LLM. 0 here means PnL unavailable. Use realizedPnl (null-safe). */
   pnlTotal: number;          // backward-compat; equals realizedPnl ?? 0
   realizedPnl: number | null;
   winRate: number | null;
