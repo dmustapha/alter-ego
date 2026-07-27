@@ -95,4 +95,6 @@ video/VIDEO-PLAN.md
 video/*.webm
 video/*.mp4
 video/*.png
+video/*.aiff
+video/*.m4a
 video/raw/

@@ -1,36 +1,30 @@
-# Alter Ego Demo Script
+# Alter Ego Demo — Final Voiceover
 
-**Voice:** warm, direct, conversational. Speak like a builder walking a judge through the product. Do not perform a trailer.
+**Voice:** warm, confident, and plainspoken. A builder showing evidence to a judge—not a trailer or a hype reel. Approx. 45 seconds.
 
-## 0:00–0:08 — What is being compared
+## 0:00–0:07 — The input
 
-“Let me show you Alter Ego with two wallets. They can be your own wallets, wallets you are researching, or a group you want to compare.”
+“Alter Ego starts with a cohort you choose: your own wallets, research targets, or unrelated public traders.”
 
-## 0:08–0:24 — Live scan
+## 0:07–0:15 — The live scan
 
-“I load the demo cohort, and the scan starts straight away. As it runs, you can see the transaction and request counters move. That is the wallet history coming back from OnchainOS.”
+“In this run, I chose three active public Solana wallets. The counters are live OnchainOS reads—requests and history arriving as the scan runs.”
 
-## 0:24–0:46 — Evidence-backed profiles
+## 0:15–0:27 — The evidence
 
-“This run finished with two wallets, two chains, and 2,400 transactions. The point is not to throw a personality label at a wallet. Each profile is backed by the behavior underneath it.”
+“Across three thousand transactions, every wallet is active today and clean by this scan’s risk-token check. But every one has a ninety-nine percent top holding.”
 
-“Here, both wallets come out as Allocators. Ethereum holds roughly 2,794 tokens with a 35 percent top position. Solana holds roughly 2,482 with a 30 percent top position. Both are active, diversified, and show no risk-flagged tokens in this scan.”
+## 0:27–0:36 — The useful pattern
 
-## 0:46–1:02 — Product direction
+“That is the useful output: not ‘copy them,’ but a rule to test. Keep the active, clean-token behavior; cap concentration through position limits and diversification.”
 
-“That is the evidence layer. The next layer is the Composite Trading Pattern: combine the signals from any selected wallets, keep the agreements and disagreements visible, then turn them into a trading playbook worth testing.”
+## 0:36–0:45 — Proof and close
 
-## 1:02–1:14 — Agent and payment proof
+“Each profile keeps its evidence attached. And agents can access the same analysis through an x402-gated route, with a real X Layer settlement documented in the project.”
 
-“Agents can request the same analysis through the payment-gated A2MCP endpoint. On X Layer, we completed a real x402 settlement of 0.01 USDT0. The transaction proof is in the project.”
+## Claims deliberately excluded
 
-## 1:14–1:22 — Close
-
-“Alter Ego turns public wallet history into clear, comparable trading evidence. Then it gives you the foundation for a pattern you can actually use.”
-
-## Claims intentionally excluded
-
-- No claim that all wallets belong to the same person.
-- No claim of full history, autonomous execution, predictive alpha, or token-specific advice.
-- No TEE-attestation claim.
-- No cache-backed roast, leaderboard, or simulated payment UI.
+- No claim that the three wallets share an owner, strategy, PnL, or future performance.
+- No claim of full history, autonomous execution, predictive alpha, or token-specific financial advice.
+- No claim that the Composite Trading Pattern is already a backtested execution engine. This demo shows the evidence layer and a testable cohort rule.
+- No TEE-attestation claim, cache-backed roast, leaderboard, or simulated payment UI.

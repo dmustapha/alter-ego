@@ -1,0 +1,24 @@
+1
+00:00:00,000 --> 00:00:07,000
+Alter Ego starts with a cohort you choose:
+your own wallets, research targets, or unrelated public traders.
+
+2
+00:00:07,000 --> 00:00:15,000
+Three active public Solana wallets.
+The counters are live OnchainOS reads.
+
+3
+00:00:15,000 --> 00:00:27,000
+3,000 transactions: active today, clean by this scan’s risk-token check,
+but each wallet has a 99% top holding.
+
+4
+00:00:27,000 --> 00:00:36,000
+The output is a rule to test—not “copy them.”
+Keep clean behavior; cap concentration.
+
+5
+00:00:36,000 --> 00:00:46,000
+Evidence stays attached to each profile.
+x402-gated agent access; real X Layer settlement documented.

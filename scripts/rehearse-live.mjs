@@ -5,7 +5,7 @@ const cohort = [
   "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN (solana)",
   "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o (solana)",
   "2fg5QD1eD7rzNNCsvnhmXFm5hqNgwTTG8p7kQ6f3rx6f (solana)",
-].join("\\n");
+].join("\n");
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
 const page = await context.newPage();
