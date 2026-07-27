@@ -47,6 +47,24 @@ describe("getHistoricalPrices", () => {
     expect(result.get("solana:SOL_LOW:" + lowTs)).toBeNull();
   });
 
+  it("returns all-null map on non-2xx response (e.g. 429)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: async () => { throw new Error("should not decode body"); },
+      })
+    );
+
+    const ts = 1704067200;
+    const result = await getHistoricalPrices([
+      { chain: "ethereum", address: "0xRATE", ts },
+    ]);
+
+    expect(result.get("ethereum:0xRATE:" + ts)).toBeNull();
+  });
+
   it("returns all-null map when fetch rejects", async () => {
     vi.stubGlobal(
       "fetch",
@@ -97,6 +115,69 @@ describe("getHistoricalPrices", () => {
     const val = result.get("ethereum:0xTOK:" + requestTs);
     expect(val).not.toBeNull();
     expect([100.0, 101.0]).toContain(val);
+  });
+
+  it("filter-then-closest: nearer low-confidence entry is gated out; farther high-confidence entry wins", async () => {
+    // ts=1000; nearest entry is at 995 (conf 0.5, gated); farther entry at 1010 (conf 0.95, passes).
+    // Result must be 101 -- proves confidence filter runs BEFORE distance selection.
+    const requestTs = 1000;
+    const mockResponse = {
+      coins: {
+        "ethereum:0xGATE": {
+          decimals: 18,
+          symbol: "GATE",
+          prices: [
+            { timestamp: 995, price: 100.0, confidence: 0.5 },
+            { timestamp: 1010, price: 101.0, confidence: 0.95 },
+          ],
+        },
+      },
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse,
+      })
+    );
+
+    const result = await getHistoricalPrices([
+      { chain: "ethereum", address: "0xGATE", ts: requestTs },
+    ]);
+
+    expect(result.get("ethereum:0xGATE:" + requestTs)).toBe(101.0);
+  });
+
+  it("all-low-confidence: returns null when every entry is below threshold", async () => {
+    // This test MUST fail if the confidence gate is removed.
+    const requestTs = 1000;
+    const mockResponse = {
+      coins: {
+        "ethereum:0xLOW": {
+          decimals: 18,
+          symbol: "LOW",
+          prices: [
+            { timestamp: 1000, price: 99.0, confidence: 0.3 },
+            { timestamp: 1001, price: 98.0, confidence: 0.5 },
+          ],
+        },
+      },
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse,
+      })
+    );
+
+    const result = await getHistoricalPrices([
+      { chain: "ethereum", address: "0xLOW", ts: requestTs },
+    ]);
+
+    expect(result.get("ethereum:0xLOW:" + requestTs)).toBeNull();
   });
 
   it("returns null when no prices array returned for a coin", async () => {

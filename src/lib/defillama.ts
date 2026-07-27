@@ -33,6 +33,11 @@ function makeKey(chain: string, address: string, ts: number): string {
   return `${chain.toLowerCase()}:${address}:${ts}`;
 }
 
+/** Convert a timestamp to seconds; pass through if already in seconds. */
+function toSeconds(ts: number): number {
+  return ts > 1e12 ? Math.round(ts / 1000) : ts;
+}
+
 /**
  * Returns USD prices for the requested (chain, address, ts) tuples.
  *
@@ -56,7 +61,7 @@ export async function getHistoricalPrices(
   const coinsBody: Record<string, number[]> = {};
   for (const r of reqs) {
     const chainKey = `${r.chain.toLowerCase()}:${r.address}`;
-    const tsSec = r.ts > 1e12 ? Math.round(r.ts / 1000) : r.ts;
+    const tsSec = toSeconds(r.ts);
     if (!coinsBody[chainKey]) coinsBody[chainKey] = [];
     coinsBody[chainKey].push(tsSec);
   }
@@ -69,6 +74,7 @@ export async function getHistoricalPrices(
       body: JSON.stringify({ coins: coinsBody }),
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
+    if (!res.ok) return result;
     data = (await res.json()) as BatchHistoricalResponse;
   } catch {
     // Network error, timeout, or JSON parse failure -- degrade to all-null.
@@ -84,22 +90,20 @@ export async function getHistoricalPrices(
       continue; // already null
     }
 
-    const requestedTsSec = r.ts > 1e12 ? Math.round(r.ts / 1000) : r.ts;
+    const requestedTsSec = toSeconds(r.ts);
 
-    // Pick the price entry whose timestamp is closest to the requested ts.
-    let best: PriceEntry | null = null;
-    let bestDiff = Infinity;
-    for (const entry of coin.prices) {
+    // Filter by confidence first, then pick the closest timestamp among passing entries.
+    const passing = coin.prices.filter(e => e.confidence >= CONFIDENCE_THRESHOLD);
+    if (passing.length === 0) continue; // key stays null
+
+    let best = passing[0];
+    let bestDiff = Math.abs(passing[0].timestamp - requestedTsSec);
+    for (const entry of passing.slice(1)) {
       const diff = Math.abs(entry.timestamp - requestedTsSec);
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        best = entry;
-      }
+      if (diff < bestDiff) { bestDiff = diff; best = entry; }
     }
 
-    if (best && best.confidence >= CONFIDENCE_THRESHOLD) {
-      result.set(mapKey, best.price);
-    }
+    result.set(mapKey, best.price);
   }
 
   return result;
