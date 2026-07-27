@@ -1,0 +1,9 @@
+Alter Ego starts with a cohort you choose: your own wallets, research targets, or unrelated public traders.
+
+In this run, I chose three active public Solana wallets. The counters are live OnchainOS reads—requests and history arriving as the scan runs.
+
+Across three thousand transactions, every wallet is active today and clean by this scan’s risk-token check. But every one has a ninety-nine percent top holding.
+
+That is the useful output: not copy them, but a rule to test. Keep the active, clean-token behavior; cap concentration through position limits and diversification.
+
+Each profile keeps its evidence attached. And agents can access the same analysis through an x402-gated route, with a real X Layer settlement documented in the project.
