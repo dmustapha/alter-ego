@@ -12,7 +12,10 @@ import type { AnalyzeResponse } from "@/lib/types";
 type Phase = "landing" | "scanning" | "results" | "battle" | "compare" | "cta" | "error";
 
 const launchDemo = (handle: (a: Array<{ address: string; chains: string[] }>) => void) =>
-  handle([{ address: "0xDemo...", chains: ["ethereum"] }, { address: "SolDemo...", chains: ["solana"] }]);
+  handle([
+    { address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", chains: ["ethereum"] },
+    { address: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM", chains: ["solana"] },
+  ]);
 
 export default function Home() {
   const [phase, setPhase] = useState<Phase>("landing");
@@ -75,7 +78,7 @@ export default function Home() {
             </SlideIn>
             <SlideIn delay={0.4}>
               <p className="text-base text-dim mt-6 leading-relaxed max-w-[620px]">
-                A TEE-ready agent that ingests your complete on-chain history across every wallet and chain. Classifies patterns. Builds a persona. Then your Ethereum self and Solana self face off in a roast battle built on real data. Self-knowledge is the product.
+                A TEE-ready agent that ingests your recent on-chain history (up to 300 transactions per wallet) across every wallet and chain. Classifies patterns. Builds a persona. Then your Ethereum self and Solana self face off in a roast battle built on real data. Self-knowledge is the product.
               </p>
             </SlideIn>
           </div>

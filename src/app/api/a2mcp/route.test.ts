@@ -1,27 +1,49 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock the engine so the analyze path produces a WalletData with non-empty patterns without any
-// network. buildWalletSignals returns signals that trigger classifier patterns (multi-chain +
-// active trader). web3.okx.com is unreachable here, so no real fetch ever runs.
-vi.mock("@/lib/okx-api", () => ({
-  getWalletTxns: vi.fn().mockResolvedValue([]),
-  getWalletBalances: vi.fn().mockResolvedValue([]),
-  getTxDetail: vi.fn().mockResolvedValue({}),
-  buildWalletSignals: vi.fn().mockReturnValue({
-    totalTxns: 200,
-    daysSinceLastTx: 1,
-    activeSpanDays: 100,
-    uniqueTokens: 10,
-    uniqueChains: 3,
-    swapCount: 40,
-    tokensHeld: 12,
-    riskTokenCount: 0,
-    riskTokenPct: 0,
-    topHoldingPct: 20,
-    avgGasGwei: 5,
-    networkMedianGasGwei: 10,
-  }),
-  deriveTrades: vi.fn().mockReturnValue([]),
+// Mock analyzeWallets so the route is testable in isolation without network.
+// The mock produces a non-empty patterns result so conformance assertions hold.
+vi.mock("@/lib/analyze", async (importActual) => {
+  const real = await importActual<typeof import("@/lib/analyze")>();
+  return {
+    ...real,
+    analyzeWallets: vi.fn().mockResolvedValue({
+      wallets: 1,
+      chains: ["ethereum"],
+      totalTxns: 200,
+      patterns: [
+        {
+          walletAddress: "0xabcabc",
+          chain: "ethereum",
+          amplify: [{ tag: "ACTIVE_TRADER", label: "Active Trader", description: "Trades frequently" }],
+          guard: [{ tag: "MULTI_CHAIN", label: "Multi Chain", description: "Uses multiple chains" }],
+        },
+      ],
+      personas: [
+        {
+          walletLabel: "ETHEREUM SELF",
+          archetype: "The Active Trader",
+          catchphrase: "Buy high sell higher",
+          vice: "FOMO",
+          superpower: "Speed",
+          kryptonite: "Volatility",
+          tradingStyle: "aggressive",
+          emojiSignature: "T",
+          pnlTotal: 0,
+          grade: { score: 72, letter: "B", components: {} },
+          realizedPnl: null,
+          winRate: null,
+          amplifyTags: ["ACTIVE_TRADER"],
+          guardTags: ["MULTI_CHAIN"],
+        },
+      ],
+      comparison: null,
+    }),
+  };
+});
+
+vi.mock("@/lib/cache", () => ({
+  loadAllDemoData: vi.fn(),
+  cacheExists: vi.fn().mockReturnValue(false),
 }));
 
 // Mock the official OKX seller SDK (@okxweb3/x402-next withX402): unpaid unless X-PAYMENT
