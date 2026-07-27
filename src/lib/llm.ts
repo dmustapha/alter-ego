@@ -20,7 +20,7 @@ export function llmAvailable(): boolean {
 
 export async function llmChat(
   messages: { role: "system" | "user" | "assistant"; content: string }[],
-  opts?: { json?: boolean; model?: string; timeoutMs?: number }
+  opts?: { json?: boolean; model?: string; timeoutMs?: number; maxTokens?: number }
 ): Promise<string> {
   const key = resolveKey();
   if (!key) throw new Error("LLM not configured");
@@ -34,6 +34,7 @@ export async function llmChat(
     messages,
     temperature: 0.7,
     ...(opts?.json ? { response_format: { type: "json_object" } } : {}),
+    ...(opts?.maxTokens ? { max_tokens: opts.maxTokens } : {}),
   };
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
