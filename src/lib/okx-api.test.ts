@@ -147,3 +147,51 @@ describe("getWalletTxnsPagedWith", () => {
     expect(caller).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("okxPublicCall throttle", () => {
+  it("serialises concurrent callers with at least MIN_INTERVAL_MS between calls", async () => {
+    // Use a tiny interval so the test is fast but still measurable.
+    const INTERVAL = 20;
+    vi.stubEnv("OKX_MIN_INTERVAL_MS", String(INTERVAL));
+
+    // Fresh module instance so _chain and _lastCallAt start clean.
+    vi.resetModules();
+    const { getWalletBalances } = await import("./okx-api");
+
+    const okResponse = {
+      data: [{ tokenAssets: [] }],
+    };
+    const callTimestamps: number[] = [];
+
+    // Mock global fetch to record when each OKX HTTP call actually fires.
+    const fetchMock = vi.fn(async () => {
+      callTimestamps.push(Date.now());
+      return {
+        ok: true,
+        text: async () => JSON.stringify(okResponse),
+      } as unknown as Response;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    // Fire 3 concurrent callers -- they must all resolve but spaced apart.
+    const N = 3;
+    await Promise.all([
+      getWalletBalances("0xaaa", "1"),
+      getWalletBalances("0xbbb", "1"),
+      getWalletBalances("0xccc", "1"),
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(N);
+    expect(callTimestamps).toHaveLength(N);
+
+    // Each consecutive call must be at least INTERVAL ms after the previous one.
+    for (let i = 1; i < callTimestamps.length; i++) {
+      const gap = callTimestamps[i] - callTimestamps[i - 1];
+      expect(gap).toBeGreaterThanOrEqual(INTERVAL - 2); // 2ms tolerance for timer jitter
+    }
+
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  }, 10_000);
+});
