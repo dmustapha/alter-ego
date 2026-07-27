@@ -10,21 +10,22 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://alter-ego-wine-mu.vercel.app"),
   title: "Alter Ego: Every wallet has a story",
-  description: "Multi-chain behavioral fingerprinting agent. TEE-ready architecture. ERC-8004 registered. Built for OKX.AI Genesis.",
+  description: "Read-only multi-wallet behavioral analysis for research cohorts. Built for OKX Build X.",
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
     title: "Alter Ego",
-    description: "Meet your trading personas. Multi-chain behavioral fingerprinting for the OKX Agentic Wallet.",
+    description: "Compare public wallet behavior with attached on-chain evidence.",
     images: ["/og-image.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: "Alter Ego",
-    description: "Meet your trading personas. Multi-chain behavioral fingerprinting.",
+    description: "Compare public wallet behavior with attached on-chain evidence.",
     images: ["/og-image.png"],
   },
 };
