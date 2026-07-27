@@ -5,6 +5,7 @@
 // or the daemon's dispatch). Never throws; always delivers exactly one reply per job.
 
 import { formatPersona } from "./format-persona.mjs";
+import { reasonReply } from "./agent-reason.mjs";
 
 // Analysis source is the UNGATED endpoint (a2mcp is x402-gated). Under DEMO_MODE the
 // server returns the real cached persona regardless of address, so any address yields
@@ -54,7 +55,11 @@ export async function handleTask(task, deps) {
 
   let content;
   if (ok && json) {
-    content = formatPersona(json, address);
+    content = await reasonReply(json, {
+      address,
+      ask: (task && (task.ask || task.text)) || undefined,
+      agentId: (task && task.toAgentId) ? String(task.toAgentId) : undefined,
+    }).catch(() => formatPersona(json, address));
   } else {
     // Graceful degrade: still answer within the timeout window, never silent-drop.
     content = `Alter Ego is temporarily unable to reach its analysis engine for ${

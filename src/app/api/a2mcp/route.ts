@@ -8,6 +8,7 @@ import { classifyInbound, a2aAck } from "@/lib/a2mcp/envelope";
 import { withX402, x402ResourceServer } from "@okxweb3/x402-next";
 import { OKXFacilitatorClient } from "@okxweb3/x402-core";
 import { ExactEvmScheme } from "@okxweb3/x402-evm/exact/server";
+import { reasonReply } from "@/lib/agent-reason";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -50,18 +51,29 @@ function routeConfig() {
 async function serviceHandler(req: NextRequest): Promise<NextResponse> {
   const body = await req.json().catch(() => ({}));
   const inbound = classifyInbound(body);
+  const question = typeof body.question === "string" && body.question ? body.question : undefined;
+
+  // Helper: attach optional per-request reasoning to a result without mutating it.
+  async function withReasoning(result: AnalyzeResponse): Promise<Record<string, unknown>> {
+    const base: Record<string, unknown> = { ...result };
+    if (question) {
+      base.reasoning = await reasonReply(result, { ask: question }).catch(() => undefined);
+    }
+    return base;
+  }
 
   // Demo mode, and any bodyless/unrecognised paid request, serve the pre-cached persona.
   if (process.env.DEMO_MODE === "true" || inbound.kind === "empty") {
     const cached = await loadAllDemoData();
-    return NextResponse.json({
+    const result: AnalyzeResponse = {
       wallets: 3,
       chains: ["ethereum", "solana", "xlayer"],
       totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
       patterns: cached.patterns,
       personas: cached.personas,
       comparison: cached.comparison,
-    } satisfies AnalyzeResponse);
+    };
+    return NextResponse.json(await withReasoning(result));
   }
 
   // Live analyze path.
@@ -69,7 +81,7 @@ async function serviceHandler(req: NextRequest): Promise<NextResponse> {
 
   try {
     const result = await analyzeWallets(addresses);
-    return NextResponse.json(result);
+    return NextResponse.json(await withReasoning(result));
   } catch (e) {
     if (e instanceof ValidationError) {
       return NextResponse.json({ error: e.message }, { status: 400 });
@@ -79,14 +91,15 @@ async function serviceHandler(req: NextRequest): Promise<NextResponse> {
     console.error(`[API] a2mcp serviceHandler live fetch failed:`, msg);
     if (cacheExists()) {
       const cached = await loadAllDemoData();
-      return NextResponse.json({
+      const result: AnalyzeResponse = {
         wallets: 3,
         chains: ["ethereum", "solana", "xlayer"],
         totalTxns: cached.walletA.totalTxns + cached.walletB.totalTxns + cached.walletC.totalTxns,
         patterns: cached.patterns,
         personas: cached.personas,
         comparison: cached.comparison,
-      } satisfies AnalyzeResponse);
+      };
+      return NextResponse.json(await withReasoning(result));
     }
     const message = process.env.NODE_ENV === "production" ? "Internal server error" : msg;
     return NextResponse.json({ error: message }, { status: 500 });
