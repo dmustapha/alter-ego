@@ -218,6 +218,8 @@ Rules:
 - onScreenTag must be one of the pattern tags listed in the FACTS.
 - onScreenData must be copied VERBATIM from the corresponding pattern insight in the FACTS.
 - CRITICAL: reference ONLY numbers and facts present in the FACTS object. Never invent any number, percentage, token count, date, or dollar figure.
+- Each line MUST weave in a specific real figure from FACTS.numbers OR a real pattern tag/insight from FACTS. Generic quips with no grounded detail are not allowed.
+- Be genuinely witty and cutting (roast-battle energy), not bland. Punch at the specific behavior the numbers reveal.
 - No em-dash character. No ellipsis. Keep it punchy.`;
 
 function buildUserPrompt(facts: RoastFacts): string {

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "! grep -rIqE 'OKX_(API|SECRET)|passphrase|[0-9a-f]{32}' public/",
+    "prebuild": "! grep -rIqE 'OKX_(API|SECRET)|passphrase|[0-9a-f]{32}|gsk_[A-Za-z0-9]|sk-[A-Za-z0-9]' public/",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
