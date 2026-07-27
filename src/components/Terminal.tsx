@@ -77,7 +77,7 @@ export function Terminal({ children }: TerminalProps) {
               {[
                 { label: "ERC-8004", color: "#00ffff" },
                 { label: "ASP·LIFESTYLE", color: "#ffff00" },
-                { label: "🔒 TEE", color: "#ff2d95", bg: "rgba(255,45,149,.06)" },
+                { label: "X LAYER", color: "#ff2d95", bg: "rgba(255,45,149,.06)" },
               ].map((b) => (
                 <span
                   key={b.label}
