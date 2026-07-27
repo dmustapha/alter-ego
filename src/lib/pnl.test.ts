@@ -93,32 +93,50 @@ describe("computePnl", () => {
     expect(result.source).toBe("fifo");
   });
 
-  // Test C: a token whose buy price is null is fully excluded from PnL and win/loss counts.
-  it("C: token with null buy price is excluded; only the priced token counts", async () => {
+  // Test C: null-priced BUY makes the exclusion sticky -- a subsequent real-priced BUY of the
+  // same token must NOT push a lot, and the sell must be skipped entirely.
+  //
+  // Shape:
+  //   tokenBad: BUY 50 @ null (ts 900) -> sets tokenExcluded=true
+  //             BUY 50 @ $5  (ts 1100) -> must be skipped because tokenExcluded is sticky
+  //             SELL 50 @ $20 (ts 2000) -> must be skipped
+  //   tokenGood: BUY 100 @ $10, SELL 100 @ $15 -> +500
+  //
+  // Expected realizedPnl = 500 (only tokenGood).
+  //
+  // Why this catches removal of the exclusion: if tokenExcluded were NOT sticky, the second
+  // BUY at $5 would push a lot and the sell would realize (20-5)*50 = 750, making
+  // realizedPnl 1250 and failing the assertion.
+  it("C: sticky null-buy exclusion -- second real BUY does NOT push lot; realizedPnl = 500 (good token only)", async () => {
     const tokenGood = "0xTOKC_G";
     const tokenBad = "0xTOKC_B";
     const chain = "ethereum";
 
-    // Good token: buy $10, sell $20 -> +1000
-    const buyGood = makeTrade({ type: "BUY", token: tokenGood, amount: 100, timestamp: 1000, chain });
-    const sellGood = makeTrade({ type: "SELL", token: tokenGood, amount: 100, timestamp: 2000, chain });
-    // Bad token: buy price null, sell price present -- should be fully excluded
-    const buyBad = makeTrade({ type: "BUY", token: tokenBad, amount: 50, timestamp: 1000, chain });
-    const sellBad = makeTrade({ type: "SELL", token: tokenBad, amount: 50, timestamp: 2000, chain });
+    // tokenBad: null BUY first (marks excluded), then a real BUY (must be suppressed), then SELL
+    const buyBadNull = makeTrade({ type: "BUY",  token: tokenBad, amount: 50,  timestamp: 900,  chain });
+    const buyBadReal = makeTrade({ type: "BUY",  token: tokenBad, amount: 50,  timestamp: 1100, chain });
+    const sellBad    = makeTrade({ type: "SELL", token: tokenBad, amount: 50,  timestamp: 2000, chain });
+
+    // tokenGood: buy $10 sell $15 -> profit (15-10)*100 = 500
+    const buyGood  = makeTrade({ type: "BUY",  token: tokenGood, amount: 100, timestamp: 1000, chain });
+    const sellGood = makeTrade({ type: "SELL", token: tokenGood, amount: 100, timestamp: 1500, chain });
 
     const priceMap = new Map<string, number | null>([
+      [`${chain}:${tokenBad}:900`,   null],  // null buy -- triggers exclusion
+      [`${chain}:${tokenBad}:1100`,  5],     // real buy -- must be ignored (sticky exclusion)
+      [`${chain}:${tokenBad}:2000`,  20],    // sell -- must be skipped
       [`${chain}:${tokenGood}:1000`, 10],
-      [`${chain}:${tokenGood}:2000`, 20],
-      [`${chain}:${tokenBad}:1000`, null],  // unpriceable buy
-      [`${chain}:${tokenBad}:2000`, 30],
+      [`${chain}:${tokenGood}:1500`, 15],
     ]);
     mockGetHistoricalPrices.mockResolvedValueOnce(priceMap);
 
-    const result = await computePnl([buyGood, sellGood, buyBad, sellBad], chain);
+    const result = await computePnl(
+      [buyBadNull, buyBadReal, sellBad, buyGood, sellGood],
+      chain
+    );
 
-    // Only good token counts
-    expect(result.realizedPnl).toBe(1000);
-    // win/loss count = 1 win (good token), bad token excluded
+    // If exclusion were not sticky, tokenBad would yield (20-5)*50 = 750 extra -> 1250 total.
+    expect(result.realizedPnl).toBe(500);
     expect(result.winRate).toBe(100);
     expect(result.source).toBe("fifo");
   });
@@ -148,6 +166,29 @@ describe("computePnl", () => {
 
     expect(result.realizedPnl).toBe(200);
     expect(result.winRate).toBe(100); // only real token's close counted
+    expect(result.source).toBe("fifo");
+  });
+
+  // Test F: breakeven close (buy $10, sell $10) -> realizedPnl 0, winRate null.
+  // Breakeven is excluded from the win/loss denominator entirely.
+  it("F: single breakeven close -> realizedPnl 0, winRate null", async () => {
+    const token = "0xTOKF";
+    const chain = "ethereum";
+
+    const buy  = makeTrade({ type: "BUY",  token, amount: 100, timestamp: 1000, chain });
+    const sell = makeTrade({ type: "SELL", token, amount: 100, timestamp: 2000, chain });
+
+    const priceMap = new Map<string, number | null>([
+      [`${chain}:${token}:1000`, 10],
+      [`${chain}:${token}:2000`, 10],  // same price -> profit = 0 (breakeven)
+    ]);
+    mockGetHistoricalPrices.mockResolvedValueOnce(priceMap);
+
+    const result = await computePnl([buy, sell], chain);
+
+    expect(result.realizedPnl).toBe(0);
+    // wins=0, losses=0 -> totalClosed=0 -> winRate null
+    expect(result.winRate).toBeNull();
     expect(result.source).toBe("fifo");
   });
 
