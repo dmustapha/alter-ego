@@ -76,7 +76,7 @@ export async function analyzeWallets(
 ): Promise<AnalyzeResponse> {
   validateInput(addresses);
 
-  const maxPages = opts?.maxPages ?? 6;
+  const maxPages = opts?.maxPages ?? 2;
 
   const walletResults: WalletData[] = await Promise.all(
     addresses.map(async (addr) => {
@@ -94,8 +94,8 @@ export async function analyzeWallets(
         allBalances.push(...balances);
       }
 
-      // Sample up to 25 txns for detail/gas data
-      const sampleTxns = allTxns.slice(0, 25) as Array<{ txHash?: string; _chainIndex?: string }>;
+      // Sample up to 3 txns for detail/gas data (gas feeds only 2 minor patterns; 3 samples sufficient)
+      const sampleTxns = allTxns.slice(0, 3) as Array<{ txHash?: string; _chainIndex?: string }>;
       const details = await Promise.all(
         sampleTxns
           .filter((tx) => tx.txHash)

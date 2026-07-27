@@ -78,7 +78,7 @@ export default function Home() {
             </SlideIn>
             <SlideIn delay={0.4}>
               <p className="text-base text-dim mt-6 leading-relaxed max-w-[620px]">
-                A TEE-ready agent that ingests your recent on-chain history (up to 300 transactions per wallet) across every wallet and chain. Classifies patterns. Builds a persona. Then your Ethereum self and Solana self face off in a roast battle built on real data. Self-knowledge is the product.
+                A TEE-ready agent that ingests your recent on-chain history (up to 200 transactions per wallet) across every wallet and chain. Classifies patterns. Builds a persona. Then your Ethereum self and Solana self face off in a roast battle built on real data. Self-knowledge is the product.
               </p>
             </SlideIn>
           </div>

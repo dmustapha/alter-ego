@@ -14,6 +14,23 @@ import type { WalletSignals, Trade } from "./types";
 const BASE = "https://web3.okx.com";
 const PROJECT_ID = "4d156bf0c61130f2692d097ecb68dbe4";
 
+// Global throttle: serialise all OKX HTTP calls so they are spaced at least
+// MIN_INTERVAL_MS apart. Parallel callers queue behind the shared chain and
+// each sleeps the remaining gap before its own call starts.
+const MIN_INTERVAL_MS = Number(process.env.OKX_MIN_INTERVAL_MS) || 1100;
+let _chain: Promise<void> = Promise.resolve();
+let _lastCallAt = 0;
+
+function throttledSlot(): Promise<void> {
+  const slot = _chain.then(() => {
+    const gap = MIN_INTERVAL_MS - (Date.now() - _lastCallAt);
+    if (gap > 0) return new Promise<void>((r) => setTimeout(r, gap));
+  });
+  // Each caller appends to the chain so subsequent callers wait for this slot.
+  _chain = slot.then(() => { _lastCallAt = Date.now(); });
+  return _chain;
+}
+
 // Chain index to human-readable name (both directions used by callers)
 const CHAIN_NAME: Record<string, string> = {
   "1": "ethereum",
@@ -40,6 +57,8 @@ function sign(
 }
 
 async function okxPublicCall(method: string, path: string) {
+  await throttledSlot();
+
   const timestamp = new Date().toISOString();
   const signature = sign(timestamp, method, path, "");
 
