@@ -1,4 +1,5 @@
-import type { PatternResult, Pattern, Persona } from "./types";
+import type { PatternResult, Pattern, Persona, BehavioralGrade } from "./types";
+import type { PnlResult } from "./pnl";
 
 const ARCHETYPES: Record<string, { archetype: string; emojiSignature: string }> = {
   "AMP-01": { archetype: "The Nomad", emojiSignature: "🌐🔗⛓️" },
@@ -48,7 +49,14 @@ function getTopPattern(patterns: Pattern[]): Pattern | null {
   })[0];
 }
 
-export function generatePersona(result: PatternResult, label: string, pnlTotal: number): Persona {
+const ZERO_GRADE: BehavioralGrade = { score: 0, letter: "F", components: {} };
+
+export function generatePersona(
+  result: PatternResult,
+  label: string,
+  grade: BehavioralGrade,
+  pnl: Pick<PnlResult, "realizedPnl" | "winRate">
+): Persona {
   const topAmp = getTopPattern(result.amplify);
   const topGrd = getTopPattern(result.guard);
 
@@ -64,11 +72,16 @@ export function generatePersona(result: PatternResult, label: string, pnlTotal: 
     kryptonite: topGrd ? topGrd.tag : "Overconfidence",
     tradingStyle: `${result.amplify.length} strengths, ${result.guard.length} weaknesses`,
     emojiSignature: archetypeInfo.emojiSignature,
-    pnlTotal,
+    pnlTotal: pnl.realizedPnl ?? 0, // @deprecated: 0 means unavailable; use realizedPnl (null-safe) for display or LLM input
+    realizedPnl: pnl.realizedPnl,
+    winRate: pnl.winRate,
+    grade,
     amplifyTags: result.amplify,
     guardTags: result.guard,
   };
 }
+
+export { ZERO_GRADE };
 
 export function generateCompareInsight(userWinRate: number, topWinRate: number): string {
   const gap = topWinRate - userWinRate;

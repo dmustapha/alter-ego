@@ -86,10 +86,8 @@ export interface WalletData {
   chain: string;
   chainId: number;
   totalTxns: number;
-  /** @deprecated Path B: no PnL from live data */
-  realizedPnl: number;
-  /** @deprecated Path B: no PnL from live data */
-  winRate: number;           // 0-100
+  realizedPnl: number | null;
+  winRate: number | null;    // 0-100, null when unavailable
   trades: Trade[];
   approvals: ApprovalEntry[];
   tokenScans: TokenScanResult[];
@@ -116,6 +114,12 @@ export interface PatternResult {
   guard: Pattern[];
 }
 
+export interface BehavioralGrade {
+  score: number;
+  letter: string;
+  components: Record<string, number>;
+}
+
 export interface Persona {
   walletLabel: string;       // "ETHEREUM SELF" | "SOLANA SELF"
   archetype: string;         // "The Professional" | "The Degen"
@@ -125,7 +129,11 @@ export interface Persona {
   kryptonite: string;
   tradingStyle: string;
   emojiSignature: string;
-  pnlTotal: number;
+  /** @deprecated Do not render or feed to text/LLM. 0 here means PnL unavailable. Use realizedPnl (null-safe). */
+  pnlTotal: number;          // backward-compat; equals realizedPnl ?? 0
+  realizedPnl: number | null;
+  winRate: number | null;
+  grade: BehavioralGrade;
   amplifyTags: Pattern[];
   guardTags: Pattern[];
 }

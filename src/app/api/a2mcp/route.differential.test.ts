@@ -35,7 +35,7 @@ vi.mock("@/lib/okx-api", async (importActual) => {
   const real = await importActual<typeof import("@/lib/okx-api")>();
   return {
     ...real,
-    getWalletTxns: vi.fn((_address: string, chain: string) => {
+    getWalletTxnsPaged: vi.fn((_address: string, chain: string) => {
       if (chain === "1") return Promise.resolve(ETH_TXNS);
       if (chain === "196") return Promise.resolve(XLAYER_TXNS);
       return Promise.resolve([]);
@@ -46,6 +46,15 @@ vi.mock("@/lib/okx-api", async (importActual) => {
       return Promise.resolve([]);
     }),
     getTxDetail: vi.fn(() => Promise.resolve(ETH_DETAIL)),
+  };
+});
+
+// withBackoff is a pass-through in tests (no retries needed with mocked network).
+vi.mock("@/lib/okx-cache", async (importActual) => {
+  const real = await importActual<typeof import("@/lib/okx-cache")>();
+  return {
+    ...real,
+    withBackoff: vi.fn(<T>(fn: () => Promise<T>) => fn()),
   };
 });
 

@@ -42,7 +42,7 @@ import {
 } from "../src/lib/okx-api.js";
 
 import { classifyPatterns } from "../src/lib/classifier.js";
-import { generatePersona } from "../src/lib/persona.js";
+import { generatePersona, ZERO_GRADE } from "../src/lib/persona.js";
 import type {
   WalletData,
   PatternResult,
@@ -350,8 +350,9 @@ async function main() {
 
   // Generate personas (ethereum + solana only, matching cache.ts loadPersonas filter)
   console.log("\n[Personas] generating...");
-  const personaA: Persona = generatePersona(patternA, "ETHEREUM SELF", 0);
-  const personaB: Persona = generatePersona(patternB, "SOLANA SELF", 0);
+  const NULL_PNL = { realizedPnl: null as null, winRate: null as null };
+  const personaA: Persona = generatePersona(patternA, "ETHEREUM SELF", ZERO_GRADE, NULL_PNL);
+  const personaB: Persona = generatePersona(patternB, "SOLANA SELF", ZERO_GRADE, NULL_PNL);
   console.log(`  A: ${personaA.archetype} (${personaA.superpower})`);
   console.log(`  B: ${personaB.archetype} (${personaB.superpower})`);
 
