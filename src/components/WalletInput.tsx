@@ -2,13 +2,14 @@
 import { useState } from "react";
 
 interface WalletInputProps {
-  onSubmit: (addresses: Array<{ address: string; chains: string[] }>) => void;
+  onSubmit: (addresses: Array<{ address: string; chains: string[] }>, deep?: boolean) => void;
   isLoading: boolean;
   onDemoLaunch?: () => void;
 }
 
 export function WalletInput({ onSubmit, isLoading, onDemoLaunch }: WalletInputProps) {
   const [addresses, setAddresses] = useState("");
+  const [deep, setDeep] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,7 +34,7 @@ export function WalletInput({ onSubmit, isLoading, onDemoLaunch }: WalletInputPr
 
     if (parsed.length === 0) { setError("Enter at least one wallet address."); return; }
     if (parsed.length > 5) { setError("Maximum 5 wallets for the demo."); return; }
-    onSubmit(parsed);
+    onSubmit(parsed, deep);
   };
 
   return (
@@ -70,6 +71,34 @@ export function WalletInput({ onSubmit, isLoading, onDemoLaunch }: WalletInputPr
           </button>
         )}
       </div>
+
+      {/* DEEP SCAN TOGGLE */}
+      <div className="flex items-center gap-3 select-none group">
+        <button
+          type="button"
+          onClick={() => !isLoading && setDeep((d) => !d)}
+          disabled={isLoading}
+          className={`relative w-9 h-[18px] border transition-colors ${
+            deep ? "border-[#00ffff] bg-[rgba(0,255,255,.12)]" : "border-[rgba(255,45,149,.25)] bg-surface"
+          }`}
+          role="switch"
+          aria-checked={deep}
+          aria-label="Deep scan"
+        >
+          <span
+            className={`absolute top-[2px] w-3 h-3 transition-all ${
+              deep ? "left-[20px] bg-[#00ffff]" : "left-[2px] bg-dim"
+            }`}
+          />
+        </button>
+        <span className="font-mono text-[10px] uppercase tracking-[1px] text-dim group-hover:text-text transition-colors">
+          Deep scan
+          <span className="text-[rgba(255,45,149,.55)] ml-2 normal-case tracking-normal">
+            more history · slower
+          </span>
+        </span>
+      </div>
+
       {error && <p id="wallet-error" role="alert" className="text-accent font-mono text-[11px] mt-2">{error}</p>}
     </form>
   );

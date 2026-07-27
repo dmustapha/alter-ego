@@ -17,18 +17,37 @@ const PROJECT_ID = "4d156bf0c61130f2692d097ecb68dbe4";
 // Global throttle: serialise all OKX HTTP calls so they are spaced at least
 // MIN_INTERVAL_MS apart. Parallel callers queue behind the shared chain and
 // each sleeps the remaining gap before its own call starts.
-const MIN_INTERVAL_MS = Number(process.env.OKX_MIN_INTERVAL_MS) || 1100;
+// Measured: a single key sustains ~2.5-3 RPS before 429 (docs claim 1). 450ms
+// spacing (~2.4 RPS) keeps ~2-3 fetches in flight -- fast, with margin below the
+// 429 threshold. withBackoff() absorbs the occasional rejection.
+const MIN_INTERVAL_MS = Number(process.env.OKX_MIN_INTERVAL_MS) || 450;
 let _chain: Promise<void> = Promise.resolve();
 let _lastCallAt = 0;
 
-function throttledSlot(): Promise<void> {
-  const slot = _chain.then(() => {
-    const gap = MIN_INTERVAL_MS - (Date.now() - _lastCallAt);
-    if (gap > 0) return new Promise<void>((r) => setTimeout(r, gap));
+async function waitForThrottleSlot(): Promise<void> {
+  let gap = MIN_INTERVAL_MS - (Date.now() - _lastCallAt);
+  while (gap > 0) {
+    await new Promise<void>((resolve) => setTimeout(resolve, gap));
+    gap = MIN_INTERVAL_MS - (Date.now() - _lastCallAt);
+  }
+}
+
+function throttledCall<T>(call: () => Promise<T>): Promise<T> {
+  const previous = _chain;
+  let release: () => void;
+  _chain = new Promise<void>((resolve) => { release = resolve; });
+  return previous.then(async () => {
+    await waitForThrottleSlot();
+    _lastCallAt = Date.now();
+    try {
+      const result = call();
+      release!();
+      return await result;
+    } catch (error) {
+      release!();
+      throw error;
+    }
   });
-  // Each caller appends to the chain so subsequent callers wait for this slot.
-  _chain = slot.then(() => { _lastCallAt = Date.now(); });
-  return _chain;
 }
 
 // Chain index to human-readable name (both directions used by callers)
@@ -57,8 +76,6 @@ function sign(
 }
 
 async function okxPublicCall(method: string, path: string) {
-  await throttledSlot();
-
   const timestamp = new Date().toISOString();
   const signature = sign(timestamp, method, path, "");
 
@@ -71,7 +88,7 @@ async function okxPublicCall(method: string, path: string) {
     "Content-Type": "application/json",
   };
 
-  const res = await fetch(`${BASE}${path}`, { method, headers });
+  const res = await throttledCall(() => fetch(`${BASE}${path}`, { method, headers }));
   const text = await res.text();
   if (!res.ok) {
     throw new Error(`OKX ${res.status}: ${text.slice(0, 300)}`);
@@ -88,7 +105,8 @@ export async function getWalletTxnsPagedWith(
   caller: (cursor: string) => Promise<any>,
   address: string,
   chain: string,
-  maxPages = 6
+  maxPages = 6,
+  onPage?: (txnsInPage: number, totalSoFar: number) => void
 ): Promise<unknown[]> {
   const all: unknown[] = [];
   let cursor = "";
@@ -97,6 +115,7 @@ export async function getWalletTxnsPagedWith(
     const d = json?.data?.[0];
     const txns = d?.transactions ?? d?.transactionList ?? [];
     all.push(...txns);
+    onPage?.(txns.length, all.length);
     cursor = d?.cursor ?? "";
     if (!cursor || txns.length === 0) break;
   }
@@ -123,12 +142,13 @@ export async function getWalletTxns(
 export async function getWalletTxnsPaged(
   address: string,
   chain: string,
-  maxPages = 6
+  maxPages = 6,
+  onPage?: (txnsInPage: number, totalSoFar: number) => void
 ): Promise<unknown[]> {
   return getWalletTxnsPagedWith(
     (cursor) => okxPublicCall("GET",
       `/api/v5/dex/post-transaction/transactions-by-address?address=${address}&chains=${chain}&limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`),
-    address, chain, maxPages
+    address, chain, maxPages, onPage
   );
 }
 

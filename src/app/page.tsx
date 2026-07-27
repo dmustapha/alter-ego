@@ -7,11 +7,14 @@ import { PersonaCard } from "@/components/PersonaCard";
 import { RoastBattle } from "@/components/RoastBattle";
 import { CompareCard } from "@/components/CompareCard";
 import { PaymentButton } from "@/components/PaymentButton";
-import type { AnalyzeResponse } from "@/lib/types";
+import { ScanProgress } from "@/components/ScanProgress";
+import type { AnalyzeResponse, AnalyzeProgress } from "@/lib/types";
 
 type Phase = "landing" | "scanning" | "results" | "battle" | "compare" | "cta" | "error";
 
-const launchDemo = (handle: (a: Array<{ address: string; chains: string[] }>) => void) =>
+const launchDemo = (
+  handle: (a: Array<{ address: string; chains: string[] }>, deep?: boolean) => void
+) =>
   handle([
     { address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", chains: ["ethereum"] },
     { address: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM", chains: ["solana"] },
@@ -24,31 +27,78 @@ export default function Home() {
   const [compareData, setCompareData] = useState<import("@/lib/types").CompareResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [addressCount, setAddressCount] = useState(0);
+  const [progress, setProgress] = useState<AnalyzeProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const phaseTimers = useRef<NodeJS.Timeout[]>([]);
   const isAnalyzing = useRef(false);
 
   useEffect(() => { return () => phaseTimers.current.forEach(clearTimeout); }, []);
 
-  const handleAnalyze = async (addresses: Array<{ address: string; chains: string[] }>) => {
+  // Post-analysis presentation reel, scheduled from the moment results land.
+  const startReel = () => {
+    const t1 = setTimeout(() => setPhase("results"), 600);
+    const t2 = setTimeout(() => {
+      fetch("/api/roast").then(r => r.json()).then(d => { if (d.battle) setBattleData(d.battle); setPhase("battle"); }).catch(() => { setError("Roast data unavailable, continuing demo"); setPhase("battle"); });
+    }, 18000);
+    const t3 = setTimeout(() => {
+      fetch("/api/compare").then(r => r.json()).then(d => { if (d.comparison) setCompareData(d.comparison); setPhase("compare"); }).catch(() => { setError("Comparison data unavailable, continuing demo"); setPhase("compare"); });
+    }, 56000);
+    const t4 = setTimeout(() => { setPhase("cta"); isAnalyzing.current = false; }, 74000);
+    phaseTimers.current = [t1, t2, t3, t4];
+  };
+
+  const handleAnalyze = async (addresses: Array<{ address: string; chains: string[] }>, deep = false) => {
     if (isAnalyzing.current) return;
     isAnalyzing.current = true;
     phaseTimers.current.forEach(clearTimeout);
-    setError(null);
+    setError(null); setProgress(null);
     setLoading(true); setAddressCount(addresses.length); setPhase("scanning");
     try {
-      const res = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ addresses }) });
-      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || `Server error (${res.status})`); }
-      const json: AnalyzeResponse = await res.json(); setData(json);
-      const t1 = setTimeout(() => setPhase("results"), 2000);
-      const t2 = setTimeout(() => {
-        fetch("/api/roast").then(r => r.json()).then(d => { if (d.battle) setBattleData(d.battle); setPhase("battle"); }).catch((e) => { setError("Roast data unavailable, continuing demo"); setPhase("battle"); });
-      }, 20000);
-      const t3 = setTimeout(() => {
-        fetch("/api/compare").then(r => r.json()).then(d => { if (d.comparison) setCompareData(d.comparison); setPhase("compare"); }).catch((e) => { setError("Comparison data unavailable, continuing demo"); setPhase("compare"); });
-      }, 58000);
-      const t4 = setTimeout(() => { setPhase("cta"); isAnalyzing.current = false; }, 76000);
-      phaseTimers.current = [t1, t2, t3, t4];
+      const res = await fetch("/api/analyze?stream=1", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
+        body: JSON.stringify({ addresses, deep }),
+      });
+      if (!res.ok || !res.body) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Server error (${res.status})`);
+      }
+
+      // Consume the NDJSON progress stream line-by-line.
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let result: AnalyzeResponse | null = null;
+      let lastProgress: AnalyzeProgress | null = null;
+      let streaming = true;
+      while (streaming) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let nl: number;
+        while ((nl = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (!line) continue;
+          const evt = JSON.parse(line);
+          if (evt.type === "progress") {
+            lastProgress = evt as AnalyzeProgress;
+            setProgress(lastProgress);
+          }
+          else if (evt.type === "done") { result = evt.result as AnalyzeResponse; streaming = false; }
+          else if (evt.type === "error") throw new Error(evt.error);
+        }
+      }
+      if (!result) throw new Error("Analysis ended without a result. Please try again.");
+      setProgress({
+        stage: "done",
+        detail: "Analysis complete",
+        txns: result.totalTxns,
+        calls: lastProgress?.calls ?? 0,
+        pct: 100,
+      });
+      setData(result);
+      startReel();
     } catch (e: any) {
       setError(e?.message || "Failed to analyze wallets. Please try again.");
       setPhase("error");
@@ -78,7 +128,7 @@ export default function Home() {
             </SlideIn>
             <SlideIn delay={0.4}>
               <p className="text-base text-dim mt-6 leading-relaxed max-w-[620px]">
-                A TEE-ready agent that ingests your recent on-chain history (up to 200 transactions per wallet) across every wallet and chain. Classifies patterns. Builds a persona. Then your Ethereum self and Solana self face off in a roast battle built on real data. Self-knowledge is the product.
+                Select wallets from any trader, team, or research cohort. Alter Ego reads their on-chain behavior, classifies evidence-backed patterns, and builds a profile for each wallet. Standard Scan retrieves up to 1,200 transactions per wallet-chain. Deep Scan retrieves up to 3,000, subject to available history.
               </p>
             </SlideIn>
           </div>
@@ -87,7 +137,7 @@ export default function Home() {
            <SlideIn delay={0.6}>
              <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 border border-[rgba(255,45,149,.25)] bg-[rgba(255,45,149,.06)]" style={{ clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)" }}>
                <span className="w-1.5 h-1.5 rounded-full bg-[#ff2d95] animate-pulse" />
-               <span className="font-mono text-[10px] uppercase tracking-[2px] text-accent">Demo Mode: Pre-computed Data</span>
+               <span className="font-mono text-[10px] uppercase tracking-[2px] text-accent">Live analysis · demo wallets available</span>
              </div>
            </SlideIn>
 
@@ -106,12 +156,12 @@ export default function Home() {
             <SlideIn delay={1.2}>
               <div className="space-y-5">
                 <div className="font-mono text-[11px] uppercase tracking-[3px] text-dim pb-3 border-b-2 border-[rgba(255,45,149,.1)]">
-                  ┃ Same Trader · Two Selves
+                  ┃ Compare selected wallets
                 </div>
-                <p className="font-mono text-[10px] uppercase tracking-[1px] text-[rgba(255,45,149,.55)]">Illustrative layout, not live data. Paste a wallet for your real persona.</p>
+                <p className="font-mono text-[10px] uppercase tracking-[1px] text-[rgba(255,45,149,.55)]">Illustrative layout. Run a scan to generate evidence-backed wallet profiles.</p>
                 {[
                   { chain: "Ethereum", name: "📊 The Professional", amps: ["Diamond Hands", "Patient Accumulator"], grds: ["Gas Guzzler"], stats: [{ v: "Patient", l: "Style" }, { v: "Low", l: "Risk Flags" }], leftColor: "#00ffff" },
-                  { chain: "Solana", name: "🔫 The Sniper", amps: ["Meme Sniper"], grds: ["Rug Roulette", "Paper Trader"], stats: [{ v: "Fast", l: "Style" }, { v: "High", l: "Risk Flags" }], leftColor: "#ff2d95" },
+                  { chain: "Solana", name: "⚡ The Operator", amps: ["Fast Execution"], grds: ["Concentration Risk", "High Turnover"], stats: [{ v: "Fast", l: "Style" }, { v: "High", l: "Risk Flags" }], leftColor: "#ff2d95" },
                 ].map((p, i) => (
                   <div
                     key={i}
@@ -145,7 +195,7 @@ export default function Home() {
           {/* STATS BAR */}
           <SlideIn delay={1.6}>
             <div className="grid grid-cols-2 md:grid-cols-4 mb-12" style={{ gap: "1px", background: "linear-gradient(90deg, rgba(255,45,149,.1), rgba(0,255,255,.1))" }}>
-              {[{ n: "3", l: "CHAINS" }, { n: "AMPLIFY", l: "STRENGTHS" }, { n: "GUARD", l: "RISKS" }, { n: "TEE", l: "SIMULATED" }].map(s => (
+              {[{ n: "3", l: "CHAINS" }, { n: "AMPLIFY", l: "STRENGTHS" }, { n: "GUARD", l: "RISKS" }, { n: "LIVE", l: "ONCHAINOS" }].map(s => (
                 <div key={s.l} className="bg-surface py-4 text-center">
                   <div className="font-pixel text-[18px] text-secondary mb-1" style={{ textShadow: "0 0 8px rgba(0,255,255,.3)" }}>{s.n}</div>
                   <div className="font-mono text-[10px] uppercase tracking-[1px] text-dim">{s.l}</div>
@@ -157,17 +207,15 @@ export default function Home() {
           {/* FOOTER */}
           <SlideIn delay={2}>
             <div className="pt-5 border-t-2 border-[rgba(255,45,149,.1)] flex justify-between items-center">
-              <span className="text-sm text-dim">OKX.AI Genesis · Lifestyle Companion + Social Buzz · #OKXAI</span>
-              <span className="font-mono text-[10px] uppercase tracking-[1px] px-4 py-2 border border-[#00ffff] text-secondary bg-[rgba(0,255,255,.03)] flex items-center gap-2">
-                🔒 TEE: Simulated Attestation (Demo)
-              </span>
+              <span className="text-sm text-dim">Built for OKX Build X · Onchain intelligence</span>
+              <span className="font-mono text-[10px] uppercase tracking-[1px] px-4 py-2 border border-[#00ffff] text-secondary bg-[rgba(0,255,255,.03)] flex items-center gap-2">● Live wallet analysis</span>
             </div>
           </SlideIn>
         </>
       )}
 
       {phase === "scanning" && (
-        <SlideIn><TypingText text={`Analyzing ${addressCount} wallet${addressCount !== 1 ? "s" : ""}... Connecting to OnchainOS...`} /></SlideIn>
+        <SlideIn><ScanProgress count={addressCount} progress={progress} /></SlideIn>
       )}
       {phase === "results" && data && (
         <div className="space-y-8">
@@ -175,7 +223,7 @@ export default function Home() {
           <div className="grid grid-cols-2 gap-6">
             {data.personas.map((p, i) => (<SlideIn key={i} delay={i * 0.5}><PersonaCard persona={p} delay={i * 0.3} /></SlideIn>))}
           </div>
-          <SlideIn delay={1.5}><p className="text-center text-dim text-sm">Same person. Two completely different traders.</p></SlideIn>
+          <SlideIn delay={1.5}><p className="text-center text-dim text-sm">Compare any selected wallets. The evidence stays attached to every profile.</p></SlideIn>
           {data.patterns.map((pr, i) => (
             <div key={i} className="space-y-2">
               <SlideIn delay={i * 0.3 + 2}>
