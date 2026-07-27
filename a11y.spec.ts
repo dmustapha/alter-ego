@@ -47,4 +47,14 @@ test.describe("a11y", () => {
     expect(await page.$$eval("button", els =>
       els.filter(e => !e.textContent?.trim() && !e.getAttribute("aria-label")).length)).toBe(0);
   });
+
+  test("deep scan is keyboard operable and landing copy does not overclaim", async ({ page }) => {
+    await page.goto("/");
+    const toggle = page.getByRole("switch", { name: /deep scan/i });
+    await toggle.focus();
+    await page.keyboard.press("Space");
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByText(/full history/i)).toHaveCount(0);
+    await expect(page.getByText(/pre-computed data/i)).toHaveCount(0);
+  });
 });

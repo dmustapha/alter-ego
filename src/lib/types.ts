@@ -170,6 +170,15 @@ export interface AnalyzeRequest {
   }>;
 }
 
+/** Honest, real-time progress emitted by analyzeWallets during a live scan. */
+export interface AnalyzeProgress {
+  stage: string;    // machine key: "fetch" | "balances" | "gas" | "pricing" | "patterns" | "personas" | "done"
+  detail: string;   // human line for the loading screen
+  txns: number;     // transactions retrieved so far
+  calls: number;    // OKX requests completed so far
+  pct: number;      // 0-100, capped at 95 until the final "done"
+}
+
 export interface AnalyzeResponse {
   wallets: number;
   chains: string[];
