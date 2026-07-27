@@ -1,8 +1,30 @@
 import fs from "fs";
 import path from "path";
 import type { CachedDemoData, WalletData, PatternResult, Persona, CompareResult, RoastBattle, LeaderboardEntry } from "./types";
+import { buildRoastFacts, generateRoast } from "./roast";
 
 const CACHE_DIR = path.join(process.cwd(), "src/data/cache");
+
+// In-memory cache for roast battles: keyed by a fingerprint of wallet addresses + signals.
+// Prevents re-billing the LLM for repeated /api/roast GETs within the same process session.
+const roastCache = new Map<string, RoastBattle>();
+
+function roastCacheKey(
+  ethAddress: string,
+  solAddress: string,
+  ethSignals: WalletData["signals"],
+  solSignals: WalletData["signals"],
+): string {
+  const sigFingerprint = [
+    ethSignals.totalTxns,
+    ethSignals.swapCount,
+    ethSignals.uniqueTokens,
+    solSignals.totalTxns,
+    solSignals.swapCount,
+    solSignals.uniqueTokens,
+  ].join(",");
+  return `${ethAddress}:${solAddress}:${sigFingerprint}`;
+}
 
 function loadJson<T>(filename: string): T {
   const filePath = path.join(CACHE_DIR, filename);
@@ -61,19 +83,67 @@ export function loadComparison(): CompareResult {
 }
 
 export async function loadRoastBattle(): Promise<RoastBattle> {
-  // Fallback: generate from roast-lines cache + personas
-  const linesPath = path.join(CACHE_DIR, "roast-lines.json");
-  if (fs.existsSync(linesPath)) {
-    const lines = JSON.parse(fs.readFileSync(linesPath, "utf-8"));
+  try {
+    // Load wallet data for signals (ethereum = walletA, solana = walletB)
+    const walletEth = loadWalletA();
+    const walletSol = loadWalletB();
+
+    // Check in-memory cache before doing any LLM work
+    const cacheKey = roastCacheKey(
+      walletEth.address,
+      walletSol.address,
+      walletEth.signals,
+      walletSol.signals,
+    );
+    const cached = roastCache.get(cacheKey);
+    if (cached) return cached;
+
+    // Load patterns (array: find by chain, fallback by index)
+    const allPatterns = loadPatterns();
+    const patternsEth = allPatterns.find(p => p.chain === "ethereum") ?? allPatterns[0];
+    const patternsSol = allPatterns.find(p => p.chain === "solana") ?? allPatterns[1];
+
+    // Load personas (filtered to non-xlayer: index 0 = ethereum, index 1 = solana)
     const personas = await loadPersonas();
-    return {
-      walletA: personas[0],
-      walletB: personas[1],
-      lines,
-    };
+    const personaEth = personas[0];
+    const personaSol = personas[1];
+
+    // Build grounded facts and generate roast (LLM or deterministic fallback)
+    const facts = buildRoastFacts(
+      personaEth,
+      personaSol,
+      patternsEth,
+      patternsSol,
+      walletEth.signals,
+      walletSol.signals,
+    );
+    const lines = await generateRoast(facts);
+
+    const battle: RoastBattle = { walletA: personaEth, walletB: personaSol, lines };
+
+    // Store in in-memory cache for session reuse
+    roastCache.set(cacheKey, battle);
+    return battle;
+  } catch {
+    // Last-resort fallback: read from roast-lines.json if personas/patterns fail to load
+    const linesPath = path.join(CACHE_DIR, "roast-lines.json");
+    if (fs.existsSync(linesPath)) {
+      const lines = JSON.parse(fs.readFileSync(linesPath, "utf-8"));
+      const personas = await loadPersonas();
+      return {
+        walletA: personas[0],
+        walletB: personas[1],
+        lines,
+      };
+    }
+    // Final fallback: pre-generated roast-battle.json
+    return loadJson<RoastBattle>("roast-battle.json");
   }
-  // Pre-generated fallback (loaded below)
-  return loadJson<RoastBattle>("roast-battle.json");
+}
+
+/** Exported for testing: allows tests to reset the in-memory roast cache. */
+export function clearRoastCache(): void {
+  roastCache.clear();
 }
 
 export function loadLeaderboard(): LeaderboardEntry[] {
