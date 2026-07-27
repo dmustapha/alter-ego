@@ -71,6 +71,7 @@ export async function computePnl(
       if (trade.type === "BUY") {
         if (price === null || price === 0) {
           // Cannot cost-basis this token reliably -- exclude entire token.
+          // Sticky: one unpriceable BUY invalidates all subsequent lots for this token's bucket.
           tokenExcluded = true;
         } else if (!tokenExcluded) {
           lots.push({ qty: trade.amount, price });
@@ -97,9 +98,10 @@ export async function computePnl(
         totalRealized += positionRealized;
         if (positionRealized > 0) {
           wins++;
-        } else {
+        } else if (positionRealized < 0) {
           losses++;
         }
+        // else breakeven: not counted as win or loss
       }
     }
   }
