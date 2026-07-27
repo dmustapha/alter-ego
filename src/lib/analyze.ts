@@ -21,6 +21,11 @@ const CHAIN_INDEX: Record<string, string> = {
 };
 
 const MAX_CHAINS = 5;
+
+function walletLabel(chain: string, address: string): string {
+  const shortAddress = `${address.slice(0, 6)}…${address.slice(-4)}`;
+  return `${chain.toUpperCase()} · ${shortAddress}`;
+}
 const BAD_CHARS = /[<>"'&`\\]/;
 
 export class ValidationError extends Error {}
@@ -186,7 +191,7 @@ export async function analyzeWallets(
     const pnl = { realizedPnl: w.realizedPnl, winRate: w.winRate };
     return generatePersona(
       p,
-      w.chain === "solana" ? "SOLANA SELF" : "ETHEREUM SELF",
+      walletLabel(w.chain, w.address),
       grade,
       pnl
     );
