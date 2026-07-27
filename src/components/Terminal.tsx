@@ -127,24 +127,30 @@ interface TerminalProps {
 
 export function TypingText({ text, delay = 30 }: { text: string; delay?: number }) {
   const reduce = useReducedMotion();
-  const [displayed, setDisplayed] = useState(reduce ? text : "");
-  const [done, setDone] = useState(!!reduce);
+  const [mounted, setMounted] = useState(false);
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+  useEffect(() => setMounted(true), []);
   useEffect(() => {
+    if (!mounted) return;
     if (reduce) { setDisplayed(text); setDone(true); return; }
     let i = 0; setDisplayed(""); setDone(false);
     const interval = setInterval(() => { setDisplayed(text.slice(0, i + 1)); i++; if (i >= text.length) { clearInterval(interval); setDone(true); } }, delay);
     return () => clearInterval(interval);
-  }, [text, delay, reduce]);
+  }, [text, delay, mounted, reduce]);
   return (<span>{displayed}{!done && <span className="animate-pulse">▌</span>}</span>);
 }
 
 export function SlideIn({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
   const reduce = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const shouldReduce = mounted && reduce;
   return (
     <motion.div
-      initial={reduce ? false : { opacity: 0, y: 20 }}
+      initial={shouldReduce ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={reduce ? { duration: 0 } : { delay, duration: 0.5 }}
+      transition={shouldReduce ? { duration: 0 } : { delay, duration: 0.5 }}
     >
       {children}
     </motion.div>
