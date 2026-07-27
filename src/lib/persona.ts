@@ -72,7 +72,7 @@ export function generatePersona(
     kryptonite: topGrd ? topGrd.tag : "Overconfidence",
     tradingStyle: `${result.amplify.length} strengths, ${result.guard.length} weaknesses`,
     emojiSignature: archetypeInfo.emojiSignature,
-    pnlTotal: pnl.realizedPnl ?? 0,
+    pnlTotal: pnl.realizedPnl ?? 0, // @deprecated: 0 means unavailable; use realizedPnl (null-safe) for display or LLM input
     realizedPnl: pnl.realizedPnl,
     winRate: pnl.winRate,
     grade,
