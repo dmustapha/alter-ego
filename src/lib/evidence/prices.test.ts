@@ -153,4 +153,25 @@ describe("collectPriceObservations", () => {
     expect(observations[0].priceUsd).toEqual({ status: "unknown", reason: "unavailable" });
     expect(observations[0].confidence).toEqual({ status: "unknown", reason: "unavailable" });
   });
+
+  it("emits unknown observations for malformed runtime requests or lookup results instead of throwing", async () => {
+    const observations = await collectPriceObservations([
+      {
+        walletAddress: "wallet",
+        chain: { id: "1", name: "ethereum" },
+        asset: { address: "0xasset", symbol: "ASSET" },
+        requestedAt: 1_700_000_000_000,
+        evidenceIds: [],
+      },
+      { walletAddress: 42 },
+    ] as unknown as readonly Parameters<typeof collectPriceObservations>[0][number][], async () => ({}) as never);
+
+    expect(observations).toHaveLength(2);
+    expect(observations[0].priceUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(observations[1]).toMatchObject({
+      walletAddress: "unknown",
+      chain: { id: "unknown", name: "unknown" },
+      priceUsd: { status: "unknown", reason: "unavailable" },
+    });
+  });
 });

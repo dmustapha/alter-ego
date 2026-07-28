@@ -43,6 +43,7 @@ function nativePrice(overrides: Partial<PriceObservation> = {}): PriceObservatio
       endpoint: "historical-prices",
       retrievedAt: 1_700_000_000_100,
       requestedAt: 1_700_000_000_000,
+      sourceAssetId: "coingecko:ethereum",
     },
     ...overrides,
   };
@@ -140,5 +141,27 @@ describe("collectExecutionCosts", () => {
 
     expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
     expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
+  it.each<readonly [string, Partial<PriceObservation["provenance"]>]>([
+    ["wrong provider", { provider: "derived" }],
+    ["wrong endpoint", { endpoint: "transaction-detail" }],
+    ["missing source asset", { sourceAssetId: undefined }],
+    ["wrong source asset", { sourceAssetId: "coingecko:solana" }],
+    ["mismatched provenance timestamp", { requestedAt: 1_700_000_000_001 }],
+  ])("fails closed for a %s price provenance", (_label, provenance) => {
+    const [cost] = collectExecutionCosts([event()], [nativePrice({
+      provenance: { ...nativePrice().provenance, ...provenance },
+    })]);
+
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
+  it("fails closed when an event chain id and name are not a canonical pair", () => {
+    const [cost] = collectExecutionCosts([event({ chain: { id: "1", name: "solana" } })], [nativePrice()]);
+
+    expect(cost.nativeAsset).toEqual({ address: null, symbol: null });
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
   });
 });
