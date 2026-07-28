@@ -111,6 +111,7 @@ describe("collector evidence contracts", () => {
       id: "cost:1:0xevent",
       walletAddress: "0xwallet",
       chain: { id: "1", name: "ethereum" },
+      nativeAsset: { address: null, symbol: "ETH" },
       eventId: "event:0xevent",
       observedAt: { status: "known", value: 1700000000000 },
       gasFeeNative: { status: "unknown", reason: "missing" },
