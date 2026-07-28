@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { collectExecutionCosts } from "./costs";
+import { collectPriceObservations } from "./prices";
 import type { NormalizedTransactionEvent, PriceObservation } from "./types";
 
 function event(overrides: Partial<NormalizedTransactionEvent> = {}): NormalizedTransactionEvent {
@@ -105,6 +106,37 @@ describe("collectExecutionCosts", () => {
       requestedAt: 1_700_000_000_001,
     });
     const [cost] = collectExecutionCosts([event()], [mismatched]);
+
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
+  it("converts a fee using a matching native price emitted by the price collector", async () => {
+    const prices = await collectPriceObservations([
+      {
+        walletAddress: "0xwallet",
+        chain: { id: "1", name: "ethereum" },
+        asset: { address: null, symbol: "ETH" },
+        requestedAt: 1_700_000_000_000,
+        evidenceIds: ["event:eth:1"],
+      },
+    ], async () => new Map([["coingecko:ethereum:1700000000000", {
+      requestedAt: 1_700_000_000_000,
+      returnedAt: 1_700_000_000,
+      priceUsd: 2_000,
+      confidence: 0.99,
+    }]]));
+
+    const [cost] = collectExecutionCosts([event()], prices);
+
+    expect(cost.gasFeeUsd).toEqual({ status: "known", value: 20 });
+    expect(cost.priceEvidenceIds).toEqual([prices[0].id]);
+  });
+
+  it("keeps an overflowing fee conversion explicitly unknown", () => {
+    const [cost] = collectExecutionCosts([
+      event({ gasFeeNative: { status: "known", value: Number.MAX_VALUE } }),
+    ], [nativePrice({ priceUsd: { status: "known", value: Number.MAX_VALUE } })]);
 
     expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
     expect(cost.priceEvidenceIds).toEqual([]);

@@ -94,10 +94,10 @@ function conversion(
   if (!price || price.priceUsd.status !== "known") {
     return Object.freeze({ usd: unknown<number>("unavailable"), ids: Object.freeze<string[]>([]) });
   }
-  return Object.freeze({
-    usd: known(gasFeeNative.value * price.priceUsd.value),
-    ids: Object.freeze([price.id]),
-  });
+  const converted = gasFeeNative.value * price.priceUsd.value;
+  return Number.isFinite(converted)
+    ? Object.freeze({ usd: known(converted), ids: Object.freeze([price.id]) })
+    : Object.freeze({ usd: unknown<number>("unavailable"), ids: Object.freeze<string[]>([]) });
 }
 
 function freezeCost(cost: ExecutionCostRecord): ExecutionCostRecord {
