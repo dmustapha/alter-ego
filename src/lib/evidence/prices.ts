@@ -11,6 +11,7 @@ import type {
   PriceObservation,
   UnknownReason,
 } from "./types";
+import { canonicalNativeAsset } from "./native-assets";
 
 export interface PriceObservationRequest {
   readonly walletAddress: string;
@@ -23,12 +24,6 @@ export interface PriceObservationRequest {
 export type HistoricalPriceLookup = (
   requests: PriceRequest[],
 ) => Promise<Map<string, HistoricalPriceDetail | null>>;
-
-const NATIVE_PRICE_SOURCES: Readonly<Record<string, { readonly symbol: string; readonly sourceAssetId: string }>> = Object.freeze({
-  "1": { symbol: "ETH", sourceAssetId: "coingecko:ethereum" },
-  "196": { symbol: "OKB", sourceAssetId: "coingecko:okb" },
-  "501": { symbol: "SOL", sourceAssetId: "coingecko:solana" },
-});
 
 function key(chain: string, address: string, timestamp: number): string {
   return `${chain.toLowerCase()}:${address}:${timestamp}`;
@@ -68,13 +63,31 @@ function freezeObservation(observation: PriceObservation): PriceObservation {
   return Object.freeze(observation);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function validRequest(value: unknown): value is PriceObservationRequest {
+  return isRecord(value) && typeof value.walletAddress === "string" && value.walletAddress !== ""
+    && isRecord(value.chain) && typeof value.chain.id === "string" && value.chain.id !== ""
+    && typeof value.chain.name === "string" && value.chain.name !== ""
+    && isRecord(value.asset) && (value.asset.address === null || (typeof value.asset.address === "string" && value.asset.address !== ""))
+    && (value.asset.symbol === null || (typeof value.asset.symbol === "string" && value.asset.symbol !== ""))
+    && typeof value.requestedAt === "number" && Number.isFinite(value.requestedAt) && value.requestedAt >= 0
+    && Array.isArray(value.evidenceIds) && value.evidenceIds.every((id) => typeof id === "string" && id !== "");
+}
+
+function fallbackRequest(): PriceObservationRequest {
+  return { walletAddress: "unknown", chain: { id: "unknown", name: "unknown" }, asset: { address: null, symbol: null }, requestedAt: 0, evidenceIds: [] };
+}
+
 function priceRequest(request: PriceObservationRequest): PriceRequest | null {
   if (request.asset.address !== null) {
     return { chain: request.chain.name, address: request.asset.address, ts: request.requestedAt };
   }
-  const native = NATIVE_PRICE_SOURCES[request.chain.id];
-  if (!native || native.symbol !== request.asset.symbol) return null;
-  const [chain, address] = native.sourceAssetId.split(":");
+  const native = canonicalNativeAsset(request.chain);
+  if (!native || native.asset.symbol !== request.asset.symbol) return null;
+  const [chain, address] = native.sourceAssetId.split(":") as [string, string];
   return { chain, address, ts: request.requestedAt };
 }
 
@@ -109,17 +122,24 @@ function fromDetail(
 }
 
 export async function collectPriceObservations(
-  requests: readonly PriceObservationRequest[],
+  requests: readonly PriceObservationRequest[] | readonly unknown[],
   lookup: HistoricalPriceLookup = getHistoricalPriceDetails,
   retrievedAt = Date.now(),
 ): Promise<readonly PriceObservation[]> {
-  const lookupRequests = requests.flatMap((request) => {
+  const validRequests = requests.map((request) => validRequest(request) ? request : fallbackRequest());
+  const lookupRequests = validRequests.flatMap((request) => {
     const lookupRequest = priceRequest(request);
     return lookupRequest ? [lookupRequest] : [];
   });
-  const details = await lookup(lookupRequests);
+  let details: Map<string, HistoricalPriceDetail | null> = new Map();
+  try {
+    const result: unknown = await lookup(lookupRequests);
+    if (result instanceof Map) details = result as Map<string, HistoricalPriceDetail | null>;
+  } catch {
+    // External lookup failures become explicit unavailable observations below.
+  }
 
-  return Object.freeze(requests.map((request, index) => {
+  return Object.freeze(validRequests.map((request, index) => {
     const source = priceRequest(request);
     const detail = source === null ? null : details.get(key(source.chain, source.address, source.ts));
     return fromDetail(request, detail, retrievedAt, index, source);
