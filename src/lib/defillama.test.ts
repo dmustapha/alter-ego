@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { getHistoricalPrices } from "./defillama";
+import { getHistoricalPriceDetails, getHistoricalPrices } from "./defillama";
 
 // DefiLlama batchHistorical response shape:
 // { coins: { "chain:address": { decimals, symbol, prices: [{ timestamp, price, confidence }] } } }
@@ -9,6 +9,70 @@ afterEach(() => {
 });
 
 describe("getHistoricalPrices", () => {
+  it("retains returned timestamp and confidence in detailed results", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ coins: { "ethereum:0xDETAIL": { prices: [
+        { timestamp: 999, price: 100, confidence: 0.3 },
+        { timestamp: 1010, price: 101, confidence: 0.95 },
+      ] } } }),
+    }));
+
+    const result = await getHistoricalPriceDetails([{ chain: "ethereum", address: "0xDETAIL", ts: 1000 }]);
+
+    expect(result.get("ethereum:0xDETAIL:1000")).toEqual({
+      requestedAt: 1000,
+      returnedAt: 999,
+      priceUsd: 100,
+      confidence: 0.3,
+    });
+  });
+
+  it("ignores malformed detailed entries before choosing a returned price", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ coins: { "ethereum:0xSAFE": { prices: [
+        null,
+        "not-an-entry",
+        { timestamp: Number.NaN, price: 99, confidence: 0.99 },
+        { timestamp: 1000, price: Number.POSITIVE_INFINITY, confidence: 0.99 },
+        { timestamp: 1000, price: 100, confidence: Number.NaN },
+        { timestamp: 1001, price: 101, confidence: 0.95 },
+      ] } } }),
+    }));
+
+    const result = await getHistoricalPriceDetails([{ chain: "ethereum", address: "0xSAFE", ts: 1000 }]);
+
+    expect(result.get("ethereum:0xSAFE:1000")).toEqual({
+      requestedAt: 1000,
+      returnedAt: 1001,
+      priceUsd: 101,
+      confidence: 0.95,
+    });
+  });
+
+  it("rejects out-of-domain source values while preserving valid zero values", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ coins: { "ethereum:0xBOUNDARY": { prices: [
+        { timestamp: 1000, price: 100, confidence: 1.01 },
+        { timestamp: 1000, price: 100, confidence: -0.01 },
+        { timestamp: 1000, price: -1, confidence: 0.99 },
+        { timestamp: -1, price: 100, confidence: 0.99 },
+        { timestamp: 0, price: 0, confidence: 0 },
+      ] } } }),
+    }));
+
+    const result = await getHistoricalPriceDetails([{ chain: "ethereum", address: "0xBOUNDARY", ts: 1000 }]);
+
+    expect(result.get("ethereum:0xBOUNDARY:1000")).toEqual({
+      requestedAt: 1000,
+      returnedAt: 0,
+      priceUsd: 0,
+      confidence: 0,
+    });
+  });
+
   it("returns price for high-confidence coin and null for low-confidence coin", async () => {
     const highTs = 1704067200; // unix seconds
     const lowTs = 1704153600;
