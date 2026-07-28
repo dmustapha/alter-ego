@@ -95,6 +95,7 @@ export interface CollectorProvenance {
   readonly chainIndex?: string;
   readonly sourceIndex?: number;
   readonly requestedAt?: number;
+  readonly sourceAssetId?: string;
 }
 
 export interface BalanceSnapshot {

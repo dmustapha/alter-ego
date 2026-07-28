@@ -24,6 +24,12 @@ export type HistoricalPriceLookup = (
   requests: PriceRequest[],
 ) => Promise<Map<string, HistoricalPriceDetail | null>>;
 
+const NATIVE_PRICE_SOURCES: Readonly<Record<string, { readonly symbol: string; readonly sourceAssetId: string }>> = Object.freeze({
+  "1": { symbol: "ETH", sourceAssetId: "coingecko:ethereum" },
+  "196": { symbol: "OKB", sourceAssetId: "coingecko:okb" },
+  "501": { symbol: "SOL", sourceAssetId: "coingecko:solana" },
+});
+
 function key(chain: string, address: string, timestamp: number): string {
   return `${chain.toLowerCase()}:${address}:${timestamp}`;
 }
@@ -62,11 +68,22 @@ function freezeObservation(observation: PriceObservation): PriceObservation {
   return Object.freeze(observation);
 }
 
+function priceRequest(request: PriceObservationRequest): PriceRequest | null {
+  if (request.asset.address !== null) {
+    return { chain: request.chain.name, address: request.asset.address, ts: request.requestedAt };
+  }
+  const native = NATIVE_PRICE_SOURCES[request.chain.id];
+  if (!native || native.symbol !== request.asset.symbol) return null;
+  const [chain, address] = native.sourceAssetId.split(":");
+  return { chain, address, ts: request.requestedAt };
+}
+
 function fromDetail(
   request: PriceObservationRequest,
   detail: HistoricalPriceDetail | null | undefined,
   retrievedAt: number,
   index: number,
+  source: PriceRequest | null,
 ): PriceObservation {
   const validDetail = isValidDetail(detail) ? detail : null;
   const unavailable = !validDetail || validDetail.confidence < PRICE_CONFIDENCE_THRESHOLD;
@@ -86,6 +103,7 @@ function fromDetail(
       endpoint: "historical-prices",
       retrievedAt,
       requestedAt: request.requestedAt,
+      ...(source ? { sourceAssetId: `${source.chain}:${source.address}` } : {}),
     },
   });
 }
@@ -95,16 +113,15 @@ export async function collectPriceObservations(
   lookup: HistoricalPriceLookup = getHistoricalPriceDetails,
   retrievedAt = Date.now(),
 ): Promise<readonly PriceObservation[]> {
-  const lookupRequests = requests.flatMap((request) => request.asset.address === null
-    ? []
-    : [{ chain: request.chain.name, address: request.asset.address, ts: request.requestedAt }]);
+  const lookupRequests = requests.flatMap((request) => {
+    const lookupRequest = priceRequest(request);
+    return lookupRequest ? [lookupRequest] : [];
+  });
   const details = await lookup(lookupRequests);
 
   return Object.freeze(requests.map((request, index) => {
-    const address = request.asset.address;
-    const detail = address === null
-      ? null
-      : details.get(key(request.chain.name, address, request.requestedAt));
-    return fromDetail(request, detail, retrievedAt, index);
+    const source = priceRequest(request);
+    const detail = source === null ? null : details.get(key(source.chain, source.address, source.ts));
+    return fromDetail(request, detail, retrievedAt, index, source);
   }));
 }

@@ -59,6 +59,35 @@ describe("collectPriceObservations", () => {
     expect(observations[0].confidence).toEqual({ status: "unknown", reason: "unavailable" });
   });
 
+  it("looks up canonical native assets while preserving the native evidence asset and source identifier", async () => {
+    let requested = [] as Parameters<HistoricalPriceLookup>[0];
+    const [observation] = await collectPriceObservations([
+      {
+        walletAddress: "wallet",
+        chain: { id: "1", name: "ethereum" },
+        asset: { address: null, symbol: "ETH" },
+        requestedAt: 1_700_000_000_000,
+        evidenceIds: ["event:eth:1"],
+      },
+    ], async (requests) => {
+      requested = requests;
+      return new Map([["coingecko:ethereum:1700000000000", {
+        requestedAt: 1_700_000_000_000,
+        returnedAt: 1_700_000_000,
+        priceUsd: 2_000,
+        confidence: 0.99,
+      }]]);
+    }, 1_700_000_000_100);
+
+    expect(requested).toEqual([{ chain: "coingecko", address: "ethereum", ts: 1_700_000_000_000 }]);
+    expect(observation).toMatchObject({
+      chain: { id: "1", name: "ethereum" },
+      asset: { address: null, symbol: "ETH" },
+      priceUsd: { status: "known", value: 2_000 },
+      provenance: { sourceAssetId: "coingecko:ethereum" },
+    });
+  });
+
   it("keeps low-confidence returned prices explicitly unknown while retaining source confidence", async () => {
     const observations = await collectPriceObservations([
       {
