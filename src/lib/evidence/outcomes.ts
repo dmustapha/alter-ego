@@ -4,6 +4,7 @@ import type {
   EvidenceChain,
   EvidenceValue,
   OutcomeInsufficiency,
+  PriceObservation,
   PositionLot,
   RealizedOutcome,
   RealizedOutcomeBuild,
@@ -11,6 +12,9 @@ import type {
   TradeLeg,
   UnknownReason,
 } from "./types";
+import { MAX_SOURCE_PRICE_DELTA_MS } from "./types";
+import { canonicalNativeAsset } from "./native-assets";
+import { PRICE_CONFIDENCE_THRESHOLD } from "../defillama";
 
 interface OpenLot {
   readonly trade: ClassifiedTrade;
@@ -95,9 +99,13 @@ function isClassifiedTrade(value: unknown): value is ClassifiedTrade {
 }
 
 function assetKey(walletAddress: string, chain: EvidenceChain, asset: EvidenceAsset): string | null {
-  return typeof asset.address !== "string" || asset.address.trim() === ""
-    ? null
-    : `${walletAddress}:${chain.id}:${asset.address}`;
+  if (typeof asset.address === "string" && asset.address.trim() !== "") {
+    return `${walletAddress}:${chain.id}:${asset.address}`;
+  }
+  const native = asset.address === null ? canonicalNativeAsset(chain) : null;
+  return native && native.asset.symbol === asset.symbol
+    ? `${walletAddress}:${chain.id}:${native.sourceAssetId}`
+    : null;
 }
 
 function priceEvidenceIds(leg: TradeLeg): readonly string[] {
@@ -135,6 +143,63 @@ function insufficiency(
 
 function timestamp(trade: ClassifiedTrade): number | null {
   return trade.timestampMs.status === "known" ? trade.timestampMs.value : null;
+}
+
+function isMatchingAsset(trade: ClassifiedTrade, leg: TradeLeg, price: Record<string, unknown>): boolean {
+  const asset = price.asset as Record<string, unknown>;
+  const provenance = price.provenance as Record<string, unknown>;
+  if (asset.address !== leg.asset.address || asset.symbol !== leg.asset.symbol) return false;
+  if (leg.asset.address !== null) return leg.asset.address.trim() !== "";
+  const native = canonicalNativeAsset(trade.chain);
+  return native !== null
+    && native.asset.address === leg.asset.address
+    && native.asset.symbol === leg.asset.symbol
+    && provenance.sourceAssetId === native.sourceAssetId;
+}
+
+function isResolvedPrice(
+  trade: ClassifiedTrade,
+  leg: TradeLeg,
+  price: unknown,
+  retrievedAt: number,
+): price is PriceObservation {
+  if (!isRecord(price) || !isRecord(price.chain) || !isRecord(price.asset) || !isRecord(price.provenance)) return false;
+  const eventTime = timestamp(trade);
+  const expectedSource = leg.asset.address === null
+    ? canonicalNativeAsset(trade.chain)?.sourceAssetId
+    : `${trade.chain.name}:${leg.asset.address}`;
+  return eventTime !== null
+    && typeof price.id === "string" && leg.priceEvidenceIds.includes(price.id)
+    && isNonEmptyIds(price.evidenceIds) && price.evidenceIds.some((id) => trade.evidenceIds.includes(id))
+    && price.walletAddress === trade.walletAddress
+    && price.chain.id === trade.chain.id && price.chain.name === trade.chain.name
+    && isMatchingAsset(trade, leg, price)
+    && price.requestedAt === eventTime
+    && isKnownNonnegative(price.returnedAt)
+    && Math.abs(price.returnedAt.value - eventTime) <= MAX_SOURCE_PRICE_DELTA_MS
+    && price.returnedAt.value <= retrievedAt
+    && isKnownNonnegative(price.priceUsd) && leg.priceUsd.status === "known" && price.priceUsd.value === leg.priceUsd.value
+    && isKnownNonnegative(price.confidence) && price.confidence.value <= 1 && price.confidence.value >= PRICE_CONFIDENCE_THRESHOLD
+    && price.provenance.provider === "defillama"
+    && price.provenance.endpoint === "historical-prices"
+    && price.provenance.requestedAt === eventTime
+    && typeof price.provenance.retrievedAt === "number" && Number.isFinite(price.provenance.retrievedAt)
+    && price.provenance.retrievedAt >= 0 && price.provenance.retrievedAt <= retrievedAt
+    && price.provenance.sourceAssetId === expectedSource;
+}
+
+function hasResolvedPrice(
+  trade: ClassifiedTrade,
+  leg: TradeLeg,
+  prices: readonly unknown[],
+  retrievedAt: number,
+): boolean {
+  return leg.priceUsd.status !== "known" || (leg.priceEvidenceIds.length > 0
+    && leg.priceEvidenceIds.every((id) => prices.some((price) => isResolvedPrice(trade, leg, price, retrievedAt) && price.id === id)));
+}
+
+function unpricedLeg(leg: TradeLeg): TradeLeg {
+  return Object.freeze({ ...leg, priceUsd: unknown<number>("unavailable"), priceEvidenceIds: Object.freeze([]) });
 }
 
 function createLot(openLot: OpenLot, quantity: number, retrievedAt: number): PositionLot {
@@ -202,6 +267,7 @@ function createOutcome(
 
 export function buildRealizedOutcomes(
   input: readonly TradeClassification[] | readonly unknown[],
+  prices: readonly PriceObservation[] | readonly unknown[] = [],
   retrievedAt = Date.now(),
 ): RealizedOutcomeBuild {
   const lots = new Map<string, OpenLot[]>();
@@ -263,40 +329,42 @@ export function buildRealizedOutcomes(
         excludedEvents.push(...trade.evidenceIds);
         continue;
       }
+      const resolved = hasResolvedPrice(trade, leg, prices, retrievedAt);
       if (leg.direction === "acquired") {
         const queue = lots.get(key) ?? [];
-        const unprovenPrice = leg.priceUsd.status === "known" && leg.priceEvidenceIds.length === 0;
+        const unprovenPrice = leg.priceUsd.status === "known" && !resolved;
         if (unprovenPrice) {
           insufficient.push(insufficiency(`insufficient:${trade.id}:open-price`, "unavailable", [trade.id], [], trade.evidenceIds, trade, leg.asset));
           excludedEvents.push(...trade.evidenceIds);
         }
         const storedLeg = unprovenPrice
-          ? Object.freeze({ ...leg, priceUsd: unknown<number>("unavailable"), priceEvidenceIds: Object.freeze([]) })
+          ? unpricedLeg(leg)
           : leg;
         queue.push({ trade, leg: storedLeg, openedAt: trade.timestampMs, quantity: leg.quantity.value });
         lots.set(key, queue);
         continue;
       }
+      const closeLeg = leg.priceUsd.status === "known" && !resolved ? unpricedLeg(leg) : leg;
       let remaining = leg.quantity.value;
       const queue = lots.get(key) ?? [];
       while (remaining > 0 && queue.length > 0) {
         const opening = queue[0];
         const matched = Math.min(remaining, opening.quantity);
-        if (opening.leg.priceUsd.status === "known" && leg.priceUsd.status === "known"
-          && opening.leg.priceEvidenceIds.length > 0 && leg.priceEvidenceIds.length > 0) {
-          outcomes.push(createOutcome(opening, trade, leg, matched, retrievedAt));
+        if (opening.leg.priceUsd.status === "known" && closeLeg.priceUsd.status === "known"
+          && opening.leg.priceEvidenceIds.length > 0 && closeLeg.priceEvidenceIds.length > 0) {
+          outcomes.push(createOutcome(opening, trade, closeLeg, matched, retrievedAt));
         } else {
-          const priceReason = opening.leg.priceEvidenceIds.length === 0 || leg.priceEvidenceIds.length === 0
+          const priceReason = opening.leg.priceEvidenceIds.length === 0 || closeLeg.priceEvidenceIds.length === 0
             ? "unavailable"
-            : valueReason(opening.leg.priceUsd.status === "unknown" ? opening.leg.priceUsd : leg.priceUsd);
+            : valueReason(opening.leg.priceUsd.status === "unknown" ? opening.leg.priceUsd : closeLeg.priceUsd);
           insufficient.push(insufficiency(
-            `insufficient:${opening.trade.id}:${trade.id}:${leg.asset.address ?? leg.asset.symbol}`,
+            `insufficient:${opening.trade.id}:${trade.id}:${closeLeg.asset.address ?? closeLeg.asset.symbol}`,
             priceReason,
             [opening.trade.id, trade.id],
-            combinedIds(priceEvidenceIds(opening.leg), priceEvidenceIds(leg)),
+            combinedIds(priceEvidenceIds(opening.leg), priceEvidenceIds(closeLeg)),
             combinedIds(opening.trade.evidenceIds, trade.evidenceIds),
             trade,
-            leg.asset,
+            closeLeg.asset,
           ));
           excludedEvents.push(...opening.trade.evidenceIds, ...trade.evidenceIds);
         }
@@ -305,7 +373,7 @@ export function buildRealizedOutcomes(
         else queue[0] = { ...opening, quantity: opening.quantity - matched };
       }
       if (remaining > 0) {
-        insufficient.push(insufficiency(`insufficient:${trade.id}:unmatched-disposal`, "unavailable", [trade.id], priceEvidenceIds(leg), trade.evidenceIds, trade, leg.asset));
+        insufficient.push(insufficiency(`insufficient:${trade.id}:unmatched-disposal`, "unavailable", [trade.id], priceEvidenceIds(closeLeg), trade.evidenceIds, trade, closeLeg.asset));
         excludedEvents.push(...trade.evidenceIds);
       }
     }

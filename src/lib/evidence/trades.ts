@@ -9,6 +9,10 @@ import type {
 
 export interface TradeSourceDetail {
   readonly eventId: string;
+  readonly walletAddress: string;
+  readonly chain: { readonly id: string; readonly name: string };
+  readonly transactionHash: string;
+  readonly sourceDetailId: string;
   readonly legs: readonly TradeLeg[];
   readonly evidenceIds: readonly string[];
   readonly provenance: CollectorProvenance;
@@ -78,11 +82,26 @@ function isValidLeg(value: unknown): value is TradeLeg {
     && validPriceEvidenceIds;
 }
 
-function isValidTradeDetail(value: unknown, eventId: string): value is TradeSourceDetail {
-  if (!isRecord(value) || value.eventId !== eventId || !Array.isArray(value.legs)) return false;
+function hasEventProvenance(detail: Record<string, unknown>, event: NormalizedTransactionEvent): boolean {
+  const eventHash = event.provenance.transactionHash;
+  return isNonBlank(eventHash)
+    && detail.eventId === event.id
+    && detail.walletAddress === event.walletAddress
+    && isRecord(detail.chain)
+    && detail.chain.id === event.chain.id
+    && detail.chain.name === event.chain.name
+    && detail.transactionHash === eventHash
+    && isNonBlank(detail.sourceDetailId)
+    && Array.isArray(detail.evidenceIds)
+    && detail.evidenceIds.includes(detail.sourceDetailId);
+}
+
+function isValidTradeDetail(value: unknown, event: NormalizedTransactionEvent): value is TradeSourceDetail {
+  if (!isRecord(value) || !hasEventProvenance(value, event) || !Array.isArray(value.legs)) return false;
   if (!value.legs.every(isValidLeg) || value.legs.length < 2) return false;
   if (!Array.isArray(value.evidenceIds) || value.evidenceIds.length === 0 || !value.evidenceIds.every(isNonBlank)) return false;
   if (!isValidProvenance(value.provenance)) return false;
+  if (value.provenance.chainIndex !== event.chain.id) return false;
   return value.legs.some((leg) => leg.direction === "acquired")
     && value.legs.some((leg) => leg.direction === "disposed");
 }
@@ -93,7 +112,7 @@ function sourceDetail(
 ): TradeSourceDetail | null {
   try {
     const detail: unknown = adapter(event);
-    return isValidTradeDetail(detail, event.id) ? detail : null;
+    return isValidTradeDetail(detail, event) ? detail : null;
   } catch {
     return null;
   }

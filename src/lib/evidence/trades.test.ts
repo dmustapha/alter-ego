@@ -27,38 +27,30 @@ function event(overrides: Partial<NormalizedTransactionEvent> = {}): NormalizedT
   };
 }
 
+function detailFor(sourceEvent: NormalizedTransactionEvent, overrides: Record<string, unknown> = {}) {
+  const transactionHash = sourceEvent.provenance.transactionHash ?? "";
+  return {
+    eventId: sourceEvent.id,
+    walletAddress: sourceEvent.walletAddress,
+    chain: sourceEvent.chain,
+    transactionHash,
+    sourceDetailId: `okx-web3:transaction-detail:${sourceEvent.chain.id}:${transactionHash}`,
+    evidenceIds: [`okx-web3:transaction-detail:${sourceEvent.chain.id}:${transactionHash}`],
+    legs: [
+      { asset: { address: "0xusdc", symbol: "USDC" }, direction: "disposed" as const, quantity: { status: "known" as const, value: 120 }, priceUsd: { status: "known" as const, value: 1 }, priceEvidenceIds: ["price:usdc"] },
+      { asset: { address: "0xasset", symbol: "ASSET" }, direction: "acquired" as const, quantity: { status: "known" as const, value: 3 }, priceUsd: { status: "known" as const, value: 40 }, priceEvidenceIds: ["price:asset"] },
+    ],
+    provenance: { provider: "okx-web3" as const, endpoint: "transaction-detail" as const, chainIndex: sourceEvent.chain.id, retrievedAt: 1700000002000, sourceIndex: 0 },
+    ...overrides,
+  };
+}
+
 describe("classifyTrades", () => {
   it("classifies only immutable explicit trade legs supplied by the source-detail adapter", () => {
     const sourceEvent = event();
     const before = structuredClone(sourceEvent);
     const adapter: TradeSourceDetailAdapter = (candidate) => candidate.id === sourceEvent.id
-      ? {
-        eventId: sourceEvent.id,
-        evidenceIds: ["okx-web3:transaction-detail:1:0xevent"],
-        legs: [
-          {
-            asset: { address: "0xusdc", symbol: "USDC" },
-            direction: "disposed",
-            quantity: { status: "known", value: 120 },
-            priceUsd: { status: "known", value: 1 },
-            priceEvidenceIds: ["price:usdc"],
-          },
-          {
-            asset: { address: "0xasset", symbol: "ASSET" },
-            direction: "acquired",
-            quantity: { status: "known", value: 3 },
-            priceUsd: { status: "known", value: 40 },
-            priceEvidenceIds: ["price:asset"],
-          },
-        ],
-        provenance: {
-          provider: "okx-web3",
-          endpoint: "transaction-detail",
-          chainIndex: "1",
-          retrievedAt: 1700000002000,
-          sourceIndex: 0,
-        },
-      }
+      ? detailFor(sourceEvent)
       : null;
 
     const [trade] = classifyTrades([sourceEvent], adapter, 1700000003000);
@@ -82,6 +74,18 @@ describe("classifyTrades", () => {
     expect(Object.isFrozen(trade)).toBe(true);
     expect(Object.isFrozen(trade.evidenceIds)).toBe(true);
     expect(Object.isFrozen(trade.provenance)).toBe(true);
+  });
+
+  it.each([
+    ["wallet", { walletAddress: "0xother" }],
+    ["chain", { chain: { id: "501", name: "solana" } }],
+    ["transaction hash", { transactionHash: "0xother" }],
+    ["source detail ID", { sourceDetailId: "detail:not-linked" }],
+  ])("fails closed when detail %s is not bound to the canonical event", (_label, override) => {
+    const sourceEvent = event();
+    const [trade] = classifyTrades([sourceEvent], () => detailFor(sourceEvent, override), 1700000003000);
+
+    expect(trade).toMatchObject({ classification: "unknown", reason: "unavailable" });
   });
 
   it("leaves directional transfers unknown without explicit trade-detail legs", () => {
@@ -160,14 +164,14 @@ describe("classifyTrades", () => {
 
   it("requires explicit price evidence for a known source-supplied trade-leg price", () => {
     const sourceEvent = event();
-    const [trade] = classifyTrades([sourceEvent], () => ({
-      eventId: sourceEvent.id,
+    const [trade] = classifyTrades([sourceEvent], () => detailFor(sourceEvent, {
       evidenceIds: ["detail:1"],
+      sourceDetailId: "detail:1",
       legs: [
         { asset: { address: "0xusdc", symbol: "USDC" }, direction: "disposed", quantity: { status: "known", value: 1 }, priceUsd: { status: "known", value: 1 }, priceEvidenceIds: [] },
         { asset: { address: "0xasset", symbol: "ASSET" }, direction: "acquired", quantity: { status: "known", value: 1 }, priceUsd: { status: "known", value: 1 }, priceEvidenceIds: ["price:asset"] },
       ],
-      provenance: { provider: "okx-web3", endpoint: "transaction-detail", retrievedAt: 1 },
+      provenance: { provider: "okx-web3", endpoint: "transaction-detail", chainIndex: "1", retrievedAt: 1 },
     }), 2);
 
     expect(trade).toMatchObject({ classification: "unknown", reason: "unavailable" });
@@ -179,17 +183,29 @@ describe("classifyTrades", () => {
       walletAddress: "SoLaNaWaLLeTMixedCase",
       chain: { id: "501", name: "solana" },
       asset: { address: "So11111111111111111111111111111111111111112", symbol: "SOL" },
+      provenance: {
+        provider: "okx-web3",
+        endpoint: "transactions-by-address",
+        chainIndex: "501",
+        transactionHash: "5oLAnAHash",
+        retrievedAt: 1700000001000,
+        sourceIndex: 0,
+      },
     });
     const detailEventId = "okx-web3:501:5oLAnAHash:0";
     const [trade] = classifyTrades([solanaEvent], (candidate) => candidate.id === detailEventId
       ? {
         eventId: detailEventId,
+        walletAddress: solanaEvent.walletAddress,
+        chain: solanaEvent.chain,
+        transactionHash: "5oLAnAHash",
+        sourceDetailId: "detail:SoLaNaWaLLeTMixedCase",
         evidenceIds: ["detail:SoLaNaWaLLeTMixedCase"],
         legs: [
           { asset: { address: "So11111111111111111111111111111111111111112", symbol: "SOL" }, direction: "acquired", quantity: { status: "known", value: 1 }, priceUsd: { status: "unknown", reason: "unavailable" }, priceEvidenceIds: [] },
           { asset: { address: "USDCMintMixedCase", symbol: "USDC" }, direction: "disposed", quantity: { status: "known", value: 150 }, priceUsd: { status: "known", value: 1 }, priceEvidenceIds: ["price:usdc"] },
         ],
-        provenance: { provider: "okx-web3", endpoint: "transaction-detail", retrievedAt: 1700000002000 },
+        provenance: { provider: "okx-web3", endpoint: "transaction-detail", chainIndex: "501", retrievedAt: 1700000002000 },
       }
       : null);
 
