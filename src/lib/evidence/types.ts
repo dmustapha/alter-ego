@@ -1,5 +1,16 @@
 export type UnknownReason = "missing" | "unavailable" | "not-applicable";
 
+export const EVIDENCE_TIMESTAMP_UNIT = "milliseconds" as const;
+export const MIN_EVIDENCE_TIMESTAMP_MS = 946_684_800_000;
+export const MAX_SOURCE_PRICE_DELTA_MS = 5 * 60 * 1_000;
+
+export function isCanonicalTimestampMs(value: unknown, latestAt?: number): value is number {
+  return typeof value === "number"
+    && Number.isSafeInteger(value)
+    && value >= MIN_EVIDENCE_TIMESTAMP_MS
+    && (latestAt === undefined || value <= latestAt);
+}
+
 export const COLLECTOR_KINDS = Object.freeze([
   "balance-snapshot",
   "price-observation",
@@ -11,7 +22,7 @@ export const COLLECTOR_KINDS = Object.freeze([
 
 export type EvidenceValue<T> =
   | { readonly status: "known"; readonly value: T }
-  | { readonly status: "unknown"; readonly reason: UnknownReason };
+  | { readonly status: "unknown"; readonly reason: UnknownReason; readonly raw?: string };
 
 export interface RawTransactionRecord {
   readonly txHash?: string;
@@ -55,6 +66,8 @@ export interface EvidenceProvenance {
   readonly transactionHash: string | null;
   readonly retrievedAt: number;
   readonly sourceIndex: number;
+  readonly rawTimestamp?: string | null;
+  readonly timestampReason?: UnknownReason | null;
 }
 
 export interface NormalizedTransactionEvent {
@@ -116,7 +129,7 @@ export interface PriceObservation {
   readonly walletAddress: string;
   readonly chain: EvidenceChain;
   readonly asset: EvidenceAsset;
-  readonly requestedAt: number;
+  readonly requestedAt: number | null;
   readonly returnedAt: EvidenceValue<number>;
   readonly priceUsd: EvidenceValue<number>;
   readonly confidence: EvidenceValue<number>;

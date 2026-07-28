@@ -11,6 +11,7 @@ import type {
   PriceObservation,
   UnknownReason,
 } from "./types";
+import { isCanonicalTimestampMs, MAX_SOURCE_PRICE_DELTA_MS } from "./types";
 import { canonicalNativeAsset } from "./native-assets";
 
 export interface PriceObservationRequest {
@@ -20,6 +21,16 @@ export interface PriceObservationRequest {
   readonly requestedAt: number;
   readonly evidenceIds: readonly string[];
 }
+
+interface InvalidPriceObservationRequest {
+  readonly walletAddress: "unknown";
+  readonly chain: EvidenceChain;
+  readonly asset: EvidenceAsset;
+  readonly requestedAt: null;
+  readonly evidenceIds: readonly string[];
+}
+
+type ObservationRequest = PriceObservationRequest | InvalidPriceObservationRequest;
 
 export type HistoricalPriceLookup = (
   requests: PriceRequest[],
@@ -40,12 +51,12 @@ function known<T>(value: T): EvidenceValue<T> {
 function isValidDetail(value: unknown): value is HistoricalPriceDetail {
   if (typeof value !== "object" || value === null) return false;
   const detail = value as Partial<HistoricalPriceDetail>;
-  return typeof detail.returnedAt === "number"
-    && Number.isFinite(detail.returnedAt)
-    && detail.returnedAt >= 0
+  return isCanonicalTimestampMs(detail.returnedAt)
+    && isCanonicalTimestampMs(detail.requestedAt)
     && typeof detail.priceUsd === "number"
     && Number.isFinite(detail.priceUsd)
     && detail.priceUsd >= 0
+    && detail.priceUsd <= Number.MAX_SAFE_INTEGER
     && typeof detail.confidence === "number"
     && Number.isFinite(detail.confidence)
     && detail.confidence >= 0
@@ -73,15 +84,16 @@ function validRequest(value: unknown): value is PriceObservationRequest {
     && typeof value.chain.name === "string" && value.chain.name !== ""
     && isRecord(value.asset) && (value.asset.address === null || (typeof value.asset.address === "string" && value.asset.address !== ""))
     && (value.asset.symbol === null || (typeof value.asset.symbol === "string" && value.asset.symbol !== ""))
-    && typeof value.requestedAt === "number" && Number.isFinite(value.requestedAt) && value.requestedAt >= 0
+    && isCanonicalTimestampMs(value.requestedAt)
     && Array.isArray(value.evidenceIds) && value.evidenceIds.every((id) => typeof id === "string" && id !== "");
 }
 
-function fallbackRequest(): PriceObservationRequest {
-  return { walletAddress: "unknown", chain: { id: "unknown", name: "unknown" }, asset: { address: null, symbol: null }, requestedAt: 0, evidenceIds: [] };
+function fallbackRequest(): InvalidPriceObservationRequest {
+  return { walletAddress: "unknown", chain: { id: "unknown", name: "unknown" }, asset: { address: null, symbol: null }, requestedAt: null, evidenceIds: [] };
 }
 
-function priceRequest(request: PriceObservationRequest): PriceRequest | null {
+function priceRequest(request: ObservationRequest): PriceRequest | null {
+  if (request.requestedAt === null) return null;
   if (request.asset.address !== null) {
     return { chain: request.chain.name, address: request.asset.address, ts: request.requestedAt };
   }
@@ -92,17 +104,21 @@ function priceRequest(request: PriceObservationRequest): PriceRequest | null {
 }
 
 function fromDetail(
-  request: PriceObservationRequest,
+  request: ObservationRequest,
   detail: HistoricalPriceDetail | null | undefined,
   retrievedAt: number,
   index: number,
   source: PriceRequest | null,
 ): PriceObservation {
-  const validDetail = isValidDetail(detail) ? detail : null;
-  const unavailable = !validDetail || validDetail.confidence < PRICE_CONFIDENCE_THRESHOLD;
+  const validDetail = isValidDetail(detail) && detail.returnedAt <= retrievedAt ? detail : null;
+  const unavailable = !validDetail
+    || request.requestedAt === null
+    || validDetail.requestedAt !== request.requestedAt
+    || validDetail.confidence < PRICE_CONFIDENCE_THRESHOLD
+    || Math.abs(validDetail.returnedAt - request.requestedAt) > MAX_SOURCE_PRICE_DELTA_MS;
   const assetAddress = request.asset.address;
   return freezeObservation({
-    id: `defillama:price:${request.chain.id}:${assetAddress ?? "unknown"}:${request.requestedAt}:${index}`,
+    id: `defillama:price:${request.chain.id}:${assetAddress ?? "unknown"}:${request.requestedAt ?? "unknown"}:${index}`,
     walletAddress: request.walletAddress,
     chain: { ...request.chain },
     asset: { ...request.asset },
@@ -115,7 +131,7 @@ function fromDetail(
       provider: "defillama",
       endpoint: "historical-prices",
       retrievedAt,
-      requestedAt: request.requestedAt,
+      ...(request.requestedAt === null ? {} : { requestedAt: request.requestedAt }),
       ...(source ? { sourceAssetId: `${source.chain}:${source.address}` } : {}),
     },
   });
@@ -126,7 +142,10 @@ export async function collectPriceObservations(
   lookup: HistoricalPriceLookup = getHistoricalPriceDetails,
   retrievedAt = Date.now(),
 ): Promise<readonly PriceObservation[]> {
-  const validRequests = requests.map((request) => validRequest(request) ? request : fallbackRequest());
+  const validRetrievedAt = isCanonicalTimestampMs(retrievedAt, Date.now());
+  const validRequests = requests.map((request) =>
+    validRetrievedAt && validRequest(request) && request.requestedAt <= retrievedAt ? request : fallbackRequest(),
+  );
   const lookupRequests = validRequests.flatMap((request) => {
     const lookupRequest = priceRequest(request);
     return lookupRequest ? [lookupRequest] : [];

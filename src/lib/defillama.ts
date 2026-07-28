@@ -4,6 +4,8 @@
  * Uses the free batchHistorical endpoint (no API key required).
  * Confidence threshold: >= 0.9. Returns null for missing or low-confidence prices.
  */
+import { MAX_SOURCE_PRICE_DELTA_MS } from "./evidence/types";
+import { isCanonicalTimestampMs } from "./evidence/types";
 
 const DEFILLAMA_URL = "https://coins.llama.fi/batchHistorical";
 export const PRICE_CONFIDENCE_THRESHOLD = 0.9;
@@ -31,6 +33,7 @@ function isValidPriceEntry(value: unknown): value is PriceEntry {
     && typeof entry.price === "number"
     && Number.isFinite(entry.price)
     && entry.price >= 0
+    && entry.price <= Number.MAX_SAFE_INTEGER
     && typeof entry.confidence === "number"
     && Number.isFinite(entry.confidence)
     && entry.confidence >= 0
@@ -55,9 +58,9 @@ function makeKey(chain: string, address: string, ts: number): string {
   return `${chain.toLowerCase()}:${address}:${ts}`;
 }
 
-/** Convert a timestamp to seconds; pass through if already in seconds. */
-function toSeconds(ts: number): number {
-  return ts > 1e12 ? Math.round(ts / 1000) : ts;
+/** Evidence timestamps are milliseconds; provider requests are seconds. */
+function toSeconds(timestampMs: number): number {
+  return Math.round(timestampMs / 1000);
 }
 
 /**
@@ -103,13 +106,21 @@ async function fetchHistoricalPriceDetails(
   minimumConfidence?: number,
 ): Promise<Map<string, HistoricalPriceDetail | null>> {
   const result = new Map<string, HistoricalPriceDetail | null>();
+  if (!Array.isArray(reqs)) return result;
   for (const r of reqs) result.set(makeKey(r.chain, r.address, r.ts), null);
 
-  if (reqs.length === 0) return result;
+  const collectedAt = Date.now();
+  const validRequests = reqs.filter((request) =>
+    typeof request.chain === "string" && request.chain !== ""
+    && typeof request.address === "string" && request.address !== ""
+    && isCanonicalTimestampMs(request.ts, collectedAt),
+  );
+
+  if (validRequests.length === 0) return result;
 
   // Group by "chain:address", collecting timestamps (convert ms -> seconds if needed).
   const coinsBody: Record<string, number[]> = {};
-  for (const r of reqs) {
+  for (const r of validRequests) {
     const chainKey = `${r.chain.toLowerCase()}:${r.address}`;
     const tsSec = toSeconds(r.ts);
     if (!coinsBody[chainKey]) coinsBody[chainKey] = [];
@@ -132,7 +143,7 @@ async function fetchHistoricalPriceDetails(
   }
 
   // Resolve each requested (chain, address, ts) from the response.
-  for (const r of reqs) {
+  for (const r of validRequests) {
     const chainKey = `${r.chain.toLowerCase()}:${r.address}`;
     const mapKey = makeKey(r.chain, r.address, r.ts);
     const coin = data?.coins?.[chainKey];
@@ -155,9 +166,11 @@ async function fetchHistoricalPriceDetails(
       if (diff < bestDiff) { bestDiff = diff; best = entry; }
     }
 
+    const returnedAt = best.timestamp * 1_000;
+    if (!Number.isSafeInteger(returnedAt) || Math.abs(returnedAt - r.ts) > MAX_SOURCE_PRICE_DELTA_MS) continue;
     result.set(mapKey, {
       requestedAt: r.ts,
-      returnedAt: best.timestamp,
+      returnedAt,
       priceUsd: best.price,
       confidence: best.confidence,
     });

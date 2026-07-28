@@ -123,7 +123,7 @@ describe("collectExecutionCosts", () => {
       },
     ], async () => new Map([["coingecko:ethereum:1700000000000", {
       requestedAt: 1_700_000_000_000,
-      returnedAt: 1_700_000_000,
+      returnedAt: 1_700_000_000_000,
       priceUsd: 2_000,
       confidence: 0.99,
     }]]));
