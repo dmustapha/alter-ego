@@ -5,7 +5,7 @@ import { collectPriceObservations, type HistoricalPriceLookup } from "./prices";
 const lookup: HistoricalPriceLookup = async (requests) => new Map([
   ["ethereum:0xAsset:1700000000000", {
     requestedAt: requests[0].ts,
-    returnedAt: 1699999999,
+    returnedAt: 1_699_999_999_000,
     priceUsd: 2275.21,
     confidence: 0.99,
   }],
@@ -28,7 +28,7 @@ describe("collectPriceObservations", () => {
       chain: { id: "1", name: "ethereum" },
       asset: { address: "0xAsset", symbol: "WETH" },
       requestedAt: 1700000000000,
-      returnedAt: { status: "known", value: 1699999999 },
+      returnedAt: { status: "known", value: 1_699_999_999_000 },
       priceUsd: { status: "known", value: 2275.21 },
       confidence: { status: "known", value: 0.99 },
       evidenceIds: ["event:1"],
@@ -49,7 +49,7 @@ describe("collectPriceObservations", () => {
         walletAddress: "wallet",
         chain: { id: "501", name: "solana" },
         asset: { address: "So111", symbol: "SOL" },
-        requestedAt: 1700000000,
+        requestedAt: 1_700_000_000_000,
         evidenceIds: [],
       },
     ], async () => new Map(), 1700000001);
@@ -73,7 +73,7 @@ describe("collectPriceObservations", () => {
       requested = requests;
       return new Map([["coingecko:ethereum:1700000000000", {
         requestedAt: 1_700_000_000_000,
-        returnedAt: 1_700_000_000,
+        returnedAt: 1_700_000_000_000,
         priceUsd: 2_000,
         confidence: 0.99,
       }]]);
@@ -94,18 +94,18 @@ describe("collectPriceObservations", () => {
         walletAddress: "wallet",
         chain: { id: "1", name: "ethereum" },
         asset: { address: "0xlow", symbol: "LOW" },
-        requestedAt: 1700000000,
+        requestedAt: 1_700_000_000_000,
         evidenceIds: [],
       },
-    ], async () => new Map([["ethereum:0xlow:1700000000", {
-      requestedAt: 1700000000,
-      returnedAt: 1700000001,
+    ], async () => new Map([["ethereum:0xlow:1700000000000", {
+        requestedAt: 1_700_000_000_000,
+        returnedAt: 1_700_000_001_000,
       priceUsd: 15,
       confidence: 0.4,
-    }]]), 1700000002);
+    }]]), 1_700_000_002_000);
 
     expect(observations[0].priceUsd).toEqual({ status: "unknown", reason: "unavailable" });
-    expect(observations[0].returnedAt).toEqual({ status: "known", value: 1700000001 });
+    expect(observations[0].returnedAt).toEqual({ status: "known", value: 1_700_000_001_000 });
     expect(observations[0].confidence).toEqual({ status: "known", value: 0.4 });
   });
 
@@ -173,5 +173,87 @@ describe("collectPriceObservations", () => {
       chain: { id: "unknown", name: "unknown" },
       priceUsd: { status: "unknown", reason: "unavailable" },
     });
+  });
+
+  it("requires millisecond request and returned timestamps within the source-price delta", async () => {
+    const observations = await collectPriceObservations([
+      {
+        walletAddress: "wallet",
+        chain: { id: "1", name: "ethereum" },
+        asset: { address: "0xasset", symbol: "ASSET" },
+        requestedAt: 1_700_000_000_000,
+        evidenceIds: [],
+      },
+      {
+        walletAddress: "wallet",
+        chain: { id: "1", name: "ethereum" },
+        asset: { address: "0xseconds", symbol: "SECONDS" },
+        requestedAt: 1_700_000_000,
+        evidenceIds: [],
+      },
+    ], async () => new Map([
+      ["ethereum:0xasset:1700000000000", {
+        requestedAt: 1_700_000_000_000,
+        returnedAt: 1_700_000_600_001,
+        priceUsd: 10,
+        confidence: 0.99,
+      }],
+    ]), 1_700_000_700_000);
+
+    expect(observations[0].returnedAt).toEqual({ status: "known", value: 1_700_000_600_001 });
+    expect(observations[0].priceUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(observations[1].requestedAt).toBeNull();
+    expect(observations[1].priceUsd).toEqual({ status: "unknown", reason: "unavailable" });
+  });
+
+  it("rejects a source timestamp later than collector retrieval even when it is near the request", async () => {
+    const [observation] = await collectPriceObservations([{
+      walletAddress: "wallet",
+      chain: { id: "1", name: "ethereum" },
+      asset: { address: "0xasset", symbol: "ASSET" },
+      requestedAt: 1_700_000_000_000,
+      evidenceIds: [],
+    }], async () => new Map([["ethereum:0xasset:1700000000000", {
+      requestedAt: 1_700_000_000_000,
+      returnedAt: 1_700_000_001_000,
+      priceUsd: 10,
+      confidence: 0.99,
+    }]]), 1_700_000_000_500);
+
+    expect(observation.returnedAt).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(observation.priceUsd).toEqual({ status: "unknown", reason: "unavailable" });
+  });
+
+  it("fails closed for unsafe numeric source price details", async () => {
+    const request = {
+      walletAddress: "wallet",
+      chain: { id: "1", name: "ethereum" },
+      asset: { address: "0xasset", symbol: "ASSET" },
+      requestedAt: 1_700_000_000_000,
+      evidenceIds: [],
+    };
+    const [observation] = await collectPriceObservations([request], async () => new Map([
+      ["ethereum:0xasset:1700000000000", {
+        requestedAt: request.requestedAt,
+        returnedAt: request.requestedAt,
+        priceUsd: Number.MAX_VALUE,
+        confidence: 0.99,
+      }],
+    ]));
+
+    expect(observation.priceUsd).toEqual({ status: "unknown", reason: "unavailable" });
+  });
+
+  it("rejects a future collector retrieval time and does not trust its request", async () => {
+    const [observation] = await collectPriceObservations([{
+      walletAddress: "wallet",
+      chain: { id: "1", name: "ethereum" },
+      asset: { address: "0xasset", symbol: "ASSET" },
+      requestedAt: Date.now() + 30_000,
+      evidenceIds: [],
+    }], async () => new Map(), Date.now() + 60_000);
+
+    expect(observation.requestedAt).toBeNull();
+    expect(observation.priceUsd).toEqual({ status: "unknown", reason: "unavailable" });
   });
 });
