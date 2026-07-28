@@ -6,7 +6,7 @@
  */
 
 const DEFILLAMA_URL = "https://coins.llama.fi/batchHistorical";
-const CONFIDENCE_THRESHOLD = 0.9;
+export const PRICE_CONFIDENCE_THRESHOLD = 0.9;
 const FETCH_TIMEOUT_MS = 8000;
 
 type PriceEntry = {
@@ -22,10 +22,32 @@ type BatchHistoricalResponse = {
   >;
 };
 
+function isValidPriceEntry(value: unknown): value is PriceEntry {
+  if (typeof value !== "object" || value === null) return false;
+  const entry = value as Partial<PriceEntry>;
+  return typeof entry.timestamp === "number"
+    && Number.isFinite(entry.timestamp)
+    && entry.timestamp >= 0
+    && typeof entry.price === "number"
+    && Number.isFinite(entry.price)
+    && entry.price >= 0
+    && typeof entry.confidence === "number"
+    && Number.isFinite(entry.confidence)
+    && entry.confidence >= 0
+    && entry.confidence <= 1;
+}
+
 export type PriceRequest = {
   chain: string;
   address: string;
   ts: number;
+};
+
+export type HistoricalPriceDetail = {
+  readonly requestedAt: number;
+  readonly returnedAt: number;
+  readonly priceUsd: number;
+  readonly confidence: number;
 };
 
 /** Build Map key from chain, address and ts (ts as provided in input). */
@@ -49,11 +71,39 @@ function toSeconds(ts: number): number {
 export async function getHistoricalPrices(
   reqs: PriceRequest[]
 ): Promise<Map<string, number | null>> {
+  const details = await fetchHistoricalPriceDetails(reqs, PRICE_CONFIDENCE_THRESHOLD);
   // Build null-filled result map first so error paths can return it as-is.
   const result = new Map<string, number | null>();
   for (const r of reqs) {
-    result.set(makeKey(r.chain, r.address, r.ts), null);
+    const detail = details.get(makeKey(r.chain, r.address, r.ts));
+    result.set(
+      makeKey(r.chain, r.address, r.ts),
+      detail !== null && detail !== undefined
+        ? detail.priceUsd
+        : null,
+    );
   }
+
+  return result;
+}
+
+/**
+ * Returns source details for the closest historical price response per request.
+ * Unlike the compatibility wrapper, this preserves low-confidence responses so
+ * callers can record their limitation instead of losing provenance.
+ */
+export async function getHistoricalPriceDetails(
+  reqs: PriceRequest[],
+): Promise<Map<string, HistoricalPriceDetail | null>> {
+  return fetchHistoricalPriceDetails(reqs);
+}
+
+async function fetchHistoricalPriceDetails(
+  reqs: PriceRequest[],
+  minimumConfidence?: number,
+): Promise<Map<string, HistoricalPriceDetail | null>> {
+  const result = new Map<string, HistoricalPriceDetail | null>();
+  for (const r of reqs) result.set(makeKey(r.chain, r.address, r.ts), null);
 
   if (reqs.length === 0) return result;
 
@@ -92,18 +142,25 @@ export async function getHistoricalPrices(
 
     const requestedTsSec = toSeconds(r.ts);
 
-    // Filter by confidence first, then pick the closest timestamp among passing entries.
-    const passing = coin.prices.filter(e => e.confidence >= CONFIDENCE_THRESHOLD);
-    if (passing.length === 0) continue; // key stays null
+    const validEntries = coin.prices.filter(isValidPriceEntry);
+    const candidates = minimumConfidence === undefined
+      ? validEntries
+      : validEntries.filter((entry) => entry.confidence >= minimumConfidence);
+    if (candidates.length === 0) continue;
 
-    let best = passing[0];
-    let bestDiff = Math.abs(passing[0].timestamp - requestedTsSec);
-    for (const entry of passing.slice(1)) {
+    let best = candidates[0];
+    let bestDiff = Math.abs(candidates[0].timestamp - requestedTsSec);
+    for (const entry of candidates.slice(1)) {
       const diff = Math.abs(entry.timestamp - requestedTsSec);
       if (diff < bestDiff) { bestDiff = diff; best = entry; }
     }
 
-    result.set(mapKey, best.price);
+    result.set(mapKey, {
+      requestedAt: r.ts,
+      returnedAt: best.timestamp,
+      priceUsd: best.price,
+      confidence: best.confidence,
+    });
   }
 
   return result;
