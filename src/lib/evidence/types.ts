@@ -128,6 +128,7 @@ export interface TradeLeg {
   readonly direction: "acquired" | "disposed";
   readonly quantity: EvidenceValue<number>;
   readonly priceUsd: EvidenceValue<number>;
+  readonly priceEvidenceIds: readonly string[];
 }
 
 interface TradeClassificationBase {
@@ -177,6 +178,25 @@ export interface RealizedOutcome {
   readonly tradeEvidenceIds: readonly string[];
   readonly priceEvidenceIds: readonly string[];
   readonly provenance: CollectorProvenance;
+}
+
+export interface OutcomeInsufficiency {
+  readonly id: string;
+  readonly walletAddress: string | null;
+  readonly chain: EvidenceChain | null;
+  readonly asset: EvidenceAsset | null;
+  readonly reason: UnknownReason;
+  readonly tradeEvidenceIds: readonly string[];
+  readonly priceEvidenceIds: readonly string[];
+  readonly excludedEvidenceIds: readonly string[];
+}
+
+export interface RealizedOutcomeBuild {
+  readonly lots: readonly PositionLot[];
+  readonly outcomes: readonly RealizedOutcome[];
+  readonly insufficient: readonly OutcomeInsufficiency[];
+  readonly excludedEvents: readonly string[];
+  readonly assumptions: readonly string[];
 }
 
 export interface ExecutionCostRecord {

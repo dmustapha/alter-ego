@@ -41,12 +41,14 @@ describe("classifyTrades", () => {
             direction: "disposed",
             quantity: { status: "known", value: 120 },
             priceUsd: { status: "known", value: 1 },
+            priceEvidenceIds: ["price:usdc"],
           },
           {
             asset: { address: "0xasset", symbol: "ASSET" },
             direction: "acquired",
             quantity: { status: "known", value: 3 },
             priceUsd: { status: "known", value: 40 },
+            priceEvidenceIds: ["price:asset"],
           },
         ],
         provenance: {
@@ -126,8 +128,8 @@ describe("classifyTrades", () => {
   it("fails closed for malformed source-detail adapter output", () => {
     const sourceEvent = event();
     const validLegs = [
-      { asset: { address: "0xusdc", symbol: "USDC" }, direction: "disposed", quantity: { status: "known", value: 1 }, priceUsd: { status: "known", value: 1 } },
-      { asset: { address: "0xasset", symbol: "ASSET" }, direction: "acquired", quantity: { status: "known", value: 1 }, priceUsd: { status: "known", value: 1 } },
+      { asset: { address: "0xusdc", symbol: "USDC" }, direction: "disposed", quantity: { status: "known", value: 1 }, priceUsd: { status: "known", value: 1 }, priceEvidenceIds: ["price:usdc"] },
+      { asset: { address: "0xasset", symbol: "ASSET" }, direction: "acquired", quantity: { status: "known", value: 1 }, priceUsd: { status: "known", value: 1 }, priceEvidenceIds: ["price:asset"] },
     ];
     const invalidDetails: unknown[] = [
       undefined,
@@ -156,6 +158,21 @@ describe("classifyTrades", () => {
     }
   });
 
+  it("requires explicit price evidence for a known source-supplied trade-leg price", () => {
+    const sourceEvent = event();
+    const [trade] = classifyTrades([sourceEvent], () => ({
+      eventId: sourceEvent.id,
+      evidenceIds: ["detail:1"],
+      legs: [
+        { asset: { address: "0xusdc", symbol: "USDC" }, direction: "disposed", quantity: { status: "known", value: 1 }, priceUsd: { status: "known", value: 1 }, priceEvidenceIds: [] },
+        { asset: { address: "0xasset", symbol: "ASSET" }, direction: "acquired", quantity: { status: "known", value: 1 }, priceUsd: { status: "known", value: 1 }, priceEvidenceIds: ["price:asset"] },
+      ],
+      provenance: { provider: "okx-web3", endpoint: "transaction-detail", retrievedAt: 1 },
+    }), 2);
+
+    expect(trade).toMatchObject({ classification: "unknown", reason: "unavailable" });
+  });
+
   it("preserves mixed-case Solana addresses when matching source-detail evidence", () => {
     const solanaEvent = event({
       id: "okx-web3:501:5oLAnAHash:0",
@@ -169,8 +186,8 @@ describe("classifyTrades", () => {
         eventId: detailEventId,
         evidenceIds: ["detail:SoLaNaWaLLeTMixedCase"],
         legs: [
-          { asset: { address: "So11111111111111111111111111111111111111112", symbol: "SOL" }, direction: "acquired", quantity: { status: "known", value: 1 }, priceUsd: { status: "unknown", reason: "unavailable" } },
-          { asset: { address: "USDCMintMixedCase", symbol: "USDC" }, direction: "disposed", quantity: { status: "known", value: 150 }, priceUsd: { status: "known", value: 1 } },
+          { asset: { address: "So11111111111111111111111111111111111111112", symbol: "SOL" }, direction: "acquired", quantity: { status: "known", value: 1 }, priceUsd: { status: "unknown", reason: "unavailable" }, priceEvidenceIds: [] },
+          { asset: { address: "USDCMintMixedCase", symbol: "USDC" }, direction: "disposed", quantity: { status: "known", value: 150 }, priceUsd: { status: "known", value: 1 }, priceEvidenceIds: ["price:usdc"] },
         ],
         provenance: { provider: "okx-web3", endpoint: "transaction-detail", retrievedAt: 1700000002000 },
       }

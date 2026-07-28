@@ -66,11 +66,16 @@ function isValidProvenance(value: unknown): value is CollectorProvenance {
 
 function isValidLeg(value: unknown): value is TradeLeg {
   if (!isRecord(value) || !isRecord(value.asset)) return false;
+  const priceUsd = value.priceUsd;
+  if (!isEvidenceValue(priceUsd)) return false;
+  const validPriceEvidenceIds = Array.isArray(value.priceEvidenceIds)
+    && value.priceEvidenceIds.every(isNonBlank)
+    && (priceUsd.status !== "known" || value.priceEvidenceIds.length > 0);
   return isNonBlank(value.asset.address)
     && isNonBlank(value.asset.symbol)
     && (value.direction === "acquired" || value.direction === "disposed")
     && isEvidenceValue(value.quantity)
-    && isEvidenceValue(value.priceUsd);
+    && validPriceEvidenceIds;
 }
 
 function isValidTradeDetail(value: unknown, eventId: string): value is TradeSourceDetail {
@@ -106,6 +111,7 @@ function copyLeg(leg: TradeLeg): TradeLeg {
     direction: leg.direction,
     quantity: copyValue(leg.quantity),
     priceUsd: copyValue(leg.priceUsd),
+    priceEvidenceIds: Object.freeze([...leg.priceEvidenceIds]),
   });
 }
 
