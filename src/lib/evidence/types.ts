@@ -19,6 +19,7 @@ export interface RawTransactionRecord {
   readonly from?: ReadonlyArray<{ readonly address?: string }>;
   readonly to?: ReadonlyArray<{ readonly address?: string }>;
   readonly amount?: string;
+  readonly methodId?: string;
   readonly symbol?: string;
   readonly tokenContractAddress?: string;
   readonly txFee?: string;
@@ -86,6 +87,7 @@ export interface CollectorProvenance {
     | "balances-by-address"
     | "historical-prices"
     | "transaction-detail"
+    | "trade-classifier"
     | "fifo-lot-builder"
     | "fifo-outcome-builder"
     | "execution-cost-normalizer";
