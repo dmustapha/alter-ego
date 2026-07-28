@@ -1,0 +1,188 @@
+export type UnknownReason = "missing" | "unavailable" | "not-applicable";
+
+export const COLLECTOR_KINDS = Object.freeze([
+  "balance-snapshot",
+  "price-observation",
+  "trade-classification",
+  "position-lot",
+  "realized-outcome",
+  "execution-cost",
+] as const);
+
+export type EvidenceValue<T> =
+  | { readonly status: "known"; readonly value: T }
+  | { readonly status: "unknown"; readonly reason: UnknownReason };
+
+export interface RawTransactionRecord {
+  readonly txHash?: string;
+  readonly txTime?: string;
+  readonly from?: ReadonlyArray<{ readonly address?: string }>;
+  readonly to?: ReadonlyArray<{ readonly address?: string }>;
+  readonly amount?: string;
+  readonly symbol?: string;
+  readonly tokenContractAddress?: string;
+  readonly txFee?: string;
+}
+
+export interface TransactionSource {
+  readonly walletAddress: string;
+  readonly chainIndex: string;
+  readonly transactions: ReadonlyArray<RawTransactionRecord>;
+  readonly retrievedAt: number;
+}
+
+export interface EvidenceProvenance {
+  readonly provider: "okx-web3";
+  readonly endpoint: "transactions-by-address";
+  readonly chainIndex: string;
+  readonly transactionHash: string | null;
+  readonly retrievedAt: number;
+  readonly sourceIndex: number;
+}
+
+export interface NormalizedTransactionEvent {
+  readonly id: string;
+  readonly walletAddress: string;
+  readonly chain: { readonly id: string; readonly name: string };
+  readonly timestampMs: number | null;
+  readonly asset: { readonly address: string | null; readonly symbol: string | null };
+  readonly direction: EvidenceValue<"inflow" | "outflow">;
+  readonly amount: EvidenceValue<number>;
+  readonly priceUsd: EvidenceValue<number>;
+  readonly gasFeeNative: EvidenceValue<number>;
+  readonly protocol: EvidenceValue<string>;
+  readonly provenance: EvidenceProvenance;
+}
+
+export interface EvidenceChain {
+  readonly id: string;
+  readonly name: string;
+}
+
+export interface EvidenceAsset {
+  readonly address: string | null;
+  readonly symbol: string | null;
+}
+
+export interface CollectorProvenance {
+  readonly provider: "okx-web3" | "defillama" | "derived";
+  readonly endpoint:
+    | "balances-by-address"
+    | "historical-prices"
+    | "transaction-detail"
+    | "fifo-lot-builder"
+    | "fifo-outcome-builder"
+    | "execution-cost-normalizer";
+  readonly retrievedAt: number;
+  readonly chainIndex?: string;
+  readonly sourceIndex?: number;
+  readonly requestedAt?: number;
+}
+
+export interface BalanceSnapshot {
+  readonly id: string;
+  readonly walletAddress: string;
+  readonly chain: EvidenceChain;
+  readonly asset: EvidenceAsset;
+  readonly observedAt: number;
+  readonly balance: EvidenceValue<number>;
+  readonly quotedUsd: EvidenceValue<number>;
+  readonly riskToken: EvidenceValue<boolean>;
+  readonly evidenceIds: readonly string[];
+  readonly provenance: CollectorProvenance;
+}
+
+export interface PriceObservation {
+  readonly id: string;
+  readonly walletAddress: string;
+  readonly chain: EvidenceChain;
+  readonly asset: EvidenceAsset;
+  readonly requestedAt: number;
+  readonly returnedAt: EvidenceValue<number>;
+  readonly priceUsd: EvidenceValue<number>;
+  readonly confidence: EvidenceValue<number>;
+  readonly evidenceIds: readonly string[];
+  readonly provenance: CollectorProvenance;
+}
+
+export interface TradeLeg {
+  readonly asset: EvidenceAsset;
+  readonly direction: "acquired" | "disposed";
+  readonly quantity: EvidenceValue<number>;
+  readonly priceUsd: EvidenceValue<number>;
+}
+
+interface TradeClassificationBase {
+  readonly id: string;
+  readonly walletAddress: string;
+  readonly chain: EvidenceChain;
+  readonly timestampMs: EvidenceValue<number>;
+  readonly evidenceIds: readonly string[];
+  readonly provenance: CollectorProvenance;
+}
+
+export interface ClassifiedTrade extends TradeClassificationBase {
+  readonly classification: "classified";
+  readonly legs: readonly TradeLeg[];
+}
+
+export interface UnknownTrade extends TradeClassificationBase {
+  readonly classification: "unknown";
+  readonly reason: UnknownReason;
+}
+
+export type TradeClassification = ClassifiedTrade | UnknownTrade;
+
+export interface PositionLot {
+  readonly id: string;
+  readonly walletAddress: string;
+  readonly chain: EvidenceChain;
+  readonly asset: EvidenceAsset;
+  readonly openedAt: EvidenceValue<number>;
+  readonly quantity: EvidenceValue<number>;
+  readonly costBasisUsd: EvidenceValue<number>;
+  readonly evidenceIds: readonly string[];
+  readonly tradeEvidenceIds: readonly string[];
+  readonly priceEvidenceIds: readonly string[];
+  readonly provenance: CollectorProvenance;
+}
+
+export interface RealizedOutcome {
+  readonly id: string;
+  readonly walletAddress: string;
+  readonly chain: EvidenceChain;
+  readonly asset: EvidenceAsset;
+  readonly closedAt: EvidenceValue<number>;
+  readonly quantity: EvidenceValue<number>;
+  readonly realizedPnlUsd: EvidenceValue<number>;
+  readonly evidenceIds: readonly string[];
+  readonly tradeEvidenceIds: readonly string[];
+  readonly priceEvidenceIds: readonly string[];
+  readonly provenance: CollectorProvenance;
+}
+
+export interface ExecutionCostRecord {
+  readonly id: string;
+  readonly walletAddress: string;
+  readonly chain: EvidenceChain;
+  readonly eventId: string;
+  readonly observedAt: EvidenceValue<number>;
+  readonly gasFeeNative: EvidenceValue<number>;
+  readonly gasFeeUsd: EvidenceValue<number>;
+  readonly priceEvidenceIds: readonly string[];
+  readonly evidenceIds: readonly string[];
+  readonly provenance: CollectorProvenance;
+}
+
+export interface WalletCoverageSummary {
+  readonly walletAddress: string;
+  readonly chainIds: readonly string[];
+  readonly eventCount: number;
+  readonly knownDirectionCount: number;
+  readonly knownAmountCount: number;
+  readonly knownPriceCount: number;
+  readonly score: number;
+  readonly newestEventAt: number | null;
+  readonly ageMs: number | null;
+  readonly recency: "current" | "recent" | "stale" | "unknown";
+}
