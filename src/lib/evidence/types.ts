@@ -31,6 +31,22 @@ export interface TransactionSource {
   readonly retrievedAt: number;
 }
 
+export interface RawBalanceRecord {
+  readonly chainIndex?: string;
+  readonly tokenContractAddress?: string;
+  readonly symbol?: string;
+  readonly balance?: string;
+  readonly tokenPrice?: string;
+  readonly isRiskToken?: boolean;
+}
+
+export interface BalanceSource {
+  readonly walletAddress: string;
+  readonly chainIndex: string;
+  readonly balances: ReadonlyArray<RawBalanceRecord>;
+  readonly retrievedAt: number;
+}
+
 export interface EvidenceProvenance {
   readonly provider: "okx-web3";
   readonly endpoint: "transactions-by-address";
