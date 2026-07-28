@@ -1,0 +1,112 @@
+import { describe, expect, it } from "vitest";
+import { collectExecutionCosts } from "./costs";
+import type { NormalizedTransactionEvent, PriceObservation } from "./types";
+
+function event(overrides: Partial<NormalizedTransactionEvent> = {}): NormalizedTransactionEvent {
+  return {
+    id: "event:eth:1",
+    walletAddress: "0xwallet",
+    chain: { id: "1", name: "ethereum" },
+    timestampMs: 1_700_000_000_000,
+    asset: { address: "0xasset", symbol: "USDC" },
+    direction: { status: "known", value: "outflow" },
+    amount: { status: "known", value: 1 },
+    priceUsd: { status: "unknown", reason: "unavailable" },
+    gasFeeNative: { status: "known", value: 0.01 },
+    protocol: { status: "unknown", reason: "unavailable" },
+    provenance: {
+      provider: "okx-web3",
+      endpoint: "transactions-by-address",
+      chainIndex: "1",
+      transactionHash: "0xhash",
+      retrievedAt: 1_700_000_000_100,
+      sourceIndex: 0,
+    },
+    ...overrides,
+  };
+}
+
+function nativePrice(overrides: Partial<PriceObservation> = {}): PriceObservation {
+  return {
+    id: "price:eth:1",
+    walletAddress: "0xwallet",
+    chain: { id: "1", name: "ethereum" },
+    asset: { address: null, symbol: "ETH" },
+    requestedAt: 1_700_000_000_000,
+    returnedAt: { status: "known", value: 1_700_000_000_010 },
+    priceUsd: { status: "known", value: 2_000 },
+    confidence: { status: "known", value: 0.99 },
+    evidenceIds: ["event:eth:1"],
+    provenance: {
+      provider: "defillama",
+      endpoint: "historical-prices",
+      retrievedAt: 1_700_000_000_100,
+      requestedAt: 1_700_000_000_000,
+    },
+    ...overrides,
+  };
+}
+
+describe("collectExecutionCosts", () => {
+  it("emits a frozen per-event native fee with matching native-price provenance", () => {
+    const [cost] = collectExecutionCosts([event()], [nativePrice()], 1_700_000_001_000);
+
+    expect(cost).toMatchObject({
+      id: "cost:event:eth:1",
+      walletAddress: "0xwallet",
+      chain: { id: "1", name: "ethereum" },
+      nativeAsset: { address: null, symbol: "ETH" },
+      eventId: "event:eth:1",
+      observedAt: { status: "known", value: 1_700_000_000_000 },
+      gasFeeNative: { status: "known", value: 0.01 },
+      gasFeeUsd: { status: "known", value: 20 },
+      priceEvidenceIds: ["price:eth:1"],
+      evidenceIds: ["event:eth:1", "price:eth:1"],
+      provenance: {
+        provider: "derived",
+        endpoint: "execution-cost-normalizer",
+        chainIndex: "1",
+        retrievedAt: 1_700_000_001_000,
+      },
+    });
+    expect(Object.isFrozen(cost)).toBe(true);
+    expect(Object.isFrozen(cost.gasFeeNative)).toBe(true);
+    expect(Object.isFrozen(cost.priceEvidenceIds)).toBe(true);
+  });
+
+  it("keeps malformed fees explicitly unknown rather than treating them as zero", () => {
+    const [cost] = collectExecutionCosts([
+      event({ gasFeeNative: { status: "known", value: Number.NaN } }),
+    ], [nativePrice()]);
+
+    expect(cost.gasFeeNative).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
+  it("refuses cross-chain native fee aggregation until every fee has its matching conversion", () => {
+    const solana = event({
+      id: "event:sol:1",
+      chain: { id: "501", name: "solana" },
+      gasFeeNative: { status: "known", value: 0.00001 },
+    });
+    const costs = collectExecutionCosts([event(), solana], [nativePrice()]);
+
+    expect(costs).toHaveLength(2);
+    expect(costs[0].gasFeeUsd).toEqual({ status: "known", value: 20 });
+    expect(costs[1].gasFeeNative).toEqual({ status: "known", value: 0.00001 });
+    expect(costs[1].gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(costs[1].priceEvidenceIds).toEqual([]);
+  });
+
+  it("rejects prices that do not exactly match the event chain, native asset, and timestamp", () => {
+    const mismatched = nativePrice({
+      asset: { address: "0xwrapped", symbol: "WETH" },
+      requestedAt: 1_700_000_000_001,
+    });
+    const [cost] = collectExecutionCosts([event()], [mismatched]);
+
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+});

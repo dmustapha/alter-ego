@@ -203,6 +203,7 @@ export interface ExecutionCostRecord {
   readonly id: string;
   readonly walletAddress: string;
   readonly chain: EvidenceChain;
+  readonly nativeAsset: EvidenceAsset;
   readonly eventId: string;
   readonly observedAt: EvidenceValue<number>;
   readonly gasFeeNative: EvidenceValue<number>;
