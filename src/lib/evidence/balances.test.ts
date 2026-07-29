@@ -115,4 +115,14 @@ describe("normalizeBalanceSnapshots", () => {
     expect(snapshot.balance).toEqual({ status: "known", value: 1e308 });
     expect(snapshot.quotedUsd).toEqual({ status: "unknown", reason: "unavailable" });
   });
+
+  it("ignores malformed balance source arrays without throwing or fabricating snapshots", () => {
+    const malformedSources = [
+      { walletAddress: "0xwallet", chainIndex: "1", retrievedAt: 1_700_000_010_000, balances: null },
+      { walletAddress: "0xwallet", chainIndex: "1", retrievedAt: 1_700_000_010_000, balances: [null] },
+    ];
+
+    expect(() => normalizeBalanceSnapshots(malformedSources as never)).not.toThrow();
+    expect(normalizeBalanceSnapshots(malformedSources as never)).toEqual([]);
+  });
 });

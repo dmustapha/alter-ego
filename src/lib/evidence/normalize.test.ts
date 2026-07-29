@@ -149,4 +149,14 @@ describe("normalizeTransactions", () => {
 
     expect(event.gasFeeUnit).toBeUndefined();
   });
+
+  it("ignores malformed transaction source arrays without throwing or fabricating events", () => {
+    const malformedSources = [
+      { walletAddress: "0xwallet", chainIndex: "1", retrievedAt: 1_700_000_010_000, transactions: null },
+      { walletAddress: "0xwallet", chainIndex: "1", retrievedAt: 1_700_000_010_000, transactions: [null] },
+    ];
+
+    expect(() => normalizeTransactions(malformedSources as never)).not.toThrow();
+    expect(normalizeTransactions(malformedSources as never)).toEqual([]);
+  });
 });

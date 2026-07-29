@@ -12,6 +12,32 @@ const CHAIN_NAMES: Record<string, string> = {
   "501": "solana",
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isOptionalString(value: unknown): boolean {
+  return value === undefined || typeof value === "string";
+}
+
+function isRawBalance(value: unknown): value is RawBalanceRecord {
+  return isRecord(value)
+    && isOptionalString(value.chainIndex)
+    && isOptionalString(value.tokenContractAddress)
+    && isOptionalString(value.symbol)
+    && isOptionalString(value.balance)
+    && isOptionalString(value.tokenPrice)
+    && (value.isRiskToken === undefined || typeof value.isRiskToken === "boolean");
+}
+
+function isBalanceSource(value: unknown): value is BalanceSource {
+  return isRecord(value)
+    && typeof value.walletAddress === "string" && value.walletAddress.trim() !== ""
+    && typeof value.chainIndex === "string" && value.chainIndex.trim() !== ""
+    && typeof value.retrievedAt === "number" && Number.isFinite(value.retrievedAt)
+    && Array.isArray(value.balances);
+}
+
 function unknown<T>(reason: UnknownReason): EvidenceValue<T> {
   return Object.freeze({ status: "unknown" as const, reason });
 }
@@ -88,9 +114,12 @@ function normalizeBalance(
 }
 
 export function normalizeBalanceSnapshots(
-  sources: ReadonlyArray<BalanceSource>,
+  sources: readonly unknown[],
 ): readonly BalanceSnapshot[] {
-  return Object.freeze(sources.flatMap((source) =>
-    source.balances.map((record, sourceIndex) => normalizeBalance(source, record, sourceIndex)),
-  ));
+  if (!Array.isArray(sources)) return Object.freeze([]);
+  return Object.freeze(sources.flatMap((source) => isBalanceSource(source)
+    ? source.balances.flatMap((record, sourceIndex) => isRawBalance(record)
+      ? [normalizeBalance(source, record, sourceIndex)]
+      : [])
+    : []));
 }
