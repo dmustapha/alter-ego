@@ -34,6 +34,8 @@ export interface RawTransactionRecord {
   readonly symbol?: string;
   readonly tokenContractAddress?: string;
   readonly txFee?: string;
+  readonly txFeeUnit?: "native-decimal";
+  readonly txFeeDecimals?: number;
 }
 
 export interface TransactionSource {
@@ -80,8 +82,15 @@ export interface NormalizedTransactionEvent {
   readonly amount: EvidenceValue<number>;
   readonly priceUsd: EvidenceValue<number>;
   readonly gasFeeNative: EvidenceValue<number>;
+  readonly gasFeeUnit?: NativeFeeUnit;
   readonly protocol: EvidenceValue<string>;
   readonly provenance: EvidenceProvenance;
+}
+
+export interface NativeFeeUnit {
+  readonly representation: "native-decimal";
+  readonly asset: EvidenceAsset;
+  readonly decimals: number;
 }
 
 export interface EvidenceChain {

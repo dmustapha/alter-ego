@@ -19,6 +19,7 @@ import { PRICE_CONFIDENCE_THRESHOLD } from "../defillama";
 interface OpenLot {
   readonly trade: ClassifiedTrade;
   readonly leg: TradeLeg;
+  readonly legIndex: number;
   readonly openedAt: EvidenceValue<number>;
   readonly quantity: number;
 }
@@ -120,6 +121,12 @@ function valueReason(value: EvidenceValue<number>): UnknownReason {
   return value.status === "unknown" ? value.reason : "missing";
 }
 
+function hasFinitePnl(openLeg: TradeLeg, closeLeg: TradeLeg, quantity: number): boolean {
+  return openLeg.priceUsd.status === "known"
+    && closeLeg.priceUsd.status === "known"
+    && Number.isFinite((closeLeg.priceUsd.value - openLeg.priceUsd.value) * quantity);
+}
+
 function insufficiency(
   id: string,
   reason: UnknownReason,
@@ -211,7 +218,7 @@ function createLot(openLot: OpenLot, quantity: number, retrievedAt: number): Pos
     ? known<number>(price.value)
     : unknown(valueReason(price));
   return Object.freeze({
-    id: `lot:${openLot.trade.id}:${openLot.leg.asset.address ?? openLot.leg.asset.symbol}`,
+    id: `lot:${openLot.trade.id}:${openLot.legIndex}:${openLot.leg.asset.address ?? openLot.leg.asset.symbol}`,
     walletAddress: openLot.trade.walletAddress,
     chain: Object.freeze({ ...openLot.trade.chain }),
     asset: Object.freeze({ ...openLot.leg.asset }),
@@ -234,6 +241,8 @@ function createOutcome(
   openLot: OpenLot,
   close: ClassifiedTrade,
   closeLeg: TradeLeg,
+  closeLegIndex: number,
+  matchIndex: number,
   quantity: number,
   retrievedAt: number,
 ): RealizedOutcome {
@@ -246,7 +255,7 @@ function createOutcome(
     ? known<number>((sellPrice.value - buyPrice.value) * quantity)
     : unknown(valueReason(buyPrice.status === "unknown" ? buyPrice : sellPrice));
   return Object.freeze({
-    id: `outcome:${openLot.trade.id}:${close.id}:${closeLeg.asset.address ?? closeLeg.asset.symbol}`,
+    id: `outcome:${openLot.trade.id}:${openLot.legIndex}:${close.id}:${closeLegIndex}:${matchIndex}:${closeLeg.asset.address ?? closeLeg.asset.symbol}`,
     walletAddress: close.walletAddress,
     chain: Object.freeze({ ...close.chain }),
     asset: Object.freeze({ ...closeLeg.asset }),
@@ -317,7 +326,7 @@ export function buildRealizedOutcomes(
       excludedEvents.push(...trade.evidenceIds);
       continue;
     }
-    for (const leg of trade.legs) {
+    for (const [legIndex, leg] of trade.legs.entries()) {
       if (leg.quantity.status !== "known" || leg.quantity.value === 0) {
         insufficient.push(insufficiency(`insufficient:${trade.id}:quantity`, valueReason(leg.quantity), [trade.id], priceEvidenceIds(leg), trade.evidenceIds, trade, leg.asset));
         excludedEvents.push(...trade.evidenceIds);
@@ -340,21 +349,25 @@ export function buildRealizedOutcomes(
         const storedLeg = unprovenPrice
           ? unpricedLeg(leg)
           : leg;
-        queue.push({ trade, leg: storedLeg, openedAt: trade.timestampMs, quantity: leg.quantity.value });
+        queue.push({ trade, leg: storedLeg, legIndex, openedAt: trade.timestampMs, quantity: leg.quantity.value });
         lots.set(key, queue);
         continue;
       }
       const closeLeg = leg.priceUsd.status === "known" && !resolved ? unpricedLeg(leg) : leg;
       let remaining = leg.quantity.value;
+      let matchIndex = 0;
       const queue = lots.get(key) ?? [];
       while (remaining > 0 && queue.length > 0) {
         const opening = queue[0];
         const matched = Math.min(remaining, opening.quantity);
-        if (opening.leg.priceUsd.status === "known" && closeLeg.priceUsd.status === "known"
-          && opening.leg.priceEvidenceIds.length > 0 && closeLeg.priceEvidenceIds.length > 0) {
-          outcomes.push(createOutcome(opening, trade, closeLeg, matched, retrievedAt));
+        const hasResolvedPrices = opening.leg.priceUsd.status === "known" && closeLeg.priceUsd.status === "known"
+          && opening.leg.priceEvidenceIds.length > 0 && closeLeg.priceEvidenceIds.length > 0;
+        if (hasResolvedPrices && hasFinitePnl(opening.leg, closeLeg, matched)) {
+          outcomes.push(createOutcome(opening, trade, closeLeg, legIndex, matchIndex, matched, retrievedAt));
         } else {
-          const priceReason = opening.leg.priceEvidenceIds.length === 0 || closeLeg.priceEvidenceIds.length === 0
+          const priceReason = hasResolvedPrices
+            ? "unavailable"
+            : opening.leg.priceEvidenceIds.length === 0 || closeLeg.priceEvidenceIds.length === 0
             ? "unavailable"
             : valueReason(opening.leg.priceUsd.status === "unknown" ? opening.leg.priceUsd : closeLeg.priceUsd);
           insufficient.push(insufficiency(
@@ -369,6 +382,7 @@ export function buildRealizedOutcomes(
           excludedEvents.push(...opening.trade.evidenceIds, ...trade.evidenceIds);
         }
         remaining -= matched;
+        matchIndex += 1;
         if (matched === opening.quantity) queue.shift();
         else queue[0] = { ...opening, quantity: opening.quantity - matched };
       }

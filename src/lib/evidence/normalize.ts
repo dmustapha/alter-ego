@@ -5,6 +5,7 @@ import type {
   TransactionSource,
 } from "./types";
 import { isCanonicalTimestampMs } from "./types";
+import { canonicalNativeAsset } from "./native-assets";
 
 const CHAIN_NAMES: Record<string, string> = {
   "1": "ethereum",
@@ -56,6 +57,22 @@ function nonBlank(value: string | undefined): string | null {
   return value?.trim() || null;
 }
 
+function feeUnit(record: RawTransactionRecord, chainIndex: string) {
+  const native = canonicalNativeAsset({ id: chainIndex, name: CHAIN_NAMES[chainIndex] ?? "unknown" });
+  const decimals = record.txFeeDecimals;
+  return record.txFeeUnit === "native-decimal"
+    && typeof decimals === "number"
+    && Number.isInteger(decimals)
+    && native !== null
+    && decimals === native.decimals
+    ? Object.freeze({
+      representation: "native-decimal" as const,
+      asset: Object.freeze({ ...native.asset }),
+      decimals,
+    })
+    : undefined;
+}
+
 function direction(record: RawTransactionRecord, walletAddress: string): EvidenceValue<"inflow" | "outflow"> {
   const from = record.from ?? [];
   const to = record.to ?? [];
@@ -74,6 +91,10 @@ function freezeEvent(event: NormalizedTransactionEvent): NormalizedTransactionEv
   Object.freeze(event.amount);
   Object.freeze(event.priceUsd);
   Object.freeze(event.gasFeeNative);
+  if (event.gasFeeUnit) {
+    Object.freeze(event.gasFeeUnit.asset);
+    Object.freeze(event.gasFeeUnit);
+  }
   Object.freeze(event.protocol);
   Object.freeze(event.provenance);
   return Object.freeze(event);
@@ -97,6 +118,7 @@ function normalizeTransaction(
     amount: numeric(record.amount),
     priceUsd: unknown("unavailable"),
     gasFeeNative: numeric(record.txFee),
+    gasFeeUnit: feeUnit(record, source.chainIndex),
     protocol: unknown("unavailable"),
     provenance: {
       provider: "okx-web3",

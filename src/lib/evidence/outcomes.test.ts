@@ -109,6 +109,21 @@ describe("buildRealizedOutcomes", () => {
     }
   });
 
+  it("fails closed when realized PnL would overflow", () => {
+    const buy = trade("trade:overflow-buy", 2_000, [acquired(2, 0, ["price:overflow-buy"])]);
+    const sell = trade("trade:overflow-sell", 3_000, [disposed(2, Number.MAX_VALUE, ["price:overflow-sell"])]);
+
+    const result = outcomes([buy, sell]);
+
+    expect(result.outcomes).toEqual([]);
+    expect(result.insufficient).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        tradeEvidenceIds: ["trade:overflow-buy", "trade:overflow-sell"],
+        reason: "unavailable",
+      }),
+    ]));
+  });
+
   it("refuses fabricated price IDs and supports canonical native assets only with a matching native observation", () => {
     const native = { address: null, symbol: "ETH" };
     const buy = trade("trade:native-buy", 2_000, [acquired(1, 10, ["price:forged"], native)]);
@@ -159,6 +174,21 @@ describe("buildRealizedOutcomes", () => {
       tradeEvidenceIds: ["trade:buy"],
       priceEvidenceIds: ["price:acquisition"],
     })]);
+  });
+
+  it("assigns deterministic distinct IDs to multiple fills of the same asset", () => {
+    const buy = trade("trade:multi-buy", 2_000, [
+      acquired(1, 10, ["price:multi-buy:0"]),
+      acquired(1, 12, ["price:multi-buy:1"]),
+    ]);
+    const sell = trade("trade:multi-sell", 3_000, [disposed(2, 20, ["price:multi-sell:0"])]);
+
+    const result = outcomes([buy, sell]);
+
+    expect(result.outcomes.map((outcome) => outcome.id)).toEqual([
+      "outcome:trade:multi-buy:0:trade:multi-sell:0:0:0xasset",
+      "outcome:trade:multi-buy:1:trade:multi-sell:0:1:0xasset",
+    ]);
   });
 
   it("never matches lots across selected wallets", () => {
