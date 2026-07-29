@@ -14,6 +14,8 @@ import type {
 import { isCanonicalTimestampMs, MAX_SOURCE_PRICE_DELTA_MS } from "./types";
 import { canonicalNativeAsset } from "./native-assets";
 
+const MAX_PRICE_LOOKUP_REQUESTS = 100;
+
 export interface PriceObservationRequest {
   readonly walletAddress: string;
   readonly chain: EvidenceChain;
@@ -142,6 +144,7 @@ export async function collectPriceObservations(
   lookup: HistoricalPriceLookup = getHistoricalPriceDetails,
   retrievedAt = Date.now(),
 ): Promise<readonly PriceObservation[]> {
+  if (!Array.isArray(requests)) return Object.freeze([]);
   const validRetrievedAt = isCanonicalTimestampMs(retrievedAt, Date.now());
   const validRequests = requests.map((request) =>
     validRetrievedAt && validRequest(request) && request.requestedAt <= retrievedAt ? request : fallbackRequest(),
@@ -150,9 +153,12 @@ export async function collectPriceObservations(
     const lookupRequest = priceRequest(request);
     return lookupRequest ? [lookupRequest] : [];
   });
+  const uniqueLookupRequests = [...new Map(
+    lookupRequests.map((request) => [key(request.chain, request.address, request.ts), request]),
+  ).values()].slice(0, MAX_PRICE_LOOKUP_REQUESTS);
   let details: Map<string, HistoricalPriceDetail | null> = new Map();
   try {
-    const result: unknown = await lookup(lookupRequests);
+    const result: unknown = await lookup(uniqueLookupRequests);
     if (result instanceof Map) details = result as Map<string, HistoricalPriceDetail | null>;
   } catch {
     // External lookup failures become explicit unavailable observations below.

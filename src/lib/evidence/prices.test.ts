@@ -43,6 +43,44 @@ describe("collectPriceObservations", () => {
     expect(Object.isFrozen(observation.provenance)).toBe(true);
   });
 
+  it("deduplicates an oversized batch before calling the price provider", async () => {
+    const requests = Array.from({ length: 101 }, (_, index) => ({
+      walletAddress: "wallet",
+      chain: { id: "1", name: "ethereum" },
+      asset: { address: "0xasset", symbol: "ASSET" },
+      requestedAt: 1_700_000_000_000,
+      evidenceIds: [`event:${index}`],
+    }));
+    let received = [] as Parameters<HistoricalPriceLookup>[0];
+
+    const observations = await collectPriceObservations(requests, async (lookupRequests) => {
+      received = lookupRequests;
+      return new Map();
+    }, 1_700_000_000_100);
+
+    expect(received).toEqual([{ chain: "ethereum", address: "0xasset", ts: 1_700_000_000_000 }]);
+    expect(observations).toHaveLength(101);
+  });
+
+  it("caps unique provider requests and marks requests beyond the budget unavailable", async () => {
+    const requests = Array.from({ length: 101 }, (_, index) => ({
+      walletAddress: "wallet",
+      chain: { id: "1", name: "ethereum" },
+      asset: { address: `0xasset${index}`, symbol: "ASSET" },
+      requestedAt: 1_700_000_000_000,
+      evidenceIds: [`event:${index}`],
+    }));
+    let received = [] as Parameters<HistoricalPriceLookup>[0];
+
+    const observations = await collectPriceObservations(requests, async (lookupRequests) => {
+      received = lookupRequests;
+      return new Map();
+    }, 1_700_000_000_100);
+
+    expect(received).toHaveLength(100);
+    expect(observations[100].priceUsd).toEqual({ status: "unknown", reason: "unavailable" });
+  });
+
   it("keeps an unavailable lookup explicitly unknown instead of assigning a zero price", async () => {
     const observations = await collectPriceObservations([
       {
@@ -173,6 +211,18 @@ describe("collectPriceObservations", () => {
       chain: { id: "unknown", name: "unknown" },
       priceUsd: { status: "unknown", reason: "unavailable" },
     });
+  });
+
+  it("returns no observations for a malformed request container without calling the provider", async () => {
+    let called = false;
+
+    const observations = await collectPriceObservations(null as never, async () => {
+      called = true;
+      return new Map();
+    });
+
+    expect(observations).toEqual([]);
+    expect(called).toBe(false);
   });
 
   it("requires millisecond request and returned timestamps within the source-price delta", async () => {

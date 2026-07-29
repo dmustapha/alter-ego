@@ -20,6 +20,8 @@ export const COLLECTOR_KINDS = Object.freeze([
   "execution-cost",
 ] as const);
 
+export type CollectorKind = typeof COLLECTOR_KINDS[number];
+
 export type EvidenceValue<T> =
   | { readonly status: "known"; readonly value: T }
   | { readonly status: "unknown"; readonly reason: UnknownReason; readonly raw?: string };
@@ -244,6 +246,17 @@ export interface WalletCoverageSummary {
   readonly knownAmountCount: number;
   readonly knownPriceCount: number;
   readonly score: number;
+  readonly transactionFieldCoverage: {
+    readonly eventCount: number;
+    readonly knownDirectionCount: number;
+    readonly knownAmountCount: number;
+    readonly knownPriceCount: number;
+    readonly score: number;
+  };
+  readonly collectorCoverage: {
+    readonly collectedKinds: readonly CollectorKind[];
+    readonly score: number;
+  };
   readonly newestEventAt: number | null;
   readonly ageMs: number | null;
   readonly recency: "current" | "recent" | "stale" | "unknown";

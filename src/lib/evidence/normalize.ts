@@ -13,6 +13,43 @@ const CHAIN_NAMES: Record<string, string> = {
   "501": "solana",
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isOptionalString(value: unknown): boolean {
+  return value === undefined || typeof value === "string";
+}
+
+function isAddressList(value: unknown): boolean {
+  return value === undefined || (Array.isArray(value) && value.every((entry) =>
+    isRecord(entry) && isOptionalString(entry.address),
+  ));
+}
+
+function isRawTransaction(value: unknown): value is RawTransactionRecord {
+  return isRecord(value)
+    && isOptionalString(value.txHash)
+    && isOptionalString(value.txTime)
+    && isAddressList(value.from)
+    && isAddressList(value.to)
+    && isOptionalString(value.amount)
+    && isOptionalString(value.methodId)
+    && isOptionalString(value.symbol)
+    && isOptionalString(value.tokenContractAddress)
+    && isOptionalString(value.txFee)
+    && (value.txFeeUnit === undefined || value.txFeeUnit === "native-decimal")
+    && (value.txFeeDecimals === undefined || typeof value.txFeeDecimals === "number");
+}
+
+function isTransactionSource(value: unknown): value is TransactionSource {
+  return isRecord(value)
+    && typeof value.walletAddress === "string" && value.walletAddress.trim() !== ""
+    && typeof value.chainIndex === "string" && value.chainIndex.trim() !== ""
+    && typeof value.retrievedAt === "number" && Number.isFinite(value.retrievedAt)
+    && Array.isArray(value.transactions);
+}
+
 function unknown<T>(reason: "missing" | "unavailable", raw?: string): EvidenceValue<T> {
   return raw === undefined ? { status: "unknown", reason } : { status: "unknown", reason, raw };
 }
@@ -134,10 +171,13 @@ function normalizeTransaction(
 }
 
 export function normalizeTransactions(
-  sources: ReadonlyArray<TransactionSource>,
+  sources: readonly unknown[],
 ): readonly NormalizedTransactionEvent[] {
-  const events = sources.flatMap((source) =>
-    source.transactions.map((record, sourceIndex) => normalizeTransaction(source, record, sourceIndex)),
-  );
+  if (!Array.isArray(sources)) return Object.freeze([]);
+  const events = sources.flatMap((source) => isTransactionSource(source)
+    ? source.transactions.flatMap((record, sourceIndex) => isRawTransaction(record)
+      ? [normalizeTransaction(source, record, sourceIndex)]
+      : [])
+    : []);
   return Object.freeze(events);
 }
