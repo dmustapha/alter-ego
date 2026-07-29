@@ -14,6 +14,11 @@ function event(overrides: Partial<NormalizedTransactionEvent> = {}): NormalizedT
     amount: { status: "known", value: 1 },
     priceUsd: { status: "unknown", reason: "unavailable" },
     gasFeeNative: { status: "known", value: 0.01 },
+    gasFeeUnit: {
+      representation: "native-decimal",
+      asset: { address: null, symbol: "ETH" },
+      decimals: 18,
+    },
     protocol: { status: "unknown", reason: "unavailable" },
     provenance: {
       provider: "okx-web3",
@@ -86,6 +91,33 @@ describe("collectExecutionCosts", () => {
     expect(cost.priceEvidenceIds).toEqual([]);
   });
 
+  it("rejects a fee conversion when its native-unit provenance is incompatible with the chain", () => {
+    const [cost] = collectExecutionCosts([event({
+      gasFeeUnit: {
+        representation: "native-decimal",
+        asset: { address: null, symbol: "SOL" },
+        decimals: 9,
+      },
+    })], [nativePrice()]);
+
+    expect(cost.gasFeeNative).toEqual({ status: "known", value: 0.01 });
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
+  it("rejects a fee conversion when its declared native decimals do not match the chain", () => {
+    const [cost] = collectExecutionCosts([event({
+      gasFeeUnit: {
+        representation: "native-decimal",
+        asset: { address: null, symbol: "ETH" },
+        decimals: 9,
+      },
+    })], [nativePrice()]);
+
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
   it("refuses cross-chain native fee aggregation until every fee has its matching conversion", () => {
     const solana = event({
       id: "event:sol:1",
@@ -107,6 +139,29 @@ describe("collectExecutionCosts", () => {
       requestedAt: 1_700_000_000_001,
     });
     const [cost] = collectExecutionCosts([event()], [mismatched]);
+
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
+  it("rejects a stale native price even when its requested timestamp matches the fee event", () => {
+    const [cost] = collectExecutionCosts([event()], [nativePrice({
+      returnedAt: { status: "known", value: 1_700_000_300_001 },
+    })]);
+
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
+  it("rejects a native price collected for a different wallet", () => {
+    const [cost] = collectExecutionCosts([event()], [nativePrice({ walletAddress: "0xother" })]);
+
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
+  it("rejects a native price not linked to the fee event", () => {
+    const [cost] = collectExecutionCosts([event()], [nativePrice({ evidenceIds: ["event:other"] })]);
 
     expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
     expect(cost.priceEvidenceIds).toEqual([]);

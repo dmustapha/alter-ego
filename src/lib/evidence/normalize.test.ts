@@ -132,4 +132,21 @@ describe("normalizeTransactions", () => {
     expect(event.amount).toEqual({ status: "unknown", reason: "unavailable", raw: "0.10000000000000001" });
     expect(event.gasFeeNative).toEqual({ status: "unknown", reason: "unavailable", raw: "0.000003288128440723" });
   });
+
+  it("does not attach fee-unit provenance when declared decimals conflict with the canonical chain", () => {
+    const [event] = normalizeTransactions([{
+      walletAddress: "0xwallet",
+      chainIndex: "1",
+      retrievedAt: 1_700_000_010_000,
+      transactions: [{
+        txHash: "0xwrong-fee-decimals",
+        txTime: "1700000000000",
+        txFee: "0.01",
+        txFeeUnit: "native-decimal",
+        txFeeDecimals: 9,
+      }],
+    }]);
+
+    expect(event.gasFeeUnit).toBeUndefined();
+  });
 });
