@@ -24,4 +24,5 @@
 - [x] Implement user-selected cohort synthesis and Composite Trading Pattern output.
 - [x] Implement strategy hypotheses and walk-forward validation.
 - [x] Implement user-approved proposal flow; live execution remains intentionally unimplemented.
+- [x] Establish an immutable, provenance-linked historical validation dataset boundary with explicit exclusions.
 - [ ] Complete critical remediation of decision-layer provenance, synthesis, validation, and proposal gates before integration.
