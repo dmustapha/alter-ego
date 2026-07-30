@@ -110,3 +110,19 @@
 ### Prompt 20
 > yes do that
 **Action:** Completed the maintenance-only lint cleanup, verified the evidence branch, and merged it into main without starting product roadmap work.
+
+### Prompt 21
+> start them now
+**Action:** Lifted the prior deferral and began the decision-layer design for profiles, synthesis, validation, proposals, and a separately gated execution boundary.
+
+### Prompt 22
+> go with your recommendation
+**Action:** Set the first release to end at a user-approved, non-executing proposal; live transaction submission remains out of scope.
+
+### Prompt 23
+> yes
+**Action:** Approved the evidence-linked decision-layer architecture for implementation planning.
+
+### Prompt 24
+> go deep on it,
+**Action:** Expanded the design with metric contracts, confidence semantics, consensus and disagreement rules, validation gates, and proposal-only approval states.
