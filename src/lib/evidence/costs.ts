@@ -113,10 +113,7 @@ function isMatchingPrice(
     && price.provenance.endpoint === "historical-prices"
     && price.provenance.sourceAssetId === native.sourceAssetId
     && price.provenance.requestedAt === event.timestampMs
-    && typeof price.provenance.retrievedAt === "number"
-    && Number.isFinite(price.provenance.retrievedAt)
-    && price.provenance.retrievedAt >= 0
-    && price.provenance.retrievedAt <= retrievedAt;
+    && isCanonicalTimestampMs(price.provenance.retrievedAt, retrievedAt);
 }
 
 function conversion(

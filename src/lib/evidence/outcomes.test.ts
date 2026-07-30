@@ -102,6 +102,7 @@ describe("buildRealizedOutcomes", () => {
       resolved.map((value) => value.id === "price:bound-buy" ? { ...value, chain: { id: "501", name: "solana" } } : value),
       resolved.map((value) => value.id === "price:bound-buy" ? { ...value, asset: { address: "0xother", symbol: "ASSET" } } : value),
       resolved.map((value) => value.id === "price:bound-buy" ? { ...value, returnedAt: { status: "known" as const, value: EPOCH_MS + 2_000 + 300_001 } } : value),
+      resolved.map((value) => value.id === "price:bound-buy" ? { ...value, provenance: { ...value.provenance, retrievedAt: 0 } } : value),
       resolved.map((value) => value.id === "price:bound-buy" ? { ...value, provenance: { ...value.provenance, sourceAssetId: "ethereum:0xother" } } : value),
       resolved.map((value) => value.id === "price:bound-buy" ? { ...value, evidenceIds: ["source:other"] } : value),
     ];

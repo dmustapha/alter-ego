@@ -188,8 +188,7 @@ function isResolvedPrice(
     && price.provenance.provider === "defillama"
     && price.provenance.endpoint === "historical-prices"
     && price.provenance.requestedAt === eventTime
-    && typeof price.provenance.retrievedAt === "number" && Number.isFinite(price.provenance.retrievedAt)
-    && price.provenance.retrievedAt >= 0 && price.provenance.retrievedAt <= retrievedAt
+    && isCanonicalTimestampMs(price.provenance.retrievedAt, retrievedAt)
     && price.provenance.sourceAssetId === expectedSource;
 }
 
