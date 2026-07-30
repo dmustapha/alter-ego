@@ -1,7 +1,5 @@
 import type { BalanceSnapshot, BehaviorMetric, ClassifiedTrade, ExecutionCostRecord, RealizedOutcome, WalletBehaviorProfile, WalletCoverageSummary } from "./types";
 
-const METRICS = ["concentration", "turnover", "holding-horizon", "risk-exposure", "execution-cost", "realized-outcome"] as const;
-
 function unknownMetric(name: BehaviorMetric["name"], coverage: WalletCoverageSummary): BehaviorMetric {
   return Object.freeze({ name, value: Object.freeze({ status: "unknown", reason: "unavailable" }), confidence: 0, observationCount: 0, recency: coverage.recency, evidenceIds: Object.freeze([]) });
 }
