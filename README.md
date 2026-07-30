@@ -48,7 +48,7 @@ The design target is a TEE (Trusted Execution Environment) so analysis is verifi
 | Field | Value |
 |-------|-------|
 | Settlement tx | `0x59eebfc91fac2ffa203de3b3d04a6820eda223404d0f6512db0fe6e72353d103` |
-| Explorer | [OKLink](https://www.oklink.com/xlayer/tx/0x59eebfc91fac2ffa203de3b3d04a6820eda223404d0f6512db0fe6e72353d103) |
+| Explorer | [OKLink](https://www.oklink.com/x-layer/evm/tx/0x59eebfc91fac2ffa203de3b3d04a6820eda223404d0f6512db0fe6e72353d103) |
 | Toll | 0.01 USDT0 on X Layer |
 | Payer | `0xcf88688b4A31787E8E5609dE724073C9aEDE7334` |
 | Seller payTo | `0xd97c85d61337f8e4366bff2d8b482cfc59d76340` |
