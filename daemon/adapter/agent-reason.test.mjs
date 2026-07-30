@@ -39,7 +39,7 @@ const analyzeJson = {
 
 // Helper: mock fetch to simulate LLM success
 function makeLlmFetch(content) {
-  return async (_url, _opts) => ({
+  return async () => ({
     ok: true,
     status: 200,
     json: async () => ({ choices: [{ message: { content } }] }),
@@ -48,7 +48,7 @@ function makeLlmFetch(content) {
 
 // Helper: mock fetch to simulate LLM failure
 function makeFailFetch(status = 500) {
-  return async (_url, _opts) => ({
+  return async () => ({
     ok: false,
     status,
     json: async () => ({}),

@@ -126,26 +126,39 @@ interface TerminalProps {
 }
 
 export function TypingText({ text, delay = 30 }: { text: string; delay?: number }) {
-  const reduce = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
+  const shouldReduce = useReducedMotion() === true;
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
-  useEffect(() => setMounted(true), []);
   useEffect(() => {
-    if (!mounted) return;
-    if (reduce) { setDisplayed(text); setDone(true); return; }
-    let i = 0; setDisplayed(""); setDone(false);
-    const interval = setInterval(() => { setDisplayed(text.slice(0, i + 1)); i++; if (i >= text.length) { clearInterval(interval); setDone(true); } }, delay);
-    return () => clearInterval(interval);
-  }, [text, delay, mounted, reduce]);
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const frame = requestAnimationFrame(() => {
+      if (shouldReduce) {
+        setDisplayed(text);
+        setDone(true);
+        return;
+      }
+      let index = 0;
+      setDisplayed("");
+      setDone(false);
+      interval = setInterval(() => {
+        setDisplayed(text.slice(0, index + 1));
+        index += 1;
+        if (index >= text.length) {
+          clearInterval(interval);
+          setDone(true);
+        }
+      }, delay);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (interval) clearInterval(interval);
+    };
+  }, [text, delay, shouldReduce]);
   return (<span>{displayed}{!done && <span className="animate-pulse">▌</span>}</span>);
 }
 
 export function SlideIn({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
-  const reduce = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const shouldReduce = mounted && reduce;
+  const shouldReduce = useReducedMotion() === true;
   return (
     <motion.div
       initial={shouldReduce ? false : { opacity: 0, y: 20 }}

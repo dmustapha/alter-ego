@@ -35,7 +35,7 @@ export function RoastBattle({ battle }: { battle: RoastBattleType }) {
           <motion.div key={currentRound} initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0 }} transition={reduce ? { duration: 0 } : { duration: 0.3 }}
             className={`p-6 border text-lg ${isBoth ? "border-[rgba(255,255,0,.2)] bg-surface text-[#ffff00] text-center" : isLeft ? "border-[rgba(0,255,255,.2)] bg-surface text-[#00ffff]" : "border-[rgba(255,45,149,.2)] bg-surface text-[#ff2d95]"}`}>
             <p className="font-mono text-[10px] tracking-[1px] uppercase text-dim mb-1">{currentLine.speaker}</p>
-            <p>"{currentLine.text}"</p>
+            <p>&quot;{currentLine.text}&quot;</p>
             {currentLine.onScreenTag && <p className="font-mono text-[10px] mt-2 text-dim">[{currentLine.onScreenTag}]: {currentLine.onScreenData}</p>}
           </motion.div>
         )}

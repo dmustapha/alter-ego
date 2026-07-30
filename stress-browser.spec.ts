@@ -1,31 +1,26 @@
 // stress-browser.spec.ts - Alter Ego Browser Stress Test
 // Playwright 1.60 - tests the actual rendered UI, not just API responses
 
-import { test, expect, chromium } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 
 const BASE = "http://localhost:3000";
 const SCREENSHOTS = path.resolve(__dirname, "screenshots");
-const VIEWPORTS = { mobile: { w: 320, h: 800 }, tablet: { w: 768, h: 900 }, desktop: { w: 1024, h: 800 }, wide: { w: 1440, h: 900 }, ultrawide: { w: 1920, h: 900 } } as const;
 const PHASE_TIMEOUT = 120_000; // 2 minutes for full 76s state machine
 
 fs.mkdirSync(SCREENSHOTS, { recursive: true });
 
 // ─── Helpers ────────────────────────────────────
 
-async function screenshot(page: any, name: string) {
+async function screenshot(page: Page, name: string) {
   const p = path.join(SCREENSHOTS, `stress-${name}-${Date.now()}.png`);
   await page.screenshot({ path: p, fullPage: true });
   return p;
 }
 
-async function waitForText(page: any, text: string, timeout = 30_000) {
+async function waitForText(page: Page, text: string, timeout = 30_000) {
   await page.locator(`text=${text}`).first().waitFor({ state: "visible", timeout });
-}
-
-async function waitForPhase(page: any, phaseText: string, timeout = 90_000) {
-  await page.locator(`text=${phaseText}`).first().waitFor({ state: "visible", timeout });
 }
 
 // ─── F1: Landing Page ───────────────────────────
@@ -70,13 +65,6 @@ test.describe("F1 - Landing Page", () => {
     const bodyBg = await page.evaluate(() => getComputedStyle(document.body).background);
     expect(bodyBg).toContain("5"); // #050510 or rgb(5,5,16)
     // Verify glitch layers exist in DOM
-    const glitchLayers = await page.evaluate(() => {
-      const styleSheets = [...document.styleSheets];
-      for (const sheet of styleSheets) {
-        try { for (const rule of [...sheet.cssRules]) { if (rule.cssText?.includes("glitchShift")) return true; } } catch {}
-      }
-      return false;
-    });
     // Actually just check that elements with the glitch styling are present
     const hasPink = await page.evaluate(() => document.body.innerHTML.includes("ff2d95"));
     const hasCyan = await page.evaluate(() => document.body.innerHTML.includes("00ffff"));
@@ -345,7 +333,7 @@ test.describe("A11y - Keyboard & Focus", () => {
     // Eventually we should hit a button or input
     const activeEl = await page.evaluate(() => {
       const el = document.activeElement;
-      return { tag: el?.tagName, type: (el as any)?.type };
+      return { tag: el?.tagName, type: el instanceof HTMLInputElement ? el.type : undefined };
     });
     expect(["INPUT", "TEXTAREA", "BUTTON", "A"]).toContain(activeEl.tag);
   });

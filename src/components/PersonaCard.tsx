@@ -41,7 +41,7 @@ export function PersonaCard({ persona, delay = 0 }: { persona: Persona; delay?: 
       </div>
       <div className="space-y-1 text-sm">
         <p><span className="text-dim">Archetype:</span> <span className="text-[#00ffff]">{persona.archetype}</span></p>
-        <p className="text-dim italic">"{persona.catchphrase}"</p>
+        <p className="text-dim italic">&quot;{persona.catchphrase}&quot;</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="p-2 border border-[rgba(0,255,255,.15)] bg-[rgba(0,255,255,.03)]">

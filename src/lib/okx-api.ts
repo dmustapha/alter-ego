@@ -11,6 +11,10 @@
 import { createHmac } from "crypto";
 import type { WalletSignals, Trade } from "./types";
 
+type PagedTransactionResponse = {
+  data?: Array<{ cursor?: string; transactions?: unknown[]; transactionList?: unknown[] }>;
+};
+
 const BASE = "https://web3.okx.com";
 const PROJECT_ID = "4d156bf0c61130f2692d097ecb68dbe4";
 
@@ -102,7 +106,7 @@ async function okxPublicCall(method: string, path: string) {
  * Testable core: caller returns the raw OKX json for one page given a cursor.
  */
 export async function getWalletTxnsPagedWith(
-  caller: (cursor: string) => Promise<any>,
+  caller: (cursor: string) => Promise<PagedTransactionResponse>,
   address: string,
   chain: string,
   maxPages = 6,
