@@ -138,3 +138,7 @@
 ### Prompt 27
 > get the entire scope, and go as deep as possible with the plan and testing gates.
 **Action:** Expanded the critical-review findings into a complete remediation plan with contract, provenance, profile, synthesis, hypothesis, validation, proposal, and adversarial merge gates.
+
+### Prompt 28
+> fix every single issue that your critique brought out. dont leave anything out
+**Action:** Corrected the remediation plan to include every identified plan gap, including historical dataset/evaluator, runtime receipt verification, complete provenance, compatibility, and adversarial gates.
