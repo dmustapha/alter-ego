@@ -126,3 +126,7 @@
 ### Prompt 24
 > go deep on it,
 **Action:** Expanded the design with metric contracts, confidence semantics, consensus and disagreement rules, validation gates, and proposal-only approval states.
+
+### Prompt 25
+> continue. stop waiting for permission from me
+**Action:** Continued the approved decision-layer implementation autonomously while retaining visible sequential verification.
