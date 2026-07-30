@@ -45,6 +45,7 @@ export interface BehaviorMetric {
   readonly name: BehaviorMetricName;
   readonly value: EvidenceValue<number>;
   readonly confidence: number;
+  readonly sourceCoverage: number;
   readonly observationCount: number;
   readonly recency: WalletCoverageSummary["recency"];
   readonly evidenceIds: readonly string[];
