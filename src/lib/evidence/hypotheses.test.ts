@@ -1,0 +1,14 @@
+import { describe, expect, it } from "vitest";
+import { compileHypotheses } from "./hypotheses";
+import type { CohortSynthesis } from "./types";
+
+const synthesis: CohortSynthesis = { cohortSize: 2, excludedWallets: [], limits: [], findings: [{ id: "consensus:concentration", kind: "consensus", metric: "concentration", profileIds: ["profile:0xa", "profile:0xb"], value: { status: "known", value: 0.8 }, confidence: 0.9, limitations: [] }] };
+
+describe("compileHypotheses", () => {
+  it("creates a neutral measurable draft from a consensus finding", () => {
+    const [hypothesis] = compileHypotheses(synthesis);
+
+    expect(hypothesis).toMatchObject({ status: "draft", findingIds: ["consensus:concentration"] });
+    expect(hypothesis.condition).not.toMatch(/buy|sell|token|price/i);
+  });
+});
