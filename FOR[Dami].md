@@ -88,7 +88,7 @@ Run `npm test -- --run src/lib/evidence/coverage.test.ts` with a fixed `nowMs`. 
 
 ### Decision-layer validation
 
-`createHistoricalValidationDataset` accepts raw historical records once, excludes malformed, duplicate, incomplete, and out-of-interval observations, then freezes a reproducible snapshot fingerprint. `validateWalkForward` consumes only that verified snapshot, fits a neutral metric range on each chronological training fold, and totals only the following out-of-sample folds after supplied costs. A validated artifact and its runtime-verified receipt are required to create a proposal; approval is only a caller acknowledgement and never performs an action.
+`createHistoricalValidationDataset` accepts an application-owned historical-source adapter plus selected observation IDs; it does not accept caller-authored observations. The adapter supplies the immutable collector snapshot, from which malformed, duplicate, incomplete, and out-of-interval records are excluded before a reproducible dataset fingerprint is frozen. `validateWalkForward` consumes only that snapshot, fits a neutral metric range on each disjoint chronological training fold, and totals only the following out-of-sample folds after supplied costs. A validated artifact and its runtime-verified receipt are required to create a proposal; approval is only a caller acknowledgement and never performs an action.
 
 ### Full app
 

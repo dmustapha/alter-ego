@@ -1,16 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { validateWalkForward } from "./validation";
-import { createHistoricalValidationDataset, registerHistoricalSource } from "./validation-dataset";
+import { __testOnlyAttestHistoricalSource, createHistoricalValidationDataset } from "./validation-dataset";
 import type { StrategyHypothesis } from "./types";
 
 const horizonMs = 86_400_000;
+process.env.ALTER_EGO_HISTORICAL_SOURCE_KEY = "test-historical-source-key";
+const attestHistoricalSource = __testOnlyAttestHistoricalSource!;
 const hypothesis: StrategyHypothesis = { id: "hypothesis:test", status: "draft", findingIds: ["consensus:test"], sourceEvidenceIds: ["evidence:test"], condition: { metric: "concentration", operator: "within-range", minimum: 0.7, maximum: 0.9 }, scope: { chainIds: [], assetIds: [], outcomeHorizonMs: horizonMs }, outcomeDefinition: "neutral outcome", assumptions: [] };
 
 function dataset(observations: readonly unknown[]) {
-  const source = registerHistoricalSource({
+  const source = { snapshot: () => attestHistoricalSource({
     source: { id: "snapshot:test", version: "v1", retrievedAt: 1_700_000_000_000, interval: { startAt: 1_699_000_000_000, endAt: 1_700_000_000_000 } },
     observations,
-  });
+  }) };
   return createHistoricalValidationDataset(source, { observationIds: observations.map((item) => String((item as { id: string }).id)), foldConfiguration: { trainingSize: 2, testSize: 1 } });
 }
 

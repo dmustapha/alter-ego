@@ -1,25 +1,44 @@
 import { describe, expect, it } from "vitest";
-import { createHistoricalValidationDataset, registerHistoricalSource } from "./validation-dataset";
+import { __testOnlyAttestHistoricalSource, createHistoricalValidationDataset } from "./validation-dataset";
 
 const observedAt = 1_700_000_000_000;
+process.env.ALTER_EGO_HISTORICAL_SOURCE_KEY = "test-historical-source-key";
+const attestHistoricalSource = __testOnlyAttestHistoricalSource!;
 
 function completeObservation(id = "observation:test") {
   return { id, observedAt, outcomeAt: observedAt + 1, chainId: "1", assetId: "asset:test", metric: "turnover", metricValue: 0.3, outcomeUsd: 3, costUsd: 1, slippageUsd: 0, liquidityUsd: 10, sourceEvidenceIds: ["evidence:test"] };
 }
 
 function datasetInput(observations: readonly unknown[] = [completeObservation()]) {
-  const source = registerHistoricalSource({
-    source: { id: "snapshot:test", version: "v1", retrievedAt: observedAt + 1_000, interval: { startAt: observedAt - 1_000, endAt: observedAt + 1_000 } },
-    observations,
-  });
+  const source = { snapshot: () => attestHistoricalSource({ source: { id: "snapshot:test", version: "v1", retrievedAt: observedAt + 1_000, interval: { startAt: observedAt - 1_000, endAt: observedAt + 1_000 } }, observations }) };
   return [source, { observationIds: observations.map((item) => typeof item === "object" && item !== null && "id" in item ? String(item.id) : "unknown"), foldConfiguration: { trainingSize: 2, testSize: 1 } }] as const;
 }
 
 function dataset(observations: readonly unknown[] = [completeObservation()]) { const [source, request] = datasetInput(observations); return createHistoricalValidationDataset(source, request); }
 
 describe("createHistoricalValidationDataset", () => {
-  it("rejects a raw caller-shaped source unless it was registered at the source boundary", () => {
-    expect(() => createHistoricalValidationDataset({ source: { id: "forged", version: "v1", retrievedAt: observedAt, interval: { startAt: observedAt - 1, endAt: observedAt } }, observations: [] } as never, { observationIds: [], foldConfiguration: { trainingSize: 2, testSize: 1 } })).toThrow("registered source snapshot");
+  it("rejects a raw caller-shaped source that does not implement the adapter boundary", () => {
+    expect(() => createHistoricalValidationDataset({ source: { id: "forged" } } as never, { observationIds: [], foldConfiguration: { trainingSize: 2, testSize: 1 } })).toThrow("attested source adapter");
+  });
+
+  it("rejects a snapshot whose observations were changed after attestation", () => {
+    const signed = attestHistoricalSource({ source: { id: "snapshot:tampered", version: "v1", retrievedAt: observedAt + 1_000, interval: { startAt: observedAt - 1_000, endAt: observedAt + 1_000 } }, observations: [completeObservation()] });
+    const adapter = { snapshot: () => ({ ...signed, observations: [{ ...completeObservation(), outcomeUsd: 999 }] }) };
+    expect(() => createHistoricalValidationDataset(adapter, { observationIds: ["observation:test"], foldConfiguration: { trainingSize: 2, testSize: 1 } })).toThrow("attested source adapter");
+  });
+
+  it("rejects custom serialization hooks that could hide altered observations", () => {
+    const signed = attestHistoricalSource({ source: { id: "snapshot:serialization", version: "v1", retrievedAt: observedAt + 1_000, interval: { startAt: observedAt - 1_000, endAt: observedAt + 1_000 } }, observations: [completeObservation()] });
+    const observations = [{ ...completeObservation(), outcomeUsd: 999 }] as Array<Record<string, unknown>>;
+    Object.defineProperty(observations, "toJSON", { value: () => signed.observations });
+    expect(() => createHistoricalValidationDataset({ snapshot: () => ({ ...signed, observations }) }, { observationIds: ["observation:test"], foldConfiguration: { trainingSize: 2, testSize: 1 } })).toThrow("attested source adapter");
+  });
+
+  it("rejects inherited serialization hooks on array prototypes", () => {
+    const signed = attestHistoricalSource({ source: { id: "snapshot:prototype", version: "v1", retrievedAt: observedAt + 1_000, interval: { startAt: observedAt - 1_000, endAt: observedAt + 1_000 } }, observations: [completeObservation()] });
+    const observations = [{ ...completeObservation(), outcomeUsd: 999 }];
+    Object.setPrototypeOf(observations, Object.assign(Object.create(Array.prototype), { toJSON: () => signed.observations }));
+    expect(() => createHistoricalValidationDataset({ snapshot: () => ({ ...signed, observations }) }, { observationIds: ["observation:test"], foldConfiguration: { trainingSize: 2, testSize: 1 } })).toThrow("attested source adapter");
   });
 
   it("records a caller-shaped utility observation without source evidence as insufficient", () => {
@@ -56,10 +75,10 @@ describe("createHistoricalValidationDataset", () => {
   });
 
   it("rejects a noncanonical snapshot time", () => {
-    expect(() => registerHistoricalSource({ source: { id: "snapshot:test", version: "v1", retrievedAt: 0, interval: { startAt: observedAt - 1, endAt: observedAt } }, observations: [] })).toThrow("canonical provenance");
+    expect(() => createHistoricalValidationDataset({ snapshot: () => ({ source: { id: "snapshot:test", version: "v1", retrievedAt: 0, interval: { startAt: observedAt - 1, endAt: observedAt } }, observations: [], attestation: "forged" }) }, { observationIds: [], foldConfiguration: { trainingSize: 2, testSize: 1 } })).toThrow("attested source adapter");
   });
 
   it.each([0, 1_700_000_000_000.5, Date.now() + 1_000])("rejects epoch, fractional, and future snapshot retrieval time %s", (retrievedAt) => {
-    expect(() => registerHistoricalSource({ source: { id: "snapshot:test", version: "v1", retrievedAt, interval: { startAt: observedAt - 1, endAt: observedAt } }, observations: [] })).toThrow("canonical provenance");
+    expect(() => createHistoricalValidationDataset({ snapshot: () => ({ source: { id: "snapshot:test", version: "v1", retrievedAt, interval: { startAt: observedAt - 1, endAt: observedAt } }, observations: [], attestation: "forged" }) }, { observationIds: [], foldConfiguration: { trainingSize: 2, testSize: 1 } })).toThrow("attested source adapter");
   });
 });

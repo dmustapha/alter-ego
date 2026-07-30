@@ -194,3 +194,11 @@
 ### Prompt 41
 > continue
 **Action:** Completed the final independent-review remediations, fixed the unrelated offline differential-test boundary, and completed clean repository verification without merging.
+
+### Prompt 42
+> resolve all issues
+**Action:** Reworked dataset provenance, fold isolation, source immutability, and branch-wide diff hygiene; independent review then identified the remaining collector-trust gap.
+
+### Prompt 43
+> fix the remaining issues
+**Action:** Added fail-closed, externally attested historical snapshots with strict canonical serialization and adversarial tamper tests; completed a clean independent review without merging.
