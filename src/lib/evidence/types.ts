@@ -22,6 +22,79 @@ export const COLLECTOR_KINDS = Object.freeze([
 
 export type CollectorKind = typeof COLLECTOR_KINDS[number];
 
+export const DECISION_PROPOSAL_STATES = Object.freeze([
+  "draft",
+  "approved",
+  "declined",
+  "expired",
+] as const);
+
+export type DecisionProposalState = typeof DECISION_PROPOSAL_STATES[number];
+export type BehaviorMetricName = "concentration" | "turnover" | "holding-horizon" | "risk-exposure" | "execution-cost" | "realized-outcome";
+
+export interface BehaviorMetric {
+  readonly name: BehaviorMetricName;
+  readonly value: EvidenceValue<number>;
+  readonly confidence: number;
+  readonly observationCount: number;
+  readonly recency: WalletCoverageSummary["recency"];
+  readonly evidenceIds: readonly string[];
+}
+
+export interface WalletBehaviorProfile {
+  readonly id: string;
+  readonly walletAddress: string;
+  readonly chainIds: readonly string[];
+  readonly metrics: readonly BehaviorMetric[];
+  readonly coverage: WalletCoverageSummary;
+  readonly limitations: readonly string[];
+}
+
+export interface CohortFinding {
+  readonly id: string;
+  readonly kind: "consensus" | "disagreement" | "insufficient";
+  readonly metric: BehaviorMetricName;
+  readonly profileIds: readonly string[];
+  readonly value: EvidenceValue<number>;
+  readonly confidence: number;
+  readonly limitations: readonly string[];
+}
+
+export interface CohortSynthesis {
+  readonly cohortSize: number;
+  readonly findings: readonly CohortFinding[];
+  readonly excludedWallets: readonly { readonly walletAddress: string; readonly reason: UnknownReason }[];
+  readonly limits: readonly string[];
+}
+
+export interface StrategyHypothesis {
+  readonly id: string;
+  readonly status: "draft" | "insufficient" | "validated" | "rejected";
+  readonly findingIds: readonly string[];
+  readonly condition: string;
+  readonly outcomeDefinition: string;
+  readonly assumptions: readonly string[];
+}
+
+export interface WalkForwardValidation {
+  readonly hypothesisId: string;
+  readonly status: "validated" | "rejected" | "insufficient";
+  readonly eligibleCount: number;
+  readonly excludedCount: number;
+  readonly totalCostUsd: EvidenceValue<number>;
+  readonly limitations: readonly string[];
+}
+
+export interface DecisionProposal {
+  readonly id: string;
+  readonly state: DecisionProposalState;
+  readonly hypothesisId: string;
+  readonly validation: WalkForwardValidation;
+  readonly assumptions: readonly string[];
+  readonly risks: readonly string[];
+  readonly expiresAt: number;
+}
+
 export type EvidenceValue<T> =
   | { readonly status: "known"; readonly value: T }
   | { readonly status: "unknown"; readonly reason: UnknownReason; readonly raw?: string };
