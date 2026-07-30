@@ -14,7 +14,7 @@ function balance(id: string, quotedUsd: number): BalanceSnapshot {
   return {
     id, walletAddress: "0xwallet", chain: { id: "1", name: "ethereum" }, asset: { address: id, symbol: id }, observedAt: 1_700_000_000_000,
     balance: { status: "known", value: quotedUsd }, quotedUsd: { status: "known", value: quotedUsd }, riskToken: { status: "known", value: false },
-    evidenceIds: ["event:1"], provenance: { provider: "okx-web3", endpoint: "balances-by-address", retrievedAt: 1_700_000_000_000 },
+    evidenceIds: ["event:1"], provenance: { provider: "okx-web3", endpoint: "balances-by-address", chainIndex: "1", retrievedAt: 1_700_000_000_000 },
   };
 }
 
@@ -96,6 +96,14 @@ describe("buildWalletBehaviorProfile", () => {
     }));
   });
 
+  it("marks turnover unknown when any classified trade leg lacks quantity evidence", () => {
+    const incomplete = { ...trade("trade:incomplete"), legs: [...trade("trade:incomplete").legs, { ...trade("trade:incomplete").legs[0], quantity: { status: "unknown" as const, reason: "unavailable" as const } }] };
+    const profile = buildWalletBehaviorProfile({ coverage, trades: [trade("trade:complete"), incomplete] });
+
+    expect(profile.metrics).toContainEqual(expect.objectContaining({ name: "turnover", value: { status: "unknown", reason: "unavailable" } }));
+    expect(profile.limitations).toContain("turnover excluded incomplete trade evidence.");
+  });
+
   it("derives holding horizon only from outcomes with explicit opening and closing times", () => {
     const profile = buildWalletBehaviorProfile({ coverage, outcomes: [outcome("outcome:horizon", 1)] });
 
@@ -108,5 +116,27 @@ describe("buildWalletBehaviorProfile", () => {
     const foreign = { ...balance("0xforeign", 10), walletAddress: "0xother" };
 
     expect(() => buildWalletBehaviorProfile({ coverage, balances: [balance("0xlocal", 10), foreign] })).toThrow("one wallet");
+  });
+
+  it("rejects balance evidence from a chain outside the profile scope", () => {
+    const foreignChain = { ...balance("0xforeign-chain", 10), chain: { id: "196", name: "xlayer" } };
+
+    expect(() => buildWalletBehaviorProfile({ coverage, balances: [balance("0xlocal", 10), foreignChain] })).toThrow("profile chains");
+  });
+
+  it("marks a metric unknown when its balance provenance is noncanonical", () => {
+    const malformed = { ...balance("0xmalformed", 20), provenance: { ...balance("0xmalformed", 20).provenance, retrievedAt: 0 } };
+    const profile = buildWalletBehaviorProfile({ coverage, balances: [balance("0xa", 80), balance("0xb", 20), malformed] });
+
+    expect(profile.metrics).toContainEqual(expect.objectContaining({ name: "concentration", value: { status: "unknown", reason: "unavailable" } }));
+    expect(profile.limitations).toContain("concentration excluded invalid balance provenance.");
+  });
+
+  it("calculates confidence from source coverage, recency, and sample size", () => {
+    const staleCoverage = { ...coverage, recency: "stale" as const };
+    const profile = buildWalletBehaviorProfile({ coverage: staleCoverage, balances: [balance("0xa", 80), balance("0xb", 20)] });
+    const concentration = profile.metrics.find((metric) => metric.name === "concentration");
+
+    expect(concentration).toMatchObject({ confidence: 0.25, sourceCoverage: 1 });
   });
 });
