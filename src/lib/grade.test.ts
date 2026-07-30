@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeBehavioralGrade } from "./grade";
+import type { WalletSignals } from "./types";
 
 describe("computeBehavioralGrade", () => {
   it("clean diversified wallet scores high", () => {
@@ -16,7 +17,7 @@ describe("computeBehavioralGrade", () => {
       topHoldingPct: 15,
       avgGasGwei: 15,
       networkMedianGasGwei: 20,
-    } as any);
+    } satisfies WalletSignals);
     expect(g.score).toBeGreaterThan(85);
     expect(["S", "A"]).toContain(g.letter);
   });
@@ -35,7 +36,7 @@ describe("computeBehavioralGrade", () => {
       topHoldingPct: 90,
       avgGasGwei: 80,
       networkMedianGasGwei: 20,
-    } as any);
+    } satisfies WalletSignals);
     expect(g.score).toBeLessThan(45);
     expect(["D", "F"]).toContain(g.letter);
   });

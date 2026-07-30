@@ -83,8 +83,8 @@ export default function Home() {
       setData(result);
       setPhase("results");
       isAnalyzing.current = false;
-    } catch (e: any) {
-      setError(e?.message || "Failed to analyze wallets. Please try again.");
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to analyze wallets. Please try again.");
       setPhase("error");
       isAnalyzing.current = false;
     } finally { setLoading(false); }

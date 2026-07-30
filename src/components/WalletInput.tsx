@@ -26,7 +26,7 @@ export function WalletInput({ onSubmit, isLoading, onDemoLaunch }: WalletInputPr
         return;
       }
       const addr = addrMatch[1];
-      let chainStr = addrMatch[2].trim();
+      const chainStr = addrMatch[2].trim();
       if (!chainStr) { parsed.push({ address: addr, chains: ["ethereum"] }); continue; }
       const chains = chainStr.replace(/[()]/g, "").split(/,\s*/).filter(Boolean);
       parsed.push({ address: addr, chains: chains.length > 0 ? chains : ["ethereum"] });
