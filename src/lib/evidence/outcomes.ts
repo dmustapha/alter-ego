@@ -249,6 +249,9 @@ function createOutcome(
   const closedAt: EvidenceValue<number> = close.timestampMs.status === "known"
     ? known<number>(close.timestampMs.value)
     : unknown(valueReason(close.timestampMs));
+  const openedAt: EvidenceValue<number> = openLot.openedAt.status === "known"
+    ? known<number>(openLot.openedAt.value)
+    : unknown(valueReason(openLot.openedAt));
   const realizedPnlUsd: EvidenceValue<number> = buyPrice.status === "known" && sellPrice.status === "known"
     ? known<number>((sellPrice.value - buyPrice.value) * quantity)
     : unknown(valueReason(buyPrice.status === "unknown" ? buyPrice : sellPrice));
@@ -257,6 +260,7 @@ function createOutcome(
     walletAddress: close.walletAddress,
     chain: Object.freeze({ ...close.chain }),
     asset: Object.freeze({ ...closeLeg.asset }),
+    openedAt,
     closedAt,
     quantity: known<number>(quantity),
     realizedPnlUsd,
