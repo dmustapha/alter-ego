@@ -57,7 +57,7 @@ function createFolds(hypothesis: StrategyHypothesis, observations: readonly Hist
   for (let start = 0; start + dataset.foldConfiguration.trainingSize + dataset.foldConfiguration.testSize <= observations.length; start += dataset.foldConfiguration.trainingSize + dataset.foldConfiguration.testSize) {
     const training = observations.slice(start, start + dataset.foldConfiguration.trainingSize);
     const testing = observations.slice(start + dataset.foldConfiguration.trainingSize, start + dataset.foldConfiguration.trainingSize + dataset.foldConfiguration.testSize);
-    folds.push(evaluateFold(hypothesis, training, testing));
+    if (Math.max(...training.map((item) => item.outcomeAt)) <= Math.min(...testing.map((item) => item.observedAt))) folds.push(evaluateFold(hypothesis, training, testing));
   }
   return folds;
 }
