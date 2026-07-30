@@ -4,6 +4,8 @@ import { canonicalNativeAsset } from "./native-assets";
 import type { ClassifiedTrade, EvidenceAsset, PriceObservation, TradeClassification } from "./types";
 
 const chain = { id: "1", name: "ethereum" };
+const EPOCH_MS = 1_700_000_000_000;
+const COLLECTED_AT = EPOCH_MS + 10_000;
 
 function trade(
   id: string,
@@ -16,10 +18,10 @@ function trade(
     walletAddress,
     chain,
     classification: "classified",
-    timestampMs: { status: "known", value: timestampMs },
+    timestampMs: { status: "known", value: EPOCH_MS + timestampMs },
     legs,
     evidenceIds: [`source:${id}:trade`, `source:${id}:price`],
-    provenance: { provider: "okx-web3", endpoint: "transaction-detail", chainIndex: chain.id, retrievedAt: timestampMs },
+    provenance: { provider: "okx-web3", endpoint: "transaction-detail", chainIndex: chain.id, retrievedAt: COLLECTED_AT },
   };
 }
 
@@ -72,7 +74,7 @@ function observations(input: readonly TradeClassification[]): readonly PriceObse
         provenance: {
           provider: "defillama",
           endpoint: "historical-prices",
-          retrievedAt: 4_000,
+          retrievedAt: COLLECTED_AT,
           requestedAt: candidate.timestampMs.status === "known" ? candidate.timestampMs.value : undefined,
           sourceAssetId: native?.sourceAssetId ?? `${candidate.chain.name}:${leg.asset.address}`,
         },
@@ -81,7 +83,7 @@ function observations(input: readonly TradeClassification[]): readonly PriceObse
   ) : []);
 }
 
-function outcomes(input: readonly TradeClassification[] | readonly unknown[], retrievedAt = 4_000) {
+function outcomes(input: readonly TradeClassification[] | readonly unknown[], retrievedAt = COLLECTED_AT) {
   return buildRealizedOutcomes(input, observations(input as readonly TradeClassification[]), retrievedAt);
 }
 
@@ -91,7 +93,7 @@ describe("buildRealizedOutcomes", () => {
     const sell = trade("trade:bound-sell", 3_000, [disposed(1, 15, ["price:bound-sell"])]);
     const resolved = observations([buy, sell]);
 
-    expect(buildRealizedOutcomes([buy, sell], resolved, 4_000).outcomes).toEqual([
+    expect(buildRealizedOutcomes([buy, sell], resolved, COLLECTED_AT).outcomes).toEqual([
       expect.objectContaining({ realizedPnlUsd: { status: "known", value: 5 } }),
     ]);
 
@@ -99,13 +101,13 @@ describe("buildRealizedOutcomes", () => {
       resolved.map((value) => value.id === "price:bound-buy" ? { ...value, walletAddress: "0xother" } : value),
       resolved.map((value) => value.id === "price:bound-buy" ? { ...value, chain: { id: "501", name: "solana" } } : value),
       resolved.map((value) => value.id === "price:bound-buy" ? { ...value, asset: { address: "0xother", symbol: "ASSET" } } : value),
-      resolved.map((value) => value.id === "price:bound-buy" ? { ...value, returnedAt: { status: "known" as const, value: 2_000 + 300_001 } } : value),
+      resolved.map((value) => value.id === "price:bound-buy" ? { ...value, returnedAt: { status: "known" as const, value: EPOCH_MS + 2_000 + 300_001 } } : value),
       resolved.map((value) => value.id === "price:bound-buy" ? { ...value, provenance: { ...value.provenance, sourceAssetId: "ethereum:0xother" } } : value),
       resolved.map((value) => value.id === "price:bound-buy" ? { ...value, evidenceIds: ["source:other"] } : value),
     ];
 
     for (const values of invalidObservations) {
-      expect(buildRealizedOutcomes([buy, sell], values, 4_000).outcomes).toEqual([]);
+      expect(buildRealizedOutcomes([buy, sell], values, COLLECTED_AT).outcomes).toEqual([]);
     }
   });
 
@@ -132,16 +134,24 @@ describe("buildRealizedOutcomes", () => {
     expect(outcomes([malformedBuy, sell] as never).outcomes).toEqual([]);
   });
 
+  it("rejects a classified trade with a pre-canonical source retrieval timestamp", () => {
+    const buy = trade("trade:stale-buy", 2_000, [acquired(1, 10, ["price:stale-buy"])]);
+    const sell = trade("trade:stale-sell", 3_000, [disposed(1, 15, ["price:stale-sell"])]);
+    const staleBuy = { ...buy, provenance: { ...buy.provenance, retrievedAt: 0 } };
+
+    expect(outcomes([staleBuy, sell] as never).outcomes).toEqual([]);
+  });
+
   it("refuses fabricated price IDs and supports canonical native assets only with a matching native observation", () => {
     const native = { address: null, symbol: "ETH" };
     const buy = trade("trade:native-buy", 2_000, [acquired(1, 10, ["price:forged"], native)]);
     const sell = trade("trade:native-sell", 3_000, [disposed(1, 15, ["price:native-sell"], native)]);
     const resolved = observations([buy, sell]).filter((value) => value.id !== "price:forged");
 
-    expect(buildRealizedOutcomes([buy, sell], resolved, 4_000).outcomes).toEqual([]);
+    expect(buildRealizedOutcomes([buy, sell], resolved, COLLECTED_AT).outcomes).toEqual([]);
 
     const nativePrices = observations([buy, sell]);
-    expect(buildRealizedOutcomes([buy, sell], nativePrices, 4_000).outcomes).toEqual([
+    expect(buildRealizedOutcomes([buy, sell], nativePrices, COLLECTED_AT).outcomes).toEqual([
       expect.objectContaining({ realizedPnlUsd: { status: "known", value: 5 } }),
     ]);
   });

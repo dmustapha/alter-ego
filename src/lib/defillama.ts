@@ -10,6 +10,7 @@ import { isCanonicalTimestampMs } from "./evidence/types";
 const DEFILLAMA_URL = "https://coins.llama.fi/batchHistorical";
 export const PRICE_CONFIDENCE_THRESHOLD = 0.9;
 const FETCH_TIMEOUT_MS = 8000;
+const MAX_HISTORICAL_PRICE_REQUESTS = 100;
 
 type PriceEntry = {
   timestamp: number;
@@ -118,9 +119,13 @@ async function fetchHistoricalPriceDetails(
 
   if (validRequests.length === 0) return result;
 
+  const boundedRequests = [...new Map(
+    validRequests.map((request) => [makeKey(request.chain, request.address, request.ts), request]),
+  ).values()].slice(0, MAX_HISTORICAL_PRICE_REQUESTS);
+
   // Group by "chain:address", collecting timestamps (convert ms -> seconds if needed).
   const coinsBody: Record<string, number[]> = {};
-  for (const r of validRequests) {
+  for (const r of boundedRequests) {
     const chainKey = `${r.chain.toLowerCase()}:${r.address}`;
     const tsSec = toSeconds(r.ts);
     if (!coinsBody[chainKey]) coinsBody[chainKey] = [];
@@ -143,7 +148,7 @@ async function fetchHistoricalPriceDetails(
   }
 
   // Resolve each requested (chain, address, ts) from the response.
-  for (const r of validRequests) {
+  for (const r of boundedRequests) {
     const chainKey = `${r.chain.toLowerCase()}:${r.address}`;
     const mapKey = makeKey(r.chain, r.address, r.ts);
     const coin = data?.coins?.[chainKey];

@@ -21,6 +21,20 @@ describe("getHistoricalPrices", () => {
     });
   });
 
+  it("caps unique direct historical-price requests at the provider budget", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ coins: {} }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const requests = Array.from({ length: 101 }, (_, index) => ({
+      chain: "ethereum",
+      address: `0xBUDGET${index}`,
+      ts: 1_700_000_000_000,
+    }));
+
+    await getHistoricalPriceDetails(requests);
+
+    expect(Object.keys(JSON.parse(fetchMock.mock.calls[0][1].body).coins)).toHaveLength(100);
+  });
+
   it("retains returned timestamp and confidence in detailed results", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       ok: true,

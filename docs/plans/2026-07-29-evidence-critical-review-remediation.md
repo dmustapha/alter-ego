@@ -50,3 +50,10 @@
 1. Run all evidence suites, the full suite, typecheck, lint, and diff checks.
 2. Manually review source identity, timestamp, numeric, unit, and coverage claims.
 3. Record the review result and commit only the scoped implementation/tests.
+
+## Verification record — 2026-07-30
+
+- Tasks 1–3 are complete: source boundaries require canonical time and exact supported numerics; derived costs and outcomes validate source lineage; coverage is derived from collector-record provenance and direct historical-price requests are deduplicated and capped at 100 unique tuples.
+- Manual review found no ownership inference, persona, Composite, alpha, trading, recommendation, or execution claims in this scope.
+- Passed: all evidence suites (9 files, 107 tests), full suite (28 files, 248 tests), `npx tsc --noEmit`, and `git diff --check`.
+- Repository lint remains red with 20 errors and 12 warnings in pre-existing out-of-scope UI, API, cache, and stress-test files; none are evidence-layer files changed by this remediation.
