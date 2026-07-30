@@ -17,3 +17,4 @@
 ## 2026-07-30 — Approved-plan autonomy
 
 - After the user approves a design and implementation plan, continue task-by-task without asking for redundant permission; report verification gates in commentary instead.
+- A request to complete the entire approved scope means continue across checkpoints without pausing for confirmation; only surface real external-authority or safety blockers.

@@ -12,7 +12,7 @@ describe("synthesizeCohort", () => {
   it("emits a consensus only from agreement across eligible profiles", () => {
     const result = synthesizeCohort([profile("0xa", 0.8), profile("0xb", 0.75)]);
 
-    expect(result.findings).toContainEqual(expect.objectContaining({ kind: "consensus", metric: "concentration" }));
+    expect(result.findings).toContainEqual(expect.objectContaining({ kind: "consensus", metric: "concentration", unit: "ratio", evidenceIds: ["balance:1"] }));
     expect(result.limits).toContain("Selected wallets are a user-defined cohort and do not imply shared ownership.");
   });
 
