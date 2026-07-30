@@ -124,7 +124,7 @@ async function fetchHistoricalPriceDetails(
     const chainKey = `${r.chain.toLowerCase()}:${r.address}`;
     const tsSec = toSeconds(r.ts);
     if (!coinsBody[chainKey]) coinsBody[chainKey] = [];
-    coinsBody[chainKey].push(tsSec);
+    if (!coinsBody[chainKey].includes(tsSec)) coinsBody[chainKey].push(tsSec);
   }
 
   let data: BatchHistoricalResponse;

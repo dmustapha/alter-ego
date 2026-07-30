@@ -5,6 +5,7 @@ import type {
   RawBalanceRecord,
   UnknownReason,
 } from "./types";
+import { isCanonicalTimestampMs } from "./types";
 
 const CHAIN_NAMES: Record<string, string> = {
   "1": "ethereum",
@@ -34,20 +35,42 @@ function isBalanceSource(value: unknown): value is BalanceSource {
   return isRecord(value)
     && typeof value.walletAddress === "string" && value.walletAddress.trim() !== ""
     && typeof value.chainIndex === "string" && value.chainIndex.trim() !== ""
-    && typeof value.retrievedAt === "number" && Number.isFinite(value.retrievedAt)
+    && isCanonicalTimestampMs(value.retrievedAt, Date.now())
     && Array.isArray(value.balances);
 }
 
-function unknown<T>(reason: UnknownReason): EvidenceValue<T> {
-  return Object.freeze({ status: "unknown" as const, reason });
+function unknown<T>(reason: UnknownReason, raw?: string): EvidenceValue<T> {
+  return Object.freeze(raw === undefined
+    ? { status: "unknown" as const, reason }
+    : { status: "unknown" as const, reason, raw });
 }
 
 function numeric(value: string | undefined): EvidenceValue<number> {
   if (value === undefined || value.trim() === "") return unknown("missing");
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= 0
+  const normalized = value.trim();
+  if (!/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(normalized)) return unknown("unavailable", value);
+  const significantDigits = normalized.replace(".", "").replace(/^0+/, "").length;
+  if (significantDigits > 15) return unknown("unavailable", value);
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed <= Number.MAX_SAFE_INTEGER && exactlyRepresentableFraction(normalized)
     ? Object.freeze({ status: "known" as const, value: parsed })
-    : unknown("unavailable");
+    : unknown("unavailable", value);
+}
+
+function exactlyRepresentableFraction(value: string): boolean {
+  const fraction = value.split(".")[1]?.replace(/0+$/, "");
+  if (!fraction) return true;
+  let numerator = Number(fraction);
+  const scale = 10 ** fraction.length;
+  let denominator = scale;
+  while (numerator !== 0) {
+    const remainder = denominator % numerator;
+    denominator = numerator;
+    numerator = remainder;
+  }
+  let reducedDenominator = scale / denominator;
+  while (reducedDenominator % 2 === 0) reducedDenominator /= 2;
+  return reducedDenominator === 1;
 }
 
 function flag(value: boolean | undefined): EvidenceValue<boolean> {

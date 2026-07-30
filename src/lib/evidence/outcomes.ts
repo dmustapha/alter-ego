@@ -70,14 +70,14 @@ function isNonEmptyIds(value: unknown): value is readonly string[] {
   return isIds(value) && value.length > 0;
 }
 
-function isTradeProvenance(value: unknown): boolean {
+function isTradeProvenance(value: unknown, chain: EvidenceChain): boolean {
   if (!isRecord(value)) return false;
   return value.provider === "okx-web3"
     && value.endpoint === "transaction-detail"
     && typeof value.retrievedAt === "number"
     && Number.isFinite(value.retrievedAt)
     && value.retrievedAt >= 0
-    && (value.chainIndex === undefined || (typeof value.chainIndex === "string" && value.chainIndex !== ""))
+    && value.chainIndex === chain.id
     && (value.sourceIndex === undefined || (typeof value.sourceIndex === "number" && Number.isInteger(value.sourceIndex) && value.sourceIndex >= 0));
 }
 
@@ -96,7 +96,7 @@ function isClassifiedTrade(value: unknown): value is ClassifiedTrade {
     && isChain(value.chain) && isNonEmptyIds(value.evidenceIds) && Array.isArray(value.legs)
     && value.legs.every(isLeg)
     && (isKnownNonnegative(value.timestampMs) || isUnknownValue(value.timestampMs))
-    && isTradeProvenance(value.provenance);
+    && isTradeProvenance(value.provenance, value.chain as EvidenceChain);
 }
 
 function assetKey(walletAddress: string, chain: EvidenceChain, asset: EvidenceAsset): string | null {

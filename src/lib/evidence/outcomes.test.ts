@@ -19,7 +19,7 @@ function trade(
     timestampMs: { status: "known", value: timestampMs },
     legs,
     evidenceIds: [`source:${id}:trade`, `source:${id}:price`],
-    provenance: { provider: "okx-web3", endpoint: "transaction-detail", retrievedAt: timestampMs },
+    provenance: { provider: "okx-web3", endpoint: "transaction-detail", chainIndex: chain.id, retrievedAt: timestampMs },
   };
 }
 
@@ -122,6 +122,14 @@ describe("buildRealizedOutcomes", () => {
         reason: "unavailable",
       }),
     ]));
+  });
+
+  it("rejects a classified trade whose provenance chain does not match the trade chain", () => {
+    const buy = trade("trade:bad-chain-buy", 2_000, [acquired(1, 10, ["price:bad-chain-buy"])]);
+    const sell = trade("trade:bad-chain-sell", 3_000, [disposed(1, 15, ["price:bad-chain-sell"])]);
+    const malformedBuy = { ...buy, provenance: { ...buy.provenance, chainIndex: "501" } };
+
+    expect(outcomes([malformedBuy, sell] as never).outcomes).toEqual([]);
   });
 
   it("refuses fabricated price IDs and supports canonical native assets only with a matching native observation", () => {

@@ -46,7 +46,7 @@ function isTransactionSource(value: unknown): value is TransactionSource {
   return isRecord(value)
     && typeof value.walletAddress === "string" && value.walletAddress.trim() !== ""
     && typeof value.chainIndex === "string" && value.chainIndex.trim() !== ""
-    && typeof value.retrievedAt === "number" && Number.isFinite(value.retrievedAt)
+    && isCanonicalTimestampMs(value.retrievedAt, Date.now())
     && Array.isArray(value.transactions);
 }
 

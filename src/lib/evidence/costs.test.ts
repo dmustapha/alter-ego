@@ -123,6 +123,7 @@ describe("collectExecutionCosts", () => {
       id: "event:sol:1",
       chain: { id: "501", name: "solana" },
       gasFeeNative: { status: "known", value: 0.00001 },
+      provenance: { ...event().provenance, chainIndex: "501" },
     });
     const costs = collectExecutionCosts([event(), solana], [nativePrice()]);
 
@@ -165,6 +166,23 @@ describe("collectExecutionCosts", () => {
 
     expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
     expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
+  it("rejects a price whose source provenance is later than cost collection", () => {
+    const [cost] = collectExecutionCosts([event()], [nativePrice({
+      provenance: { ...nativePrice().provenance, retrievedAt: 1_700_000_001_001 },
+    })], 1_700_000_001_000);
+
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
+  it("rejects a fee event with noncanonical transaction provenance", () => {
+    const costs = collectExecutionCosts([event({
+      provenance: { ...event().provenance, retrievedAt: 0 },
+    })], [nativePrice()]);
+
+    expect(costs).toEqual([]);
   });
 
   it("converts a fee using a matching native price emitted by the price collector", async () => {

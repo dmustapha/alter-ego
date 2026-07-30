@@ -76,13 +76,13 @@ describe("normalizeBalanceSnapshots", () => {
       ],
     }]);
 
-    expect(malformed.balance).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(malformed.balance).toEqual({ status: "unknown", reason: "unavailable", raw: "NaN" });
     expect(malformed.quotedUsd).toEqual({ status: "unknown", reason: "unavailable" });
     expect(blankPrice.balance).toEqual({ status: "known", value: 2 });
     expect(blankPrice.quotedUsd).toEqual({ status: "unknown", reason: "missing" });
     expect(malformedPrice.balance).toEqual({ status: "known", value: 2 });
     expect(malformedPrice.quotedUsd).toEqual({ status: "unknown", reason: "unavailable" });
-    expect(negativeBalance.balance).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(negativeBalance.balance).toEqual({ status: "unknown", reason: "unavailable", raw: "-2" });
     expect(negativeBalance.quotedUsd).toEqual({ status: "unknown", reason: "unavailable" });
     expect(negativePrice.balance).toEqual({ status: "known", value: 2 });
     expect(negativePrice.quotedUsd).toEqual({ status: "unknown", reason: "unavailable" });
@@ -104,15 +104,15 @@ describe("normalizeBalanceSnapshots", () => {
     expect(snapshot.riskToken).toEqual({ status: "unknown", reason: "unavailable" });
   });
 
-  it("keeps an overflowing USD quote explicitly unavailable", () => {
+  it("rejects unsafe balance numeric strings instead of recording approximate evidence", () => {
     const [snapshot] = normalizeBalanceSnapshots([{
       walletAddress: "0xwallet",
       chainIndex: "1",
       retrievedAt: 1700000010000,
-      balances: [{ tokenContractAddress: "0xlarge", balance: "1e308", tokenPrice: "1e308", isRiskToken: false }],
+      balances: [{ tokenContractAddress: "0xlarge", balance: "1e308", tokenPrice: "1", isRiskToken: false }],
     }]);
 
-    expect(snapshot.balance).toEqual({ status: "known", value: 1e308 });
+    expect(snapshot.balance).toEqual({ status: "unknown", reason: "unavailable", raw: "1e308" });
     expect(snapshot.quotedUsd).toEqual({ status: "unknown", reason: "unavailable" });
   });
 
@@ -124,5 +124,16 @@ describe("normalizeBalanceSnapshots", () => {
 
     expect(() => normalizeBalanceSnapshots(malformedSources as never)).not.toThrow();
     expect(normalizeBalanceSnapshots(malformedSources as never)).toEqual([]);
+  });
+
+  it("rejects a balance source with a noncanonical retrieval timestamp", () => {
+    const snapshots = normalizeBalanceSnapshots([{
+      walletAddress: "0xwallet",
+      chainIndex: "1",
+      retrievedAt: 0,
+      balances: [{ tokenContractAddress: "0xasset", balance: "1", tokenPrice: "1" }],
+    }]);
+
+    expect(snapshots).toEqual([]);
   });
 });
