@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COLLECTOR_KINDS } from "./types";
+import { COLLECTOR_KINDS, DECISION_PROPOSAL_STATES } from "./types";
 import type {
   BalanceSnapshot,
   EvidenceValue,
@@ -138,5 +138,10 @@ describe("collector evidence contracts", () => {
       "execution-cost",
     ]);
     expect(Object.isFrozen(COLLECTOR_KINDS)).toBe(true);
+  });
+
+  it("exports immutable proposal-only decision states", () => {
+    expect(DECISION_PROPOSAL_STATES).toEqual(["draft", "approved", "declined", "expired"]);
+    expect(Object.isFrozen(DECISION_PROPOSAL_STATES)).toBe(true);
   });
 });
