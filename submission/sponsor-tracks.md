@@ -9,7 +9,7 @@ OKX OnchainOS integrations wired into the Alter Ego app:
 | **OKX WALLET** (live) | Multi-chain address ingestion via the OnchainOS REST API | `src/components/WalletInput.tsx`: accepts EVM/Solana addresses, validates format |
 | **OKX DEX-MARKET** (live) | Cross-chain trade history for the comparison engine | `src/app/api/compare/route.ts`: calculates GAP COST using multi-chain trade data |
 | **OKX-AI** (live) | ASP agent listing on the OKX.AI marketplace | Integration strip: `src/app/page.tsx`; agent card served at `src/app/api/a2mcp/route.ts` |
-| **x402** (gate wired) | Payment gate for snapshots; live settlement planned | `src/components/PaymentButton.tsx`: 3-state transition (idle to simulating to done), USDT0 on X Layer |
+| **x402** (A2MCP settlement proven) | Demo snapshot animation is simulated; A2MCP settlement is proven on X Layer | `src/components/PaymentButton.tsx` plus `docs/proof/x402-settlement.md` |
 
 ## Track: X Layer Arena (Human Track)
 

@@ -47,7 +47,7 @@
   <li><strong>Persona builder assigns archetypes.</strong> The Professional. The Degen. The Whale. Each persona gets a superpower, a kryptonite, and a win/loss rate.</li>
   <li><strong>5-round roast battle.</strong> Your Ethereum persona and Solana persona face off. Every insult is backed by real transaction data. "You held through a 45% drawdown, that is not conviction, that is a coma." GUARD tags flash pink when targeted.</li>
   <li><strong>Compare card reveals the cost.</strong> Side-by-side PnL, win rates, and the GAP COST: what you lost by not being your best self on every chain.</li>
-  <li><strong>Sealed snapshot via x402.</strong> An attestation pinned to the agent identity (TEE attestation simulated in demo). The x402 gate (USDT0 on X Layer) is wired end-to-end; live settlement is the next milestone.</li>
+  <li><strong>Sealed snapshot via x402.</strong> An attestation pinned to the agent identity (TEE attestation simulated in demo). The demo snapshot-payment animation is simulated; a separate A2MCP request settled 0.01 USDT0 on X Layer, with public transaction proof.</li>
 </ol>
 
 <h2>Key Features</h2>
@@ -58,7 +58,7 @@
   <li><strong>5-round roast battle:</strong> each round fires a data-backed insult at the opposing persona. Pink/cyan/yellow speaker colors, CRT scanline effects.</li>
   <li><strong>GAP COST calculation:</strong> quantifies the real dollar difference between your best and worst trading persona.</li>
   <li><strong>Sealed attestation:</strong> a snapshot pinned to the agent identity (TEE attestation simulated in demo). Shareable proof of your Alter Ego analysis.</li>
-  <li><strong>x402 micropayment gate:</strong> 3-state transition (idle → simulating → done), simulated settlement. Snapshot at $0.99, coaching subscription at $4.99/mo.</li>
+  <li><strong>x402 micropayment gate:</strong> the demo UI uses a 3-state simulated transition; a separate A2MCP request has a proven 0.01 USDT0 settlement on X Layer.</li>
 </ul>
 
 <h2>Live Now</h2>
@@ -70,7 +70,7 @@
   <li><strong>A2MCP endpoint:</strong> <a href="https://alter-ego-wine-mu.vercel.app/api/a2mcp">https://alter-ego-wine-mu.vercel.app/api/a2mcp</a> (200), OKX.AI agent card plus payment-gated analyze</li>
   <li><strong>33 Playwright browser tests:</strong> 33/33 passing, 6-phase state machine, responsive layout (320px/1440px), network resilience (slow 3G)</li>
   <li><strong>Deployed on Vercel:</strong> production build, Next.js 16 (Turbopack), TypeScript 0 errors</li>
-  <li><strong>OKX OnchainOS:</strong> WALLET, DEX-MARKET, OKX-AI live; x402 gate wired (live settlement planned)</li>
+  <li><strong>OKX OnchainOS:</strong> WALLET, DEX-MARKET, OKX-AI live; x402 A2MCP settlement proven on X Layer (demo snapshot animation simulated)</li>
 </ul>
 
 <h2>Tech Stack</h2>
@@ -81,7 +81,7 @@
 
 <ul>
   <li><strong>Primary track:</strong> X Layer Arena (Human Track)</li>
-  <li><strong>OKX integrations used:</strong> OKX WALLET (multi-chain address ingestion), OKX DEX-MARKET (cross-chain trade history), OKX-AI (marketplace listing plus A2MCP agent card), x402 (micropayment gate, wired)</li>
+  <li><strong>OKX integrations used:</strong> OKX WALLET (multi-chain address ingestion), OKX DEX-MARKET (cross-chain trade history), OKX-AI (marketplace listing plus A2MCP agent card), x402 (A2MCP settlement proven; demo snapshot animation simulated)</li>
   <li><strong>Sponsor tech:</strong> OKX OnchainOS REST API for all wallet data, ERC-8004 agent identity registered on X Layer, TEE attestation (simulated)</li>
 </ul>
 
@@ -90,7 +90,7 @@
 <p>This is a hackathon demo. Two capabilities are intentionally simulated and clearly labeled:</p>
 <ul>
   <li><strong>TEE attestation:</strong> simulated. The attestation badge is UI; real SGX/TDX attestation is planned post-hackathon.</li>
-  <li><strong>x402 settlement:</strong> the payment gate is wired end-to-end; live USDT0-on-X-Layer settlement is the next milestone.</li>
+  <li><strong>x402 settlement:</strong> the demo snapshot-payment animation is simulated. A separate A2MCP settlement is proven on-chain; see the project proof link.</li>
 </ul>
 
 <h2>Proof</h2>
