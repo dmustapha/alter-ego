@@ -29,4 +29,13 @@ describe("synthesizeCohort", () => {
 
     expect(result.findings).toContainEqual(expect.objectContaining({ kind: "insufficient", metric: "concentration", value: { status: "unknown", reason: "unavailable" } }));
   });
+
+  it("preserves a unit-specific disagreement range instead of averaging it into consensus", () => {
+    const result = synthesizeCohort([profile("0xa", 0.2), profile("0xb", 0.8)]);
+
+    expect(result.findings).toContainEqual(expect.objectContaining({
+      kind: "disagreement", metric: "concentration", unit: "ratio",
+      distribution: { minimum: 0.2, maximum: 0.8, count: 2 },
+    }));
+  });
 });

@@ -8,7 +8,12 @@ describe("compileHypotheses", () => {
   it("creates a neutral measurable draft from a consensus finding", () => {
     const [hypothesis] = compileHypotheses(synthesis);
 
-    expect(hypothesis).toMatchObject({ status: "draft", findingIds: ["consensus:concentration"] });
-    expect(hypothesis.condition).not.toMatch(/buy|sell|token|price/i);
+    expect(hypothesis).toMatchObject({
+      status: "draft",
+      findingIds: ["consensus:concentration"],
+      sourceEvidenceIds: ["balance:1"],
+      condition: { metric: "concentration", operator: "within-range", minimum: 0.75, maximum: 0.85 },
+      scope: { chainIds: [], outcomeHorizonMs: 86_400_000 },
+    });
   });
 });

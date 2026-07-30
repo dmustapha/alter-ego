@@ -82,9 +82,11 @@ export interface CohortSynthesis {
 
 export interface StrategyHypothesis {
   readonly id: string;
-  readonly status: "draft" | "insufficient" | "validated" | "rejected";
+  readonly status: "draft" | "insufficient";
   readonly findingIds: readonly string[];
-  readonly condition: string;
+  readonly sourceEvidenceIds: readonly string[];
+  readonly condition: { readonly metric: BehaviorMetricName; readonly operator: "within-range"; readonly minimum: number; readonly maximum: number };
+  readonly scope: { readonly chainIds: readonly string[]; readonly outcomeHorizonMs: number };
   readonly outcomeDefinition: string;
   readonly assumptions: readonly string[];
 }
