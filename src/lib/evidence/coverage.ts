@@ -1,4 +1,4 @@
-import { COLLECTOR_KINDS, type CollectorKind, type NormalizedTransactionEvent, type WalletCoverageSummary } from "./types";
+import { COLLECTOR_KINDS, isCanonicalTimestampMs, type CollectorKind, type NormalizedTransactionEvent, type WalletCoverageSummary } from "./types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const CURRENT_WINDOW_MS = 7 * DAY_MS;
@@ -27,19 +27,25 @@ function recency(ageMs: number | null): WalletCoverageSummary["recency"] {
   return ageMs <= RECENT_WINDOW_MS ? "recent" : "stale";
 }
 
-function collectorKind(value: unknown): CollectorKind | null {
+const COLLECTOR_ENDPOINTS = {
+  "balances-by-address": ["balance-snapshot", "okx-web3"],
+  "historical-prices": ["price-observation", "defillama"],
+  "transaction-detail": ["trade-classification", "okx-web3"],
+  "fifo-lot-builder": ["position-lot", "derived"],
+  "fifo-outcome-builder": ["realized-outcome", "derived"],
+  "execution-cost-normalizer": ["execution-cost", "derived"],
+} as const;
+
+function collectorKind(value: unknown, walletAddress: string, chainIds: readonly string[], nowMs: number): CollectorKind | null {
   if (typeof value !== "object" || value === null) return null;
-  const provenance = (value as { provenance?: unknown }).provenance;
+  const record = value as { walletAddress?: unknown; chain?: { id?: unknown }; evidenceIds?: unknown; provenance?: unknown };
+  if (record.walletAddress !== walletAddress || !record.chain || typeof record.chain.id !== "string" || !chainIds.includes(record.chain.id) || !Array.isArray(record.evidenceIds) || record.evidenceIds.length === 0 || !record.evidenceIds.every((id) => typeof id === "string" && id.trim() !== "")) return null;
+  const provenance = record.provenance;
   if (typeof provenance !== "object" || provenance === null) return null;
-  switch ((provenance as { endpoint?: unknown }).endpoint) {
-    case "balances-by-address": return "balance-snapshot";
-    case "historical-prices": return "price-observation";
-    case "transaction-detail": return "trade-classification";
-    case "fifo-lot-builder": return "position-lot";
-    case "fifo-outcome-builder": return "realized-outcome";
-    case "execution-cost-normalizer": return "execution-cost";
-    default: return null;
-  }
+  const source = provenance as { endpoint?: unknown; provider?: unknown; retrievedAt?: unknown };
+  if (typeof source.endpoint !== "string" || !isCanonicalTimestampMs(source.retrievedAt, nowMs)) return null;
+  const expected = COLLECTOR_ENDPOINTS[source.endpoint as keyof typeof COLLECTOR_ENDPOINTS];
+  return expected && source.provider === expected[1] ? expected[0] : null;
 }
 
 export function summarizeCoverage(
@@ -56,8 +62,9 @@ export function summarizeCoverage(
   const knownAmountCount = knownCount(events, (event) => event.amount);
   const knownPriceCount = knownCount(events, (event) => event.priceUsd);
   const transactionFieldScore = (knownDirectionCount + knownAmountCount + knownPriceCount) / (events.length * 3);
+  const chainIds = Object.freeze([...new Set(events.map((event) => event.chain.id))]);
   const observedCollectors = Object.freeze([...new Set(collectorRecords.flatMap((record) => {
-    const kind = collectorKind(record);
+    const kind = collectorKind(record, walletAddress, chainIds, nowMs);
     return kind === null ? [] : [kind];
   }))]);
   const newestEventAt = newestTimestamp(events, nowMs);
@@ -65,7 +72,7 @@ export function summarizeCoverage(
 
   return Object.freeze({
     walletAddress,
-    chainIds: Object.freeze([...new Set(events.map((event) => event.chain.id))]),
+    chainIds,
     eventCount: events.length,
     knownDirectionCount,
     knownAmountCount,

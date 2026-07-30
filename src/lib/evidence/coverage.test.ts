@@ -28,6 +28,16 @@ function event(overrides: Partial<NormalizedTransactionEvent> = {}): NormalizedT
   };
 }
 
+function collectorRecord(endpoint: string, overrides: Record<string, unknown> = {}) {
+  return {
+    walletAddress: "0xwallet",
+    chain: { id: "1", name: "ethereum" },
+    evidenceIds: ["evidence:1"],
+    provenance: { provider: endpoint === "historical-prices" ? "defillama" : "okx-web3", endpoint, retrievedAt: nowMs },
+    ...overrides,
+  };
+}
+
 describe("summarizeCoverage", () => {
   it("scores only observed direction, amount, and price fields for one wallet", () => {
     const result = summarizeCoverage([
@@ -56,10 +66,10 @@ describe("summarizeCoverage", () => {
     const result = summarizeCoverage([event()], {
       nowMs,
       collectorRecords: [
-        { provenance: { endpoint: "balances-by-address" } },
-        { provenance: { endpoint: "historical-prices" } },
+        collectorRecord("balances-by-address"),
+        collectorRecord("historical-prices"),
       ],
-    } as never);
+    });
 
     expect(result).toMatchObject({
       score: 1,
@@ -75,15 +85,28 @@ describe("summarizeCoverage", () => {
     const result = summarizeCoverage([event()], {
       nowMs,
       collectorRecords: [
-        { provenance: { endpoint: "historical-prices" } },
-        { provenance: { endpoint: "invented-collector" } },
+        collectorRecord("historical-prices"),
+        collectorRecord("invented-collector"),
       ],
-    } as never);
+    });
 
     expect(result.collectorCoverage).toEqual({
       collectedKinds: ["price-observation"],
       score: 1 / 6,
     });
+  });
+
+  it("does not count a foreign-wallet or foreign-chain collector record", () => {
+    const result = summarizeCoverage([event()], {
+      nowMs,
+      collectorRecords: [
+        collectorRecord("balances-by-address"),
+        collectorRecord("historical-prices", { walletAddress: "0xother" }),
+        collectorRecord("trade-classifier", { chain: { id: "196", name: "xlayer" }, provenance: { provider: "derived", endpoint: "trade-classifier", retrievedAt: nowMs } }),
+      ],
+    });
+
+    expect(result.collectorCoverage).toEqual({ collectedKinds: ["balance-snapshot"], score: 1 / 6 });
   });
 
   it("reports recency from the newest timestamp and exposes missing recency", () => {
