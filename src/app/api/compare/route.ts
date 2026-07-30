@@ -6,9 +6,10 @@ export async function GET() {
     const comparison = loadComparison();
     const leaderboard = loadLeaderboard();
     return NextResponse.json({ comparison, top3: leaderboard.slice(0, 3) });
-  } catch (error: any) {
-    console.error(`[API] GET /api/compare:`, error.message);
-    const message = process.env.NODE_ENV === "production" ? "Internal server error" : error.message;
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : "Unknown error";
+    console.error(`[API] GET /api/compare:`, detail);
+    const message = process.env.NODE_ENV === "production" ? "Internal server error" : detail;
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

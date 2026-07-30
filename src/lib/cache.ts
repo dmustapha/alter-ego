@@ -149,15 +149,18 @@ export function clearRoastCache(): void {
 }
 
 export function loadLeaderboard(): LeaderboardEntry[] {
-  const raw = loadJson<any>("leaderboard.json");
+  const raw = loadJson<unknown>("leaderboard.json");
 
   // Handle seed-script format: { solana: "{...json...}", ethereum: "{...json...}" }
-  if (raw && typeof raw === "object" && !Array.isArray(raw) && (raw.solana || raw.ethereum)) {
+  const seeded = raw && typeof raw === "object" && !Array.isArray(raw)
+    ? raw as Partial<Record<"solana" | "ethereum", unknown>>
+    : null;
+  if (seeded?.solana || seeded?.ethereum) {
     const entries: LeaderboardEntry[] = [];
     for (const chain of ["solana", "ethereum"] as const) {
-      if (raw[chain]) {
+      if (seeded[chain]) {
         try {
-          const parsed = typeof raw[chain] === "string" ? JSON.parse(raw[chain]) : raw[chain];
+          const parsed = typeof seeded[chain] === "string" ? JSON.parse(seeded[chain]) : seeded[chain];
           if (parsed?.ok && Array.isArray(parsed.data)) {
             entries.push(...parsed.data);
           }

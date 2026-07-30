@@ -5,9 +5,10 @@ export async function GET() {
   try {
     const personas = await loadPersonas();
     return NextResponse.json({ personas });
-  } catch (error: any) {
-    console.error(`[API] GET /api/persona:`, error.message);
-    const message = process.env.NODE_ENV === "production" ? "Internal server error" : error.message;
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : "Unknown error";
+    console.error(`[API] GET /api/persona:`, detail);
+    const message = process.env.NODE_ENV === "production" ? "Internal server error" : detail;
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

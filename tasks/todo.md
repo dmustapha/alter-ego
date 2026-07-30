@@ -12,7 +12,13 @@
 
 ## Full product, after submission
 
-- [ ] Define normalized evidence and outcome schema.
+- [x] Define normalized evidence and coverage schema.
+- [x] Complete evidence-integrity remediation Task 1: canonical time and numeric policy.
+- [x] Complete and manually review remediation Task 2: bind trade and price evidence provenance.
+- [x] Complete remediation Task 3: unit-safe FIFO and execution-cost derivations.
+- [x] Complete remediation Task 4: provider-boundary hardening and collector-aware coverage.
+- [x] Complete critical-review remediation before any collector finalization or profile work.
+- [ ] Clear repository lint gate and merge verified evidence remediation into main.
 - [ ] Implement confidence-scored wallet behavior profiles.
 - [ ] Implement user-selected cohort synthesis and Composite Trading Pattern output.
 - [ ] Implement strategy hypotheses and walk-forward validation.

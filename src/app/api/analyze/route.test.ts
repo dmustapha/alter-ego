@@ -7,48 +7,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // -- Fixtures --
 
-const MOCK_TXNS = [
-  {
-    txHash: "0xaaa",
-    txTime: String(Date.now() - 86400000),
-    tokenContractAddress: "0xtoken1",
-    symbol: "USDC",
-    chainIndex: "1",
-    hitBlacklist: false,
-    from: [{ address: "0xabc" }],
-    amount: "100",
-  },
-  {
-    txHash: "0xbbb",
-    txTime: String(Date.now() - 172800000),
-    tokenContractAddress: "0xtoken2",
-    symbol: "DAI",
-    chainIndex: "1",
-    hitBlacklist: false,
-    from: [{ address: "0xother" }],
-    amount: "50",
-  },
-];
-
-const MOCK_BALANCES = [
-  {
-    tokenContractAddress: "0xtoken1",
-    symbol: "USDC",
-    balance: "100",
-    tokenPrice: "1",
-    isRiskToken: false,
-  },
-  {
-    tokenContractAddress: "0xtoken2",
-    symbol: "DAI",
-    balance: "50",
-    tokenPrice: "1",
-    isRiskToken: false,
-  },
-];
-
-const MOCK_DETAIL = { gasPrice: "20000000000" }; // 20 gwei
-
 // -- Mock setup --
 
 // Mock analyzeWallets so the route is testable in isolation without network.
