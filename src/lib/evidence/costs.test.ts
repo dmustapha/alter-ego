@@ -161,6 +161,15 @@ describe("collectExecutionCosts", () => {
     expect(cost.priceEvidenceIds).toEqual([]);
   });
 
+  it("rejects a native price with a pre-canonical retrieval timestamp", () => {
+    const [cost] = collectExecutionCosts([event()], [nativePrice({
+      provenance: { ...nativePrice().provenance, retrievedAt: 0 },
+    })]);
+
+    expect(cost.gasFeeUsd).toEqual({ status: "unknown", reason: "unavailable" });
+    expect(cost.priceEvidenceIds).toEqual([]);
+  });
+
   it("rejects a native price not linked to the fee event", () => {
     const [cost] = collectExecutionCosts([event()], [nativePrice({ evidenceIds: ["event:other"] })]);
 
