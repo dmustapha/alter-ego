@@ -19,6 +19,7 @@
 - [x] Complete remediation Task 4: provider-boundary hardening and collector-aware coverage.
 - [x] Complete critical-review remediation before any collector finalization or profile work.
 - [x] Clear repository lint gate and merge verified evidence remediation into main.
+- [x] Approve the evidence-linked decision-layer design and a proposal-only first release.
 - [ ] Implement confidence-scored wallet behavior profiles.
 - [ ] Implement user-selected cohort synthesis and Composite Trading Pattern output.
 - [ ] Implement strategy hypotheses and walk-forward validation.
