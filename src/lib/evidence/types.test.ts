@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COLLECTOR_KINDS, DECISION_PROPOSAL_STATES } from "./types";
+import { COLLECTOR_KINDS, DECISION_METRIC_UNITS, DECISION_PROPOSAL_STATES } from "./types";
 import type {
   BalanceSnapshot,
   EvidenceValue,
@@ -143,5 +143,17 @@ describe("collector evidence contracts", () => {
   it("exports immutable proposal-only decision states", () => {
     expect(DECISION_PROPOSAL_STATES).toEqual(["draft", "approved", "declined", "expired"]);
     expect(Object.isFrozen(DECISION_PROPOSAL_STATES)).toBe(true);
+  });
+
+  it("declares a non-interchangeable unit for every behavior metric", () => {
+    expect(DECISION_METRIC_UNITS).toEqual({
+      concentration: "ratio",
+      turnover: "ratio",
+      "holding-horizon": "milliseconds",
+      "risk-exposure": "ratio",
+      "execution-cost": "usd",
+      "realized-outcome": "usd",
+    });
+    expect(Object.isFrozen(DECISION_METRIC_UNITS)).toBe(true);
   });
 });

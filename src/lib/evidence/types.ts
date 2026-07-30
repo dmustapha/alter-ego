@@ -32,6 +32,15 @@ export const DECISION_PROPOSAL_STATES = Object.freeze([
 export type DecisionProposalState = typeof DECISION_PROPOSAL_STATES[number];
 export type BehaviorMetricName = "concentration" | "turnover" | "holding-horizon" | "risk-exposure" | "execution-cost" | "realized-outcome";
 
+export const DECISION_METRIC_UNITS: Readonly<Record<BehaviorMetricName, "ratio" | "milliseconds" | "usd">> = Object.freeze({
+  concentration: "ratio",
+  turnover: "ratio",
+  "holding-horizon": "milliseconds",
+  "risk-exposure": "ratio",
+  "execution-cost": "usd",
+  "realized-outcome": "usd",
+});
+
 export interface BehaviorMetric {
   readonly name: BehaviorMetricName;
   readonly value: EvidenceValue<number>;
