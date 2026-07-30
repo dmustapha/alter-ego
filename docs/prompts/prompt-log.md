@@ -27,3 +27,86 @@
 ### Prompt 7
 > then proceed with the demo video after all that. you dont need any input from me again. i just need the final product
 **Action:** Took ownership of the remaining cohort selection, product correction, recording, narration, and release QA.
+
+### Prompt 8
+> Resume Alter Ego’s post-submission implementation in `/Users/MAC/hackathon-toolkit/active/alter-ego`.
+>
+> Read the full handoff first: `docs/context/conversation_2026-07-28_0051.md`.
+>
+> Do not touch or re-render any video. The user accepted `video/out/alter-ego-product-first-90s.mp4` as-is under deadline pressure. It still has top subtitles and narration that does not use the canonical Composite wording; those are intentionally deferred unless the user explicitly reopens video work.
+>
+> Then read:
+> 1. `docs/plans/2026-07-27-demo-release-and-composite-trading-pattern.md`
+> 2. `docs/plans/2026-07-27-composite-trading-pattern-design.md`
+> 3. `tasks/todo.md`
+> 4. `~/.codex/skills/hackathon-briefs/okx-buildx.md`
+> 5. `~/.codex/skills/executing-plans/SKILL.md`
+> 6. `~/.codex/skills/using-git-worktrees/SKILL.md`
+> 7. `~/.codex/skills/test-driven-development/SKILL.md`
+>
+> The current checkout is dirty `main`. Preserve all changes. Create an isolated worktree/feature branch before code changes.
+>
+> Start Track B, Task 8 only: build a typed normalized evidence and coverage layer. Write tests first, watch them fail, then implement the minimum code for `src/lib/evidence/types.ts`, `normalize.ts`, and `coverage.ts`. Tests must cover immutable cross-chain normalization, provenance, explicit unknown values, coverage scoring, and recency. Do not implement profiles, Composite synthesis, backtesting, or execution yet.
+>
+> Critical truth rules: selected wallet cohorts never imply shared ownership; personas are presentation-only; Composite Trading Pattern is not live yet; no alpha, trade, or autonomous-execution claim without evidence and validation.
+**Action:** Started Track B, Task 8 in an isolated feature worktree with a test-first normalized evidence and coverage contract. Video work remains explicitly untouched.
+
+### Prompt 9
+> everything in the entire plan is done???? we have how the full trading pattern implemented?
+**Action:** Clarified that only Task 8 was implemented because the previous request explicitly limited work to it; recorded the scope-reporting lesson.
+
+### Prompt 10
+> continue the next thing
+**Action:** Began reviewing Track B, Task 9 behavior profiles and paused for the required design approval before implementation.
+
+### Prompt 11
+> go with 3
+**Action:** Deferred behavior-profile implementation in favor of designing its prerequisite evidence collectors first.
+
+### Prompt 12
+> yes
+**Action:** Approved the prerequisite collector scope; documented and committed the design, then prepared the implementation plan.
+
+### Prompt 13
+> what about now. and why are the tasks been run inn the background. i want to see as its being done
+**Action:** Stopped background subagent execution and switched to visible, sequential implementation and review updates.
+
+### Prompt 14
+> Resume Alter Ego in `/Users/MAC/.config/superpowers/worktrees/alter-ego/feature-evidence-coverage`.
+>
+> Read the full handoff first: `docs/context/conversation_2026-07-29_0331.md`.
+>
+> Do not touch or render any video. Do not start Task 7, profiles, Composite synthesis, backtesting, recommendations, or execution.
+>
+> Work visibly and sequentially only. Do not spawn background implementation agents. For every fix, show the failing test, then minimal implementation, then passing tests and manual review outcomes in commentary.
+>
+> First action: manually review remediation Task 2 commit `249b888` against `docs/plans/2026-07-28-evidence-integrity-remediation.md`, then run:
+> `npm test -- --run src/lib/evidence/trades.test.ts src/lib/evidence/outcomes.test.ts src/lib/evidence/prices.test.ts`
+> and `npx tsc --noEmit`.
+>
+> Critical truth rules: selected wallets never imply shared ownership; personas are presentation-only; Composite Trading Pattern is not live; do not make alpha, trade, or autonomous-execution claims without evidenced validation.
+**Action:** Reviewed remediation Task 2 provenance binding, ran its focused test suite and typecheck, and completed the manual specification and quality gates without changing evidence code.
+
+### Prompt 15
+> continue with task 3 in full. all phases.
+**Action:** Completed Task 3 with visible test-first cycles for finite FIFO PnL, canonical fee-unit/decimals provenance, stale and source-unlinked native prices, and deterministic multi-fill IDs; verified and committed the scoped implementation.
+
+### Prompt 16
+> continue with the next task, task 4?
+**Action:** Completed Task 4 with visible test-first provider-boundary guards, bounded/deduplicated price requests, and collector-aware coverage that excludes future timestamps; verified and committed the scoped implementation.
+
+### Prompt 17
+> review all the work youve done so far critically
+**Action:** Performed a read-only critical review of the evidence-layer commits, including fresh tests, typecheck, lint, provenance, numeric-safety, and collector-coverage audit; reported gaps without changing implementation.
+
+### Prompt 18
+> lets do tbose. first commit and push all recent work to a branch. use the update push. when we're done with the full plan and testing, we'll merge to main
+**Action:** Verified, committed, and pushed the accumulated evidence-remediation work to the feature branch; continued the remaining plan without merging to main.
+
+### Prompt 19
+> CONTINUE
+**Action:** Completed the remaining critical-review remediation, including bounded direct price requests and canonical classified-trade provenance; ran the full evidence and repository verification suite without merging to main.
+
+### Prompt 20
+> yes do that
+**Action:** Began a maintenance-only lint cleanup and merge gate for the verified evidence branch; product roadmap work remains out of scope.
