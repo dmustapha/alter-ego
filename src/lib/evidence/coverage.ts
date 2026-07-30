@@ -6,7 +6,7 @@ const RECENT_WINDOW_MS = 30 * DAY_MS;
 
 export interface CoverageOptions {
   readonly nowMs: number;
-  readonly collectedKinds?: readonly CollectorKind[];
+  readonly collectorRecords?: readonly unknown[];
 }
 
 function knownCount<T>(
@@ -27,13 +27,24 @@ function recency(ageMs: number | null): WalletCoverageSummary["recency"] {
   return ageMs <= RECENT_WINDOW_MS ? "recent" : "stale";
 }
 
-function isCollectorKind(value: unknown): value is CollectorKind {
-  return typeof value === "string" && (COLLECTOR_KINDS as readonly string[]).includes(value);
+function collectorKind(value: unknown): CollectorKind | null {
+  if (typeof value !== "object" || value === null) return null;
+  const provenance = (value as { provenance?: unknown }).provenance;
+  if (typeof provenance !== "object" || provenance === null) return null;
+  switch ((provenance as { endpoint?: unknown }).endpoint) {
+    case "balances-by-address": return "balance-snapshot";
+    case "historical-prices": return "price-observation";
+    case "transaction-detail": return "trade-classification";
+    case "fifo-lot-builder": return "position-lot";
+    case "fifo-outcome-builder": return "realized-outcome";
+    case "execution-cost-normalizer": return "execution-cost";
+    default: return null;
+  }
 }
 
 export function summarizeCoverage(
   events: readonly NormalizedTransactionEvent[],
-  { nowMs, collectedKinds = [] }: CoverageOptions,
+  { nowMs, collectorRecords = [] }: CoverageOptions,
 ): WalletCoverageSummary {
   if (events.length === 0) throw new Error("Coverage requires at least one event");
   const walletAddress = events[0].walletAddress;
@@ -45,7 +56,10 @@ export function summarizeCoverage(
   const knownAmountCount = knownCount(events, (event) => event.amount);
   const knownPriceCount = knownCount(events, (event) => event.priceUsd);
   const transactionFieldScore = (knownDirectionCount + knownAmountCount + knownPriceCount) / (events.length * 3);
-  const observedCollectors = Object.freeze([...new Set(collectedKinds.filter(isCollectorKind))]);
+  const observedCollectors = Object.freeze([...new Set(collectorRecords.flatMap((record) => {
+    const kind = collectorKind(record);
+    return kind === null ? [] : [kind];
+  }))]);
   const newestEventAt = newestTimestamp(events, nowMs);
   const ageMs = newestEventAt === null ? null : nowMs - newestEventAt;
 

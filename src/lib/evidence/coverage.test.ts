@@ -55,7 +55,10 @@ describe("summarizeCoverage", () => {
   it("reports collector coverage separately from transaction-field coverage", () => {
     const result = summarizeCoverage([event()], {
       nowMs,
-      collectedKinds: ["balance-snapshot", "price-observation"],
+      collectorRecords: [
+        { provenance: { endpoint: "balances-by-address" } },
+        { provenance: { endpoint: "historical-prices" } },
+      ],
     } as never);
 
     expect(result).toMatchObject({
@@ -68,10 +71,13 @@ describe("summarizeCoverage", () => {
     });
   });
 
-  it("ignores unknown collector kinds instead of reporting them as coverage", () => {
+  it("ignores records without a supported collector endpoint", () => {
     const result = summarizeCoverage([event()], {
       nowMs,
-      collectedKinds: ["price-observation", "invented-collector"],
+      collectorRecords: [
+        { provenance: { endpoint: "historical-prices" } },
+        { provenance: { endpoint: "invented-collector" } },
+      ],
     } as never);
 
     expect(result.collectorCoverage).toEqual({

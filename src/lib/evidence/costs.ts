@@ -9,6 +9,7 @@ import type {
   UnknownReason,
 } from "./types";
 import { MAX_SOURCE_PRICE_DELTA_MS } from "./types";
+import { isCanonicalTimestampMs } from "./types";
 import { canonicalNativeAsset, type CanonicalNativeAsset } from "./native-assets";
 
 function known<T>(value: T): EvidenceValue<T> {
@@ -41,7 +42,17 @@ function validChain(value: unknown): value is EvidenceChain {
 function validEvent(value: unknown): value is NormalizedTransactionEvent {
   return isRecord(value) && typeof value.id === "string" && value.id !== ""
     && typeof value.walletAddress === "string" && value.walletAddress !== ""
-    && validChain(value.chain);
+    && validChain(value.chain)
+    && isCanonicalTimestampMs(value.timestampMs, Date.now())
+    && isRecord(value.provenance)
+    && value.provenance.provider === "okx-web3"
+    && value.provenance.endpoint === "transactions-by-address"
+    && value.provenance.chainIndex === value.chain.id
+    && typeof value.provenance.transactionHash === "string" && value.provenance.transactionHash !== ""
+    && isCanonicalTimestampMs(value.provenance.retrievedAt, Date.now())
+    && typeof value.provenance.sourceIndex === "number"
+    && Number.isInteger(value.provenance.sourceIndex)
+    && value.provenance.sourceIndex >= 0;
 }
 
 function nativeAsset(chain: EvidenceChain): EvidenceAsset {
@@ -78,6 +89,7 @@ function isMatchingPrice(
   price: unknown,
   event: NormalizedTransactionEvent,
   native: CanonicalNativeAsset | null,
+  retrievedAt: number,
 ): price is PriceObservation {
   if (!isRecord(price) || !validChain(price.chain) || !isRecord(price.asset)) return false;
   if (!native || !isRecord(price.provenance)) return false;
@@ -93,6 +105,7 @@ function isMatchingPrice(
     && isKnownNonnegative(price.returnedAt)
     && event.timestampMs !== null
     && Math.abs(price.returnedAt.value - event.timestampMs) <= MAX_SOURCE_PRICE_DELTA_MS
+    && price.returnedAt.value <= retrievedAt
     && isRecord(price.confidence) && price.confidence.status === "known"
     && typeof price.confidence.value === "number" && Number.isFinite(price.confidence.value)
     && price.confidence.value >= 0.9 && price.confidence.value <= 1
@@ -101,7 +114,9 @@ function isMatchingPrice(
     && price.provenance.sourceAssetId === native.sourceAssetId
     && price.provenance.requestedAt === event.timestampMs
     && typeof price.provenance.retrievedAt === "number"
-    && Number.isFinite(price.provenance.retrievedAt) && price.provenance.retrievedAt >= 0;
+    && Number.isFinite(price.provenance.retrievedAt)
+    && price.provenance.retrievedAt >= 0
+    && price.provenance.retrievedAt <= retrievedAt;
 }
 
 function conversion(
@@ -109,11 +124,12 @@ function conversion(
   native: CanonicalNativeAsset | null,
   prices: readonly unknown[],
   gasFeeNative: EvidenceValue<number>,
+  retrievedAt: number,
 ): { readonly usd: EvidenceValue<number>; readonly ids: readonly string[] } {
   if (gasFeeNative.status !== "known" || event.timestampMs === null || !hasCanonicalFeeUnit(event.gasFeeUnit, native)) {
     return Object.freeze({ usd: unknown<number>("unavailable"), ids: Object.freeze<string[]>([]) });
   }
-  const price = prices.find((value) => isMatchingPrice(value, event, native));
+  const price = prices.find((value) => isMatchingPrice(value, event, native, retrievedAt));
   if (!price || price.priceUsd.status !== "known") {
     return Object.freeze({ usd: unknown<number>("unavailable"), ids: Object.freeze<string[]>([]) });
   }
@@ -150,7 +166,7 @@ export function collectExecutionCosts(
     const asset = nativeAsset(event.chain);
     const gasFeeNative = fee(event);
     const observedAt = timestamp(event);
-    const matched = conversion(event, native, prices, gasFeeNative);
+    const matched = conversion(event, native, prices, gasFeeNative, retrievedAt);
     return [freezeCost({
       id: `cost:${event.id}`,
       walletAddress: event.walletAddress,

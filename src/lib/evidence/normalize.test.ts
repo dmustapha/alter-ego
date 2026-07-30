@@ -105,15 +105,14 @@ describe("normalizeTransactions", () => {
   });
 
   it("rejects an event when its source retrieval time is in the future", () => {
-    const [event] = normalizeTransactions([{
+    const events = normalizeTransactions([{
       walletAddress: "0xwallet",
       chainIndex: "1",
       retrievedAt: Date.now() + 60_000,
       transactions: [{ txHash: "0xfuture-source", txTime: "1700000000000" }],
     }]);
 
-    expect(event.timestampMs).toBeNull();
-    expect(event.provenance.timestampReason).toBe("unavailable");
+    expect(events).toEqual([]);
   });
 
   it("rejects silently rounded fractional amounts and fees while retaining their source strings", () => {
@@ -158,5 +157,16 @@ describe("normalizeTransactions", () => {
 
     expect(() => normalizeTransactions(malformedSources as never)).not.toThrow();
     expect(normalizeTransactions(malformedSources as never)).toEqual([]);
+  });
+
+  it("rejects a transaction source with a noncanonical retrieval timestamp", () => {
+    const events = normalizeTransactions([{
+      walletAddress: "0xwallet",
+      chainIndex: "1",
+      retrievedAt: 0,
+      transactions: [{ txHash: "0xinvalid-retrieval", txTime: "1700000000000" }],
+    }]);
+
+    expect(events).toEqual([]);
   });
 });
