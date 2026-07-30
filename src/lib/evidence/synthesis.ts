@@ -1,4 +1,4 @@
-import { DECISION_METRIC_UNITS, type BehaviorMetricName, type CohortFinding, type CohortSynthesis, type WalletBehaviorProfile } from "./types";
+import { DECISION_METRIC_UNITS, type CohortFinding, type CohortSynthesis, type WalletBehaviorProfile } from "./types";
 
 const LIMIT = "Selected wallets are a user-defined cohort and do not imply shared ownership.";
 type SynthesizableMetric = "concentration" | "turnover" | "holding-horizon" | "risk-exposure";

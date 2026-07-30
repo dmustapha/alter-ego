@@ -13,7 +13,7 @@ describe("compileHypotheses", () => {
       findingIds: ["consensus:concentration"],
       sourceEvidenceIds: ["balance:1"],
       condition: { metric: "concentration", operator: "within-range", minimum: 0.75, maximum: 0.85 },
-      scope: { chainIds: [], outcomeHorizonMs: 86_400_000 },
+      scope: { chainIds: [], assetIds: [], outcomeHorizonMs: 86_400_000 },
     });
   });
 });

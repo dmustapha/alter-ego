@@ -86,6 +86,10 @@ Run `npm test -- --run src/lib/evidence/normalize.test.ts` to verify cross-chain
 
 Run `npm test -- --run src/lib/evidence/coverage.test.ts` with a fixed `nowMs`. A lower score normally means observed fields are missing, not that the wallet is risky. Check the individual known-field counts before interpreting the result.
 
+### Decision-layer validation
+
+`createHistoricalValidationDataset` accepts raw historical records once, excludes malformed, duplicate, incomplete, and out-of-interval observations, then freezes a reproducible snapshot fingerprint. `validateWalkForward` consumes only that verified snapshot, fits a neutral metric range on each chronological training fold, and totals only the following out-of-sample folds after supplied costs. A validated artifact and its runtime-verified receipt are required to create a proposal; approval is only a caller acknowledgement and never performs an action.
+
 ### Full app
 
 Run `npm test` and `npx tsc --noEmit`. For live API failures, inspect `/api/analyze` stream events and the throttled OnchainOS client; never mask an unavailable live result as new evidence.

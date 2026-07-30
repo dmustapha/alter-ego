@@ -52,6 +52,7 @@ export function buildWalletBehaviorProfile({ coverage, balances = [], outcomes =
     ...(incompleteTradeEvidence ? ["turnover excluded incomplete trade evidence."] : []),
     ...(incompleteOutcomeEvidence ? ["outcome metrics excluded incomplete outcome evidence."] : []),
     ...(incompleteCostEvidence ? ["execution cost excluded incomplete cost evidence."] : []),
+    ...(knownOutcomes.some((outcome) => outcome.openedAt === undefined) ? ["holding horizon unavailable because legacy outcome opening time is absent."] : []),
   ];
   return Object.freeze({ id: `profile:${coverage.walletAddress}`, walletAddress: coverage.walletAddress, chainIds: Object.freeze([...coverage.chainIds]), metrics: Object.freeze([concentration, riskExposure, realizedOutcome, executionCost, turnover, holdingHorizon]), coverage: Object.freeze({ ...coverage }), limitations: Object.freeze(limitations) });
 }

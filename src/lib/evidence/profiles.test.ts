@@ -120,6 +120,15 @@ describe("buildWalletBehaviorProfile", () => {
     }));
   });
 
+  it("keeps legacy outcomes without opening time readable without fabricating a holding horizon", () => {
+    const legacy = { ...outcome("outcome:legacy", 1), openedAt: undefined };
+    const profile = buildWalletBehaviorProfile({ coverage, outcomes: [legacy] });
+
+    expect(profile.metrics).toContainEqual(expect.objectContaining({ name: "realized-outcome", value: { status: "known", value: 1 } }));
+    expect(profile.metrics).toContainEqual(expect.objectContaining({ name: "holding-horizon", value: { status: "unknown", reason: "unavailable" } }));
+    expect(profile.limitations).toContain("holding horizon unavailable because legacy outcome opening time is absent.");
+  });
+
   it("marks outcome metrics unknown when an outcome lacks linked price evidence", () => {
     const unlinked = { ...outcome("outcome:unlinked", 2), priceEvidenceIds: [] };
     const profile = buildWalletBehaviorProfile({ coverage, outcomes: [outcome("outcome:valid", 1), unlinked] });

@@ -25,4 +25,11 @@
 - [x] Implement strategy hypotheses and walk-forward validation.
 - [x] Implement user-approved proposal flow; live execution remains intentionally unimplemented.
 - [x] Establish an immutable, provenance-linked historical validation dataset boundary with explicit exclusions.
-- [ ] Complete critical remediation of decision-layer provenance, synthesis, validation, and proposal gates before integration.
+- [x] Complete critical remediation of decision-layer provenance, synthesis, validation, and proposal gates before integration.
+
+## Decision-layer remediation resume (2026-07-30)
+
+- [x] Task 6: Replace caller-shaped validation inputs with verified immutable datasets and receipts.
+- [x] Task 7: Runtime-verify proposal artifacts and implement pure acknowledgement transitions.
+- [x] Task 8: Preserve legacy outcomes without inventing holding horizons.
+- [x] Task 9: Add adversarial checks, complete final verification, and remediate independent review findings.
