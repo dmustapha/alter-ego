@@ -58,6 +58,12 @@ vi.mock("@/lib/okx-cache", async (importActual) => {
   };
 });
 
+vi.mock("@/lib/defillama", () => ({
+  getHistoricalPrices: vi.fn((requests: Array<{ chain: string; address: string; ts: number }>) =>
+    Promise.resolve(new Map(requests.map((request) => [`${request.chain}:${request.address}:${request.ts}`, 1])))
+  ),
+}));
+
 // The route now gates the analyze path on x402 payment (issued by the OKX Payment SDK, whose
 // facilitator host is unreachable from this machine). This test exercises the real engine, not
 // payment, so treat every request as paid. This does NOT weaken the differential assertion below.

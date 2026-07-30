@@ -86,7 +86,7 @@ export interface StrategyHypothesis {
   readonly findingIds: readonly string[];
   readonly sourceEvidenceIds: readonly string[];
   readonly condition: { readonly metric: BehaviorMetricName; readonly operator: "within-range"; readonly minimum: number; readonly maximum: number };
-  readonly scope: { readonly chainIds: readonly string[]; readonly outcomeHorizonMs: number };
+  readonly scope: { readonly chainIds: readonly string[]; readonly assetIds: readonly string[]; readonly outcomeHorizonMs: number };
   readonly outcomeDefinition: string;
   readonly assumptions: readonly string[];
 }
@@ -98,16 +98,52 @@ export interface WalkForwardValidation {
   readonly excludedCount: number;
   readonly totalCostUsd: EvidenceValue<number>;
   readonly limitations: readonly string[];
+  readonly folds: readonly WalkForwardFold[];
+  readonly datasetFingerprint: string;
+  readonly hypothesisFingerprint: string;
+  readonly fingerprint: string;
+  readonly issuedAt: number;
+}
+
+export interface WalkForwardFold {
+  readonly trainingObservationIds: readonly string[];
+  readonly testObservationIds: readonly string[];
+  readonly fittedRange: { readonly minimum: number; readonly maximum: number };
+  readonly eligibleCount: number;
+  readonly excludedCount: number;
+  readonly totalCostUsd: number;
+  readonly netOutcomeUsd: number;
+  readonly sourceEvidenceIds: readonly string[];
+  readonly limitations: readonly string[];
+}
+
+export interface ValidationReceipt {
+  readonly version: "validation-receipt/v1";
+  readonly hypothesisId: string;
+  readonly hypothesisFingerprint: string;
+  readonly datasetFingerprint: string;
+  readonly foldConfiguration: { readonly trainingSize: number; readonly testSize: number };
+  readonly reportFingerprint: string;
+  readonly issuedAt: number;
+}
+
+export interface ValidatedHypothesis {
+  readonly version: "validated-hypothesis/v1";
+  readonly hypothesis: StrategyHypothesis;
+  readonly validation: WalkForwardValidation;
+  readonly receipt: ValidationReceipt;
 }
 
 export interface DecisionProposal {
   readonly id: string;
   readonly state: DecisionProposalState;
   readonly hypothesisId: string;
-  readonly validation: WalkForwardValidation;
+  readonly validatedHypothesis: ValidatedHypothesis;
   readonly assumptions: readonly string[];
   readonly risks: readonly string[];
   readonly expiresAt: number;
+  readonly createdAt: number;
+  readonly acknowledgement?: { readonly text: string; readonly acknowledgedAt: number; readonly acknowledgementSource: "caller" };
 }
 
 export type EvidenceValue<T> =
