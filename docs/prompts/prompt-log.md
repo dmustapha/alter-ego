@@ -166,3 +166,11 @@
 ### Prompt 34
 > continue with whats next, dont stop, dont wait for approvals
 **Action:** Continued from Task 3 completion audit into Task 4 metric-specific synthesis without approval pauses.
+
+### Prompt 35
+> whats left/next
+**Action:** Refreshed the remediation handoff and reported the remaining execution order and merge gates.
+
+### Prompt 36
+> continue
+**Action:** Continued Task 4 with metric-specific disagreement preservation tests and implementation.
