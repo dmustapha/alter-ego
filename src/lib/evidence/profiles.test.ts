@@ -55,6 +55,14 @@ describe("buildWalletBehaviorProfile", () => {
     expect(Object.isFrozen(profile)).toBe(true);
   });
 
+  it("marks concentration unknown instead of discarding a balance with an unavailable quote", () => {
+    const incomplete = { ...balance("0xmissing", 20), quotedUsd: { status: "unknown" as const, reason: "unavailable" as const } };
+    const profile = buildWalletBehaviorProfile({ coverage, balances: [balance("0xa", 80), balance("0xb", 20), incomplete] });
+
+    expect(profile.metrics).toContainEqual(expect.objectContaining({ name: "concentration", value: { status: "unknown", reason: "unavailable" } }));
+    expect(profile.limitations).toContain("concentration excluded incomplete balance evidence.");
+  });
+
   it("derives risk exposure only from quoted balances with an explicit risk flag", () => {
     const risky = { ...balance("0xrisk", 25), riskToken: { status: "known" as const, value: true } };
     const profile = buildWalletBehaviorProfile({ coverage, balances: [risky, balance("0xsafe", 75)] });
