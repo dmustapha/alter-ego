@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { approveProposal, createProposal, declineProposal, expireProposal } from "./proposals";
 import { createValidatedHypothesis, createValidationReceipt, validateWalkForward } from "./validation";
-import { createHistoricalValidationDataset } from "./validation-dataset";
+import { createHistoricalValidationDataset, registerHistoricalSource } from "./validation-dataset";
 import type { StrategyHypothesis } from "./types";
 
 const nowMs = 1_700_000_000_000;
@@ -10,7 +10,8 @@ const hypothesis: StrategyHypothesis = { id: "hypothesis:1", status: "draft", fi
 
 function validatedHypothesis() {
   const observations = [0, 1, 2].map((index) => ({ id: `observation:${index}`, observedAt: nowMs - (4 - index) * horizonMs, outcomeAt: nowMs - (3 - index) * horizonMs, chainId: "1", assetId: "asset:test", metric: "concentration" as const, metricValue: 0.8, outcomeUsd: 3, costUsd: 1, slippageUsd: 0, liquidityUsd: 10, sourceEvidenceIds: [`evidence:${index}`] }));
-  const dataset = createHistoricalValidationDataset({ source: { id: "snapshot:test", version: "v1", retrievedAt: nowMs, interval: { startAt: nowMs - 5 * horizonMs, endAt: nowMs } }, observations, foldConfiguration: { trainingSize: 2, testSize: 1 } });
+  const source = registerHistoricalSource({ source: { id: "snapshot:test", version: "v1", retrievedAt: nowMs, interval: { startAt: nowMs - 5 * horizonMs, endAt: nowMs } }, observations });
+  const dataset = createHistoricalValidationDataset(source, { observationIds: observations.map((item) => item.id), foldConfiguration: { trainingSize: 2, testSize: 1 } });
   const validation = validateWalkForward(hypothesis, dataset);
   return createValidatedHypothesis(hypothesis, validation, createValidationReceipt(validation, dataset));
 }
@@ -39,7 +40,9 @@ describe("proposal-only approval", () => {
 
   it("deeply freezes the validated asset scope", () => {
     const mutable = { ...hypothesis, scope: { ...hypothesis.scope, assetIds: ["asset:test"] } };
-    const dataset = createHistoricalValidationDataset({ source: { id: "snapshot:immutable", version: "v1", retrievedAt: nowMs, interval: { startAt: nowMs - 5 * horizonMs, endAt: nowMs } }, observations: [0, 1, 2].map((index) => ({ id: `immutable:${index}`, observedAt: nowMs - (4 - index) * horizonMs, outcomeAt: nowMs - (3 - index) * horizonMs, chainId: "1", assetId: "asset:test", metric: "concentration" as const, metricValue: 0.8, outcomeUsd: 3, costUsd: 1, slippageUsd: 0, liquidityUsd: 10, sourceEvidenceIds: [`immutable-evidence:${index}`] })), foldConfiguration: { trainingSize: 2, testSize: 1 } });
+    const observations = [0, 1, 2].map((index) => ({ id: `immutable:${index}`, observedAt: nowMs - (4 - index) * horizonMs, outcomeAt: nowMs - (3 - index) * horizonMs, chainId: "1", assetId: "asset:test", metric: "concentration" as const, metricValue: 0.8, outcomeUsd: 3, costUsd: 1, slippageUsd: 0, liquidityUsd: 10, sourceEvidenceIds: [`immutable-evidence:${index}`] }));
+    const source = registerHistoricalSource({ source: { id: "snapshot:immutable", version: "v1", retrievedAt: nowMs, interval: { startAt: nowMs - 5 * horizonMs, endAt: nowMs } }, observations });
+    const dataset = createHistoricalValidationDataset(source, { observationIds: observations.map((item) => item.id), foldConfiguration: { trainingSize: 2, testSize: 1 } });
     const validation = validateWalkForward(mutable, dataset);
     const artifact = createValidatedHypothesis(mutable, validation, createValidationReceipt(validation, dataset));
 
