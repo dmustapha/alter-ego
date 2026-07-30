@@ -269,6 +269,7 @@ export interface RealizedOutcome {
   readonly walletAddress: string;
   readonly chain: EvidenceChain;
   readonly asset: EvidenceAsset;
+  readonly openedAt?: EvidenceValue<number>;
   readonly closedAt: EvidenceValue<number>;
   readonly quantity: EvidenceValue<number>;
   readonly realizedPnlUsd: EvidenceValue<number>;
