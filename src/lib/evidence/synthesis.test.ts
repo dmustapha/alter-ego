@@ -22,4 +22,11 @@ describe("synthesizeCohort", () => {
 
     expect(result.excludedWallets).toEqual([{ walletAddress: "0xc", reason: "unavailable" }]);
   });
+
+  it("emits insufficient rather than consensus from stale or low-coverage metrics", () => {
+    const stale = { ...profile("0xb", 0.75), metrics: [{ ...profile("0xb", 0.75).metrics[0], recency: "stale" as const, sourceCoverage: 0.25, confidence: 0.1 }] };
+    const result = synthesizeCohort([profile("0xa", 0.8), stale]);
+
+    expect(result.findings).toContainEqual(expect.objectContaining({ kind: "insufficient", metric: "concentration", value: { status: "unknown", reason: "unavailable" } }));
+  });
 });
