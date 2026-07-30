@@ -12,7 +12,7 @@ import type {
   TradeLeg,
   UnknownReason,
 } from "./types";
-import { MAX_SOURCE_PRICE_DELTA_MS } from "./types";
+import { isCanonicalTimestampMs, MAX_SOURCE_PRICE_DELTA_MS } from "./types";
 import { canonicalNativeAsset } from "./native-assets";
 import { PRICE_CONFIDENCE_THRESHOLD } from "../defillama";
 
@@ -74,9 +74,7 @@ function isTradeProvenance(value: unknown, chain: EvidenceChain): boolean {
   if (!isRecord(value)) return false;
   return value.provider === "okx-web3"
     && value.endpoint === "transaction-detail"
-    && typeof value.retrievedAt === "number"
-    && Number.isFinite(value.retrievedAt)
-    && value.retrievedAt >= 0
+    && isCanonicalTimestampMs(value.retrievedAt, Date.now())
     && value.chainIndex === chain.id
     && (value.sourceIndex === undefined || (typeof value.sourceIndex === "number" && Number.isInteger(value.sourceIndex) && value.sourceIndex >= 0));
 }

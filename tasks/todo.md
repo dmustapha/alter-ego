@@ -17,7 +17,7 @@
 - [x] Complete and manually review remediation Task 2: bind trade and price evidence provenance.
 - [x] Complete remediation Task 3: unit-safe FIFO and execution-cost derivations.
 - [x] Complete remediation Task 4: provider-boundary hardening and collector-aware coverage.
-- [ ] Complete critical-review remediation before any collector finalization or profile work.
+- [x] Complete critical-review remediation before any collector finalization or profile work.
 - [ ] Implement confidence-scored wallet behavior profiles.
 - [ ] Implement user-selected cohort synthesis and Composite Trading Pattern output.
 - [ ] Implement strategy hypotheses and walk-forward validation.
