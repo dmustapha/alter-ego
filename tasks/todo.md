@@ -20,7 +20,7 @@
 - [x] Complete critical-review remediation before any collector finalization or profile work.
 - [x] Clear repository lint gate and merge verified evidence remediation into main.
 - [x] Approve the evidence-linked decision-layer design and a proposal-only first release.
-- [ ] Implement confidence-scored wallet behavior profiles.
-- [ ] Implement user-selected cohort synthesis and Composite Trading Pattern output.
-- [ ] Implement strategy hypotheses and walk-forward validation.
-- [ ] Implement user-approved proposal and execution flow.
+- [x] Implement confidence-scored wallet behavior profiles.
+- [x] Implement user-selected cohort synthesis and Composite Trading Pattern output.
+- [x] Implement strategy hypotheses and walk-forward validation.
+- [x] Implement user-approved proposal flow; live execution remains intentionally unimplemented.
