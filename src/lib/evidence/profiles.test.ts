@@ -112,6 +112,15 @@ describe("buildWalletBehaviorProfile", () => {
     }));
   });
 
+  it("marks outcome metrics unknown when an outcome lacks linked price evidence", () => {
+    const unlinked = { ...outcome("outcome:unlinked", 2), priceEvidenceIds: [] };
+    const profile = buildWalletBehaviorProfile({ coverage, outcomes: [outcome("outcome:valid", 1), unlinked] });
+
+    expect(profile.metrics).toContainEqual(expect.objectContaining({ name: "realized-outcome", value: { status: "unknown", reason: "unavailable" } }));
+    expect(profile.metrics).toContainEqual(expect.objectContaining({ name: "holding-horizon", value: { status: "unknown", reason: "unavailable" } }));
+    expect(profile.limitations).toContain("outcome metrics excluded incomplete outcome evidence.");
+  });
+
   it("rejects evidence from another selected wallet instead of aggregating it", () => {
     const foreign = { ...balance("0xforeign", 10), walletAddress: "0xother" };
 
