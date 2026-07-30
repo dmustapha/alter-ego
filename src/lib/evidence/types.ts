@@ -63,7 +63,10 @@ export interface CohortFinding {
   readonly id: string;
   readonly kind: "consensus" | "disagreement" | "insufficient";
   readonly metric: BehaviorMetricName;
+  readonly unit: "ratio" | "milliseconds" | "usd";
   readonly profileIds: readonly string[];
+  readonly evidenceIds: readonly string[];
+  readonly distribution: { readonly minimum: number; readonly maximum: number; readonly count: number };
   readonly value: EvidenceValue<number>;
   readonly confidence: number;
   readonly limitations: readonly string[];
