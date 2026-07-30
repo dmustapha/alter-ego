@@ -88,6 +88,14 @@ describe("buildWalletBehaviorProfile", () => {
     }));
   });
 
+  it("marks execution cost unknown when a supplied cost lacks price evidence", () => {
+    const unlinked = { ...cost("cost:unlinked", 0.5), priceEvidenceIds: [] };
+    const profile = buildWalletBehaviorProfile({ coverage, costs: [cost("cost:valid", 1.5), unlinked] });
+
+    expect(profile.metrics).toContainEqual(expect.objectContaining({ name: "execution-cost", value: { status: "unknown", reason: "unavailable" } }));
+    expect(profile.limitations).toContain("execution cost excluded incomplete cost evidence.");
+  });
+
   it("derives turnover only from classified trade-leg quantities", () => {
     const profile = buildWalletBehaviorProfile({ coverage, trades: [trade("trade:1")] });
 
