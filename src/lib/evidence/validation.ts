@@ -54,7 +54,7 @@ export function isValidationReceipt(value: unknown): value is ValidationReceipt 
 
 function createFolds(hypothesis: StrategyHypothesis, observations: readonly HistoricalObservation[], dataset: HistoricalDataset): readonly WalkForwardFold[] {
   const folds: WalkForwardFold[] = [];
-  for (let start = 0; start + dataset.foldConfiguration.trainingSize + dataset.foldConfiguration.testSize <= observations.length; start += dataset.foldConfiguration.testSize) {
+  for (let start = 0; start + dataset.foldConfiguration.trainingSize + dataset.foldConfiguration.testSize <= observations.length; start += dataset.foldConfiguration.trainingSize + dataset.foldConfiguration.testSize) {
     const training = observations.slice(start, start + dataset.foldConfiguration.trainingSize);
     const testing = observations.slice(start + dataset.foldConfiguration.trainingSize, start + dataset.foldConfiguration.trainingSize + dataset.foldConfiguration.testSize);
     folds.push(evaluateFold(hypothesis, training, testing));
