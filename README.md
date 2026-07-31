@@ -1,309 +1,175 @@
-# Alter Ego: Every wallet has a story. Meet your Alter Ego.
+# Alter Ego: inspect public-wallet evidence before drawing conclusions
 
-Alter Ego analyzes any EVM or Solana wallet address against real on-chain data, classifies behavioral patterns, builds a psychological persona, and pits your Ethereum self against your Solana self in a 5-round roast battle grounded in your actual transaction history. Self-knowledge is the product.
+Alter Ego turns selected public EVM and Solana wallet activity into inspectable evidence. It records what was observed, where it came from, and what is missing. Agents can request the same grounded analysis through a payment-gated A2MCP endpoint on X Layer.
+
+The decision layer is deliberately bounded. It forms behavior profiles and cohort findings from normalized evidence, produces neutral hypotheses, and validates them against an immutable historical dataset. It does not infer common ownership, promise outcomes, provide trade instructions, or submit transactions.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-148%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-304%20passing-brightgreen)]()
 
 **Live:** [alter-ego-wine-mu.vercel.app](https://alter-ego-wine-mu.vercel.app)
+**Proof:** [payment, identity, and integration evidence](https://alter-ego-wine-mu.vercel.app/proof)
 
 ---
 
-![Hero](docs/images/landing.png)
+![Alter Ego landing page](docs/images/landing.png)
 
----
+## What it does
 
-## What Is Alter Ego?
+1. Accepts user-selected public wallet addresses.
+2. Collects wallet activity, holdings, and provider-bound evidence through OKX integrations.
+3. Normalizes the evidence with coverage, provenance, unit, and limitation records.
+4. Builds explainable wallet profiles and cohort-level consensus or disagreement findings.
+5. Produces a neutral, falsifiable hypothesis when the evidence is sufficient.
+6. Validates eligible hypotheses chronologically against an immutable, attested historical dataset.
 
-Paste any EVM or Solana wallet address. Alter Ego pulls up to ~200 recent transactions through the OKX OnchainOS API (rate-limit-throttled), runs them through a behavioral signal engine, computes a Behavioral Grade (0-100 with letter S/A/B/C/D/F), builds a persona, and generates a roast battle via Groq (llama-3.3-70b-versatile) that is strictly grounded in your real numbers. No demo mode, no fixed scripts, no fabricated figures.
+The live application is an evidence surface. The decision modules are pure contracts that can return `insufficient` or `rejected` when evidence or validation is incomplete. A proposal is a non-executing review artifact, never an authorization to act.
 
-Realized PnL and win rate are computed from real on-chain trades using FIFO cost-basis, with tokens priced via DefiLlama historical prices. When a token cannot be reliably priced, PnL is shown as "not available" rather than estimated.
+## Evidence and decision boundaries
 
-The design target is a TEE (Trusted Execution Environment) so analysis is verifiable and private. TEE attestation is simulated in this demo. The project is built for the X Layer ecosystem: X Layer is one of the analyzed chains, the on-chain identity is registered on X Layer, and the x402 payment token is USDT0 on X Layer.
+| Boundary | Guarantee |
+|---|---|
+| Wallet cohort | A selected public cohort is not treated as proof of shared ownership or a shared strategy. |
+| Evidence | Metrics retain provider, retrieval, coverage, and limitation context. |
+| Historical validation | Walk-forward validation consumes an immutable dataset and never substitutes live observations. |
+| Historical source | Collector-issued snapshots require a server-side HMAC attestation. Unattested or tampered snapshots fail closed. |
+| Hypotheses | Outputs are testable claims with explicit assumptions and limitations, not predictions or alpha. |
+| Proposals | Approval, decline, and expiry are pure state transitions. No signer, wallet, broadcast, scheduler, or execution field exists. |
 
----
+## Live A2MCP service and payment proof
 
-## Screenshots
+`POST /api/a2mcp` exposes payment-gated wallet analysis for agents. It uses the official OKX x402 seller flow on X Layer. The live demonstration UI is not payment proof.
 
-| Landing | Results |
-|---------|---------|
-| ![](docs/images/landing.png) | ![](docs/images/results.png) |
-
-| Battle | Compare |
-|--------|---------|
-| ![](docs/images/battle.png) | ![](docs/images/compare.png) |
-
----
-
-## Problem, Solution, Proof
-
-**Problem.** On-chain portfolios are raw data. Traders have no way to see their own behavioral patterns across chains, and no incentive to confront the gap between how they act on Ethereum versus Solana.
-
-**Solution.** Alter Ego turns transaction history into a behavioral profile. It computes a Behavioral Grade from six orthogonal signals (risk hygiene, diversification, concentration, gas discipline, activity, multi-chain breadth), generates LLM-powered persona commentary grounded in real numbers, and stages a roast battle between a wallet's two chain personas.
-
-**Integration proof.** x402 micropayment end-to-end settlement is live on X Layer:
+A separate external-buyer A2MCP request settled **0.01 USDT0 on X Layer**. The public transaction proof is [0x59eebf…53d103](https://www.oklink.com/x-layer/evm/tx/0x59eebfc91fac2ffa203de3b3d04a6820eda223404d0f6512db0fe6e72353d103).
 
 | Field | Value |
-|-------|-------|
-| Settlement tx | `0x59eebfc91fac2ffa203de3b3d04a6820eda223404d0f6512db0fe6e72353d103` |
-| Explorer | [OKLink](https://www.oklink.com/x-layer/evm/tx/0x59eebfc91fac2ffa203de3b3d04a6820eda223404d0f6512db0fe6e72353d103) |
-| Toll | 0.01 USDT0 on X Layer |
-| Payer | `0xcf88688b4A31787E8E5609dE724073C9aEDE7334` |
-| Seller payTo | `0xd97c85d61337f8e4366bff2d8b482cfc59d76340` |
+|---|---|
+| Agent identity | ERC-8004 agent `#6013` |
+| Network | X Layer, chain ID `196` |
+| A2MCP endpoint | `https://alter-ego-wine-mu.vercel.app/api/a2mcp` |
+| Settlement | 0.01 USDT0, external buyer, X Layer |
 
-Reproduce: `node scripts/buy-a2mcp.mjs`
+## How it works
 
-**Differentiator.** Every metric is computed from real on-chain data. The roast text is LLM-generated per request (not static), guarded by a post-generation numeric check that rejects any figure not drawn from the wallet's actual signals. The A2A daemon answers per-request questions the same way: LLM-reasoned from the real analysis, with a deterministic template fallback.
-
----
-
-## Integrations
-
-### OKX OnchainOS
-
-Transaction history and portfolio data. Users paste any EVM or Solana address and Alter Ego fetches up to ~200 recent transactions via the OKX OnchainOS REST API. The client is rate-limit-throttled to respect API limits.
-
-```ts
-// src/lib/okx-api.ts: HMAC-signed REST client
-import { fetchTransactionHistory } from "@/lib/okx-api";
-const txns = await fetchTransactionHistory({ address, chainIndex });
+```text
+Selected public wallets
+        |
+        v
+OKX wallet and market evidence
+        |
+        v
+Normalized observations with provenance and coverage
+        |
+        +-------------------------------+
+        |                               |
+        v                               v
+Wallet behavior profiles          A2MCP grounded analysis
+        |                               |
+        v                               v
+Cohort findings and hypotheses   x402-gated agent response
+        |
+        v
+Attested immutable historical dataset
+        |
+        v
+Walk-forward validation report
+        |
+        v
+Non-executing review proposal
 ```
 
-### DefiLlama Historical Prices
+## Core capabilities
 
-Token prices for FIFO PnL computation. Alter Ego queries DefiLlama for historical close prices on every token in a wallet's trade history. Tokens that cannot be priced are excluded from PnL rather than estimated.
+- **Public-wallet evidence:** Supports chosen EVM and Solana addresses without converting a cohort into an identity claim.
+- **Provenance-aware metrics:** Preserves source, retrieval time, evidence identifiers, coverage, units, and limitations.
+- **Cohort synthesis:** Separates consensus from disagreement instead of averaging away conflicts.
+- **Neutral hypotheses:** Expresses observable conditions as testable statements with assumptions and exclusions.
+- **Chronological validation:** Uses fixed train and holdout folds with documented costs and explicit insufficiency outcomes.
+- **Attested historical inputs:** Requires a server-side `ALTER_EGO_HISTORICAL_SOURCE_KEY` to verify collector snapshots.
+- **Payment-gated agent access:** Makes grounded analysis discoverable through A2MCP and x402 on X Layer.
 
-### Groq (llama-3.3-70b-versatile)
-
-LLM-generated roast battle and A2A agent reasoning. Each roast line is generated by the LLM with the wallet's real numeric signals injected as a facts whitelist. A post-generation numeric guard rejects any line containing a figure not on the whitelist before the response is served.
-
-```ts
-// src/lib/roast.ts: numeric guard on every LLM line
-export function numericGuard(line: RoastLine, facts: RoastFacts): RoastLine
-```
-
-### OKX AI Marketplace / A2MCP
-
-Alter Ego is listed as an ASP agent on the OKX.AI marketplace. The `/api/a2mcp` endpoint is gated by x402 (0.01 USDT0 on X Layer). Buyers receive an LLM-reasoned answer grounded in the live wallet analysis, with a deterministic fallback. TEE attestation is simulated in this demo.
-
-### x402 Micropayments
-
-Real end-to-end settlement on X Layer. The payment gate uses USDT0 (6 decimals, `0x779ded0c9e1022225f8e0630b35a9b54be713736`). Settlement is proven on-chain (see Integration proof above).
-
----
-
-## Behavioral Grade
-
-The headline metric is a 0-100 score with a letter grade (S/A/B/C/D/F) computed from six signals:
-
-| Signal | Weight | Measures |
-|--------|--------|----------|
-| Risk hygiene | 25 | Fraction of portfolio in high-risk tokens |
-| Diversification | 20 | Unique token count (up to 15) |
-| Concentration | 15 | Top holding as % of portfolio |
-| Gas discipline | 15 | Avg gas paid vs. network median |
-| Activity | 15 | Swap count + recency (days since last tx) |
-| Multi-chain | 10 | Unique chains used |
-
-Score thresholds: S >= 90, A >= 80, B >= 70, C >= 60, D >= 50, F < 50.
-
----
-
-## On-Chain Identity
-
-| Field | Value |
-|-------|-------|
-| Agent ID | #6013 (ERC-8004, X Layer) |
-| Owner wallet | `0xd97c85d61337f8e4366bff2d8b482cfc59d76340` |
-| Agent communication address | `0x835C02C82a1DCCe73585D23DFe07A939AB971707` |
-| Network | X Layer (chainIndex 196) |
-| x402 token | USDT0 `0x779ded0c9e1022225f8e0630b35a9b54be713736` (6 decimals) |
-
----
-
-## How It Works
-
-```
-┌──────────┐     ┌──────────────┐     ┌──────────────┐
-│  Wallet  │────▶│  OKX OnchainOS│────▶│  Behavioral  │
-│  Input   │     │  REST API    │     │  Signal Eng. │
-└──────────┘     └──────────────┘     └──────┬───────┘
-                                             │
-                    ┌────────────────────────┘
-                    ▼
-┌──────────┐     ┌──────────────┐     ┌──────────────┐
-│  Compare │◀────│  Roast       │◀────│  Persona +   │
-│  Card    │     │  Battle      │     │  Grade       │
-└────┬─────┘     │  (Groq LLM)  │     └──────────────┘
-     │           └──────────────┘
-     ▼
-┌──────────┐     ┌──────────────┐
-│  Snapshot│────▶│  TEE         │
-│  (x402)  │     │  Attestation │
-└──────────┘     │  (simulated) │
-                 └──────────────┘
-```
-
-### Phase Flow
-
-| Phase | What Happens |
-|-------|-------------|
-| Landing | Wallet input (EVM or Solana address), persona preview sidebar |
-| Scanning | Fetches real transaction history via OKX OnchainOS |
-| Results | Behavioral Grade, persona cards, AMPLIFY/GUARD patterns |
-| Battle | 5-round roast (Groq LLM, numeric-guarded) |
-| Compare | Side-by-side chain comparison with real PnL where available |
-| CTA | ATTESTATION VERIFIED badge (simulated TEE), x402 snapshot gate |
-
-### API Endpoints
+## API reference
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/analyze` | Submit wallet address; returns behavioral grade, signals, persona |
-| GET | `/api/roast` | LLM-generated 5-round roast grounded in real wallet numbers |
-| GET | `/api/compare` | Side-by-side chain comparison with FIFO PnL where computable |
-| GET | `/api/persona` | Persona profile for the active wallet |
-| POST | `/api/a2mcp` | x402-gated A2A agent endpoint (0.01 USDT0 on X Layer) |
+|---|---|---|
+| `POST` | `/api/analyze` | Collect and return grounded wallet analysis for selected public addresses. |
+| `POST` | `/api/a2mcp` | Payment-gated A2MCP wallet-analysis request. |
+| `GET` | `/api/a2mcp` | Service discovery and payment-gated A2MCP interaction. |
+| `GET` | `/proof` | Human-readable identity, integration, and settlement proof surface. |
 
----
+An unpaid A2MCP request receives the standard x402 payment requirement. A paid request is still bounded by the available evidence and its limitations.
 
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (Turbopack) |
-| Language | TypeScript |
-| Styling | Tailwind CSS 4 |
-| Animation | Framer Motion |
-| Fonts | Press Start 2P, Space Mono |
-| On-chain data | OKX OnchainOS REST API (HMAC-signed, rate-limit-throttled) |
-| Historical prices | DefiLlama (FIFO PnL cost-basis) |
-| LLM | Groq (llama-3.3-70b-versatile) |
-| Payments | x402 micropayment gate (USDT0 on X Layer) |
-| Identity | TEE attestation (simulated in demo) |
-| Testing | Vitest (unit/integration) + Playwright (a11y + stress) |
-
----
+|---|---|
+| Application | Next.js 16, React 19, TypeScript |
+| UI | Tailwind CSS 4, Framer Motion |
+| Evidence collection | OKX OnchainOS wallet and market integrations |
+| Agent service | A2MCP, OKX AI, x402 on X Layer |
+| Historical validation | Immutable attested datasets, chronological walk-forward evaluator |
+| Testing | Vitest, Playwright |
+| Deployment | Vercel |
 
 ## Testing
 
-148 Vitest tests passing across 20 test files, plus 38 Playwright browser tests (33 stress + 5 accessibility).
+The suite currently contains **304 passing tests across 38 files**.
 
 ```bash
-npx vitest run          # 148 passing
-npx playwright test     # 38 passing (stress + a11y)
+npm test
+# 304 passing
+
+npm run build
+# production build passes
 ```
 
-What the tests verify:
+The tests cover evidence normalization, provenance and coverage checks, cost and outcome boundaries, cohort synthesis, hypothesis construction, historical-dataset attestation, walk-forward validation, proposal transitions, A2MCP/x402 conformance, and UI/accessibility behavior.
 
-- Behavioral grade formula produces correct scores from signal math (unit)
-- FIFO PnL returns null for unpriced tokens rather than estimating (unit)
-- Numeric guard strips any LLM line containing a fabricated figure (unit)
-- A2MCP route gates unpaid requests with a 402 and validates payload schema (integration)
-- Landing page renders with hero text and wallet input
-- Each phase transitions correctly: scanning, results, battle, compare, CTA
-- Glitch Core design elements (CRT scanlines, corner brackets, clip-paths) render
-- Wallet input enforces address validation and disables ANALYZE on empty input
-- Network throttle (slow 3G) completes within 25 seconds
-- Keyboard focus rings render, prefers-reduced-motion is honored, dim text meets WCAG AA contrast
-
----
-
-## Try It (2 minutes)
-
-1. Visit [alter-ego-wine-mu.vercel.app](https://alter-ego-wine-mu.vercel.app)
-2. Paste any EVM or Solana wallet address (or click **LOAD DEMO** for a sample)
-3. Click **ANALYZE** to start the pipeline against real on-chain data
-4. Watch the 5-phase flow: scanning, persona analysis, roast battle, comparison
-5. At the CTA phase, see the **ATTESTATION VERIFIED** badge (TEE simulated) and snapshot pricing
-6. Click **VIEW FULL PROOF** to see the cryptographic proof page at `/proof`
-
----
-
-## Running Locally
+## Run locally
 
 ```bash
 git clone https://github.com/dmustapha/alter-ego.git
 cd alter-ego
 npm install
-npm run dev -- --turbopack
+npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-### Environment Variables
+### Environment variables
 
-Copy `.env.example` to `.env.local` and fill in your keys.
+Copy `.env.example` to `.env.local`, then configure only the integrations you need.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OKX_API_KEY` | Yes | OKX OnchainOS API key (from web3.okx.com/onchain-os/dev-portal) |
-| `OKX_SECRET_KEY` | Yes | OKX API secret |
-| `OKX_PASSPHRASE` | Yes | OKX API passphrase |
-| `GROQ_API_KEY` | Yes | Groq API key (roast + A2A reasoning) |
-| `LLM_BASE_URL` | No | Override LLM provider (default: Groq) |
-| `LLM_MODEL` | No | Override model (default: llama-3.3-70b-versatile) |
-| `X402_PAYTO_ADDRESS` | No | Address to receive x402 payments |
-| `X402_PRICE` | No | x402 toll amount in USDT0 |
-| `OKX_MIN_INTERVAL_MS` | No | Rate-limit floor between OKX API calls (ms) |
+| Variable | Purpose |
+|---|---|
+| `OKX_API_KEY` | OKX OnchainOS API key |
+| `OKX_SECRET_KEY` | OKX OnchainOS API secret |
+| `OKX_PASSPHRASE` | OKX OnchainOS API passphrase |
+| `GROQ_API_KEY` | Optional grounded-commentary provider key |
+| `A2MCP_ENDPOINT_URL` | Public A2MCP service URL |
+| `A2MCP_PAYTO_ADDRESS` | x402 settlement recipient |
+| `X402_PRICE` | x402 price configuration |
+| `ALTER_EGO_HISTORICAL_SOURCE_KEY` | Server-only key for collector-side historical snapshot attestations |
 
----
+Never expose the historical-source key to a browser, client bundle, or repository.
 
-## Project Structure
+## Project structure
 
-```
-alter-ego/
-├── src/
-│   ├── app/
-│   │   ├── api/               # Route handlers (analyze, roast, compare, persona, a2mcp)
-│   │   ├── proof/             # Cryptographic attestation proof page
-│   │   ├── globals.css        # CRT scanlines, flicker, glitch animations
-│   │   ├── layout.tsx         # Root layout with pixel fonts
-│   │   └── page.tsx           # Main app: 6-phase state machine
-│   ├── components/
-│   │   ├── Terminal.tsx       # Shared terminal shell with corner brackets
-│   │   ├── WalletInput.tsx    # Wallet address input + demo loader
-│   │   ├── PersonaCard.tsx    # Persona display with traits and archetypes
-│   │   ├── PatternCard.tsx    # AMPLIFY/GUARD pattern classification
-│   │   ├── RoastBattle.tsx    # 5-round roast battle engine
-│   │   ├── CompareCard.tsx    # Side-by-side chain comparison
-│   │   └── PaymentButton.tsx  # x402 payment gate with 3-state transition
-│   └── lib/
-│       ├── analyze.ts         # Main analysis orchestrator
-│       ├── classifier.ts      # Signal-based AMPLIFY/GUARD pattern engine
-│       ├── grade.ts           # Behavioral Grade (0-100, S/A/B/C/D/F)
-│       ├── pnl.ts             # FIFO realized PnL + win rate (confidence-gated)
-│       ├── roast.ts           # LLM roast engine + numeric guard
-│       ├── llm.ts             # Pluggable LLM client (Groq default)
-│       ├── defillama.ts       # DefiLlama historical-price client
-│       ├── okx-api.ts         # OKX OnchainOS REST client (HMAC-signed)
-│       ├── ratelimit.ts       # OKX request rate-limit throttle
-│       ├── agent-reason.ts    # A2A per-request reasoning (LLM-grounded)
-│       ├── x402/              # x402 seller gate (USDT0 on X Layer)
-│       ├── a2mcp/             # A2A agent card + conformance
-│       ├── types.ts           # Shared TypeScript interfaces
-│       └── cache.ts           # Analysis result cache
-├── scripts/
-│   ├── buy-a2mcp.mjs          # Reproduce x402 settlement end-to-end
-│   └── spike-x402.mjs         # x402 gate smoke test
-├── public/                    # Logo, avatar, TEE badge, favicons
-├── docs/images/               # Screenshots
-├── playwright.config.ts       # Playwright configuration
-├── a11y.spec.ts               # 5 accessibility tests
-└── stress-browser.spec.ts     # 33 browser stress tests
+```text
+src/
+├── app/api/                 # Analyze and A2MCP route handlers
+├── app/proof/               # Public proof surface
+├── lib/evidence/            # Normalization, profiles, synthesis, validation, proposals
+│   └── historical-source-server.ts
+│                            # Server-side snapshot attestation issuer
+├── lib/a2mcp/               # Agent card and envelope handling
+├── lib/x402/                # Official x402 seller boundary
+└── components/              # Live evidence interface
 ```
 
----
-
-## Team
-
-Solo project by Dami Mustapha (GitHub: [dmustapha](https://github.com/dmustapha)). Built for the OKX Build X Series (X Layer Arena, Human Track).
-
----
-
-Built for the [OKX.AI Genesis Hackathon](https://www.okx.ai/genesis) (OKX x DoraHacks).
+Built for the [OKX.AI Genesis Hackathon](https://www.okx.ai/genesis) on X Layer.
 
 ## License
 
